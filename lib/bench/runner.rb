@@ -91,7 +91,7 @@ module Bench
 
       def payload_for_execution
         payload = options.fetch(:payload).dup
-        payload[:port] = options[:http_port] if options[:workload] == "http"
+        payload[:port] = options[:http_port] if options[:workload].match?(/\Ahttp|async_http\z/)
         payload
       end
 
@@ -221,7 +221,7 @@ module Bench
       end
 
       def start_delay_server_if_needed
-        return unless options[:workload] == "http"
+        return unless options[:workload].match?(/\Ahttp|async_http\z/)
 
         port = options.fetch(:http_port)
         env = database_env

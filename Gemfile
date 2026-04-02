@@ -10,6 +10,7 @@ gem "pg", "~> 1.1"
 gem "puma", ">= 5.0"
 gem "solid_queue", path: "../solid_queue"
 gem "async"
+gem "async-http"
 gem "csv"
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem

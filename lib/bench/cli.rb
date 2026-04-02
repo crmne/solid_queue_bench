@@ -51,7 +51,7 @@ module Bench
 
       def normalize_payload!
         case options[:workload]
-        when "sleep", "http"
+        when "sleep", "http", "async_http"
           options[:payload] = { duration_ms: options[:payload][:duration_ms] || 50 }
         when "cpu"
           options[:payload] = { iterations: options[:payload][:iterations] || 25_000 }

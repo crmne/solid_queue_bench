@@ -15,7 +15,8 @@ module Bench
       output_dir: File.expand_path("../../tmp/benchmarks", __dir__),
       payload: { duration_ms: 50 },
       http_port: 9393,
-      name: nil
+      name: nil,
+      repeat: 1
     }.freeze
 
     def initialize(argv)
@@ -36,7 +37,7 @@ module Bench
         OptionParser.new do |parser|
           parser.banner = "Usage: bin/matrix [options]"
 
-          parser.on("--workload NAME", "sleep, cpu, or http (default: sleep)") { |v| options[:workload] = v }
+          parser.on("--workload NAME", "sleep, cpu, http, or async_http (default: sleep)") { |v| options[:workload] = v }
           parser.on("--jobs N", Integer, "Jobs per cell (default: 500)") { |v| options[:jobs] = v }
           parser.on("--capacities LIST", "Comma-separated capacities (default: 5,10,25,50,100,200)") { |v| options[:capacities] = v.split(",").map(&:to_i) }
           parser.on("--processes LIST", "Comma-separated process counts (default: 1,2,4)") { |v| options[:processes] = v.split(",").map(&:to_i) }
@@ -47,6 +48,7 @@ module Bench
           parser.on("--http-port N", Integer, "Delay server port (default: 9393)") { |v| options[:http_port] = v }
           parser.on("--output-dir PATH", "Output directory") { |v| options[:output_dir] = v }
           parser.on("--name NAME", "Run name prefix for output files") { |v| options[:name] = v }
+          parser.on("--repeat N", Integer, "Runs per cell, report median (default: 1)") { |v| options[:repeat] = v }
         end.parse!(argv)
 
         normalize_payload!
@@ -54,7 +56,7 @@ module Bench
 
       def normalize_payload!
         case options[:workload]
-        when "sleep", "http"
+        when "sleep", "http", "async_http"
           options[:payload] = { duration_ms: options[:payload][:duration_ms] || 50 }
         when "cpu"
           options[:payload] = { iterations: options[:payload][:iterations] || 25_000 }
@@ -73,6 +75,7 @@ module Bench
         puts "  Processes:  #{options[:processes].join(", ")}"
         puts "  Workload:   #{options[:workload]} (#{options[:payload].map { |k, v| "#{k}=#{v}" }.join(", ")})"
         puts "  Jobs/cell:  #{options[:jobs]}"
+        puts "  Repeat:     #{options[:repeat]}x (median)" if options[:repeat] > 1
         puts "-" * 72
 
         cells.each_with_index.map do |cell, index|
@@ -93,7 +96,7 @@ module Bench
             output_dir: options[:output_dir]
           }
 
-          result = Bench::Runner.new(runner_opts).run_single(mode)
+          result = run_cell(mode, runner_opts)
 
           puts "  -> #{result[:jobs_per_second]} jobs/s | RSS peak=#{result[:peak_rss_kb]}KB avg=#{result[:avg_rss_kb]}KB | CPU avg=#{result[:avg_cpu_pct]}% peak=#{result[:peak_cpu_pct]}%"
           result
@@ -111,6 +114,38 @@ module Bench
             end
           end
         end
+      end
+
+      def run_cell(mode, runner_opts)
+        repeats = options[:repeat]
+        return Bench::Runner.new(runner_opts).run_single(mode) if repeats <= 1
+
+        runs = repeats.times.filter_map do |i|
+          puts "    run #{i + 1}/#{repeats}..." if repeats > 1
+          Bench::Runner.new(runner_opts).run_single(mode)
+        rescue => error
+          puts "    run #{i + 1} failed: #{error.message.lines.first&.strip}"
+          nil
+        end
+
+        raise "All #{repeats} runs failed" if runs.empty?
+
+        median_result(runs)
+      end
+
+      def median_result(runs)
+        sorted = runs.sort_by { |r| r[:jobs_per_second] }
+        median = sorted[sorted.size / 2]
+
+        numeric_keys = %i[jobs_per_second wall_time_s peak_rss_kb avg_rss_kb avg_cpu_pct peak_cpu_pct]
+        result = median.dup
+
+        numeric_keys.each do |key|
+          values = runs.map { |r| r[key] }.compact.sort
+          result[key] = values[values.size / 2]
+        end
+
+        result
       end
 
       def run_name(mode, capacity, procs)
@@ -133,6 +168,7 @@ module Bench
           capacities: options[:capacities],
           processes: options[:processes],
           modes: options[:modes],
+          repeat: options[:repeat],
           results: results
         }
 
