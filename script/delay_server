@@ -1,0 +1,48 @@
+#!/usr/bin/env ruby
+
+require "cgi"
+require "json"
+require "socket"
+require "uri"
+
+port = Integer(ARGV.fetch(0))
+server = TCPServer.new("127.0.0.1", port)
+
+trap("TERM") do
+  server.close
+  exit
+end
+
+begin
+  loop do
+    client = server.accept
+
+    Thread.new(client) do |socket|
+      request_line = socket.gets
+      next unless request_line
+
+      path = request_line.split[1]
+      query = URI(path).query.to_s
+      duration_ms = CGI.parse(query).fetch("ms", [ "50" ]).first.to_i
+
+      while (line = socket.gets)
+        break if line == "\r\n"
+      end
+
+      sleep(duration_ms / 1000.0)
+
+      body = { ok: true, duration_ms: duration_ms }.to_json
+      socket.write(
+        "HTTP/1.1 200 OK\r\n" \
+        "Content-Type: application/json\r\n" \
+        "Content-Length: #{body.bytesize}\r\n" \
+        "Connection: close\r\n\r\n" \
+        "#{body}"
+      )
+    ensure
+      socket.close rescue nil
+    end
+  end
+rescue IOError, Errno::EBADF
+  exit
+end

@@ -1,0 +1,341 @@
+#!/usr/bin/env python3
+"""
+Generate comparison charts from solid_queue_bench matrix sweep CSV.
+
+Usage:
+    bin/plot tmp/benchmarks/matrix-sleep-20260402-160000.csv
+    bin/plot tmp/benchmarks/matrix-sleep-20260402-160000.csv --output-dir tmp/charts
+"""
+
+import csv
+import sys
+import os
+import argparse
+from collections import defaultdict
+
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+import numpy as np
+
+# ── Style ──────────────────────────────────────────────────────────────────────
+
+MODE_STYLE = {
+    "thread": {"color": "#3b82f6", "marker": "o", "label": "Thread"},
+    "async":  {"color": "#ef4444", "marker": "s", "label": "Async"},
+}
+
+GRID_METRICS = [
+    ("jobs_per_second",       "Throughput (jobs/s)", 1),
+    ("peak_rss_kb",           "Peak RSS (MB)",       1 / 1024),
+    ("avg_cpu_pct",           "Avg CPU (%)",         1),
+    ("total_latency_p50_ms",  "Latency p50 (ms)",    1),
+]
+
+DELTA_METRICS = [
+    ("jobs_per_second",       "Throughput",   1),
+    ("peak_rss_kb",           "Peak RSS",    -1),
+    ("avg_cpu_pct",           "Avg CPU",     -1),
+    ("total_latency_p50_ms",  "Latency p50", -1),
+]
+
+
+# ── Data ───────────────────────────────────────────────────────────────────────
+
+def read_csv_data(path):
+    rows = []
+    with open(path) as f:
+        for row in csv.DictReader(f):
+            parsed = {}
+            for key, val in row.items():
+                if key == "mode":
+                    parsed[key] = val
+                elif val in ("", None):
+                    parsed[key] = 0.0
+                else:
+                    try:
+                        parsed[key] = float(val)
+                    except ValueError:
+                        parsed[key] = val
+            rows.append(parsed)
+    return rows
+
+
+def build_lookup(rows):
+    lookup = {}
+    for r in rows:
+        lookup[(r["mode"], int(r["processes"]), int(r["capacity"]))] = r
+    return lookup
+
+
+# ── Figure 1: Comparison Grid ─────────────────────────────────────────────────
+
+def plot_comparison_grid(rows, out_base):
+    process_counts = sorted(set(int(r["processes"]) for r in rows))
+    modes = sorted(set(r["mode"] for r in rows), key=lambda m: (m != "thread"))
+    by_mode_proc = defaultdict(list)
+    for r in rows:
+        by_mode_proc[(r["mode"], int(r["processes"]))].append(r)
+    for v in by_mode_proc.values():
+        v.sort(key=lambda r: r["capacity"])
+
+    n_cols = len(process_counts)
+    n_rows = len(GRID_METRICS)
+
+    fig, axes = plt.subplots(
+        n_rows, n_cols,
+        figsize=(4.5 * n_cols + 0.8, 3.2 * n_rows + 1.2),
+        squeeze=False,
+    )
+    fig.suptitle(
+        "Solid Queue — Thread vs Async",
+        fontsize=14, fontweight="bold", y=0.98,
+    )
+
+    for col, procs in enumerate(process_counts):
+        axes[0][col].set_title(
+            f"{procs} process{'es' if procs != 1 else ''}",
+            fontsize=11, pad=8,
+        )
+        for row_i, (metric, label, scale) in enumerate(GRID_METRICS):
+            ax = axes[row_i][col]
+            for mode in modes:
+                data = by_mode_proc.get((mode, procs), [])
+                if not data:
+                    continue
+                x = [r["capacity"] for r in data]
+                y = [float(r.get(metric, 0) or 0) * scale for r in data]
+                s = MODE_STYLE.get(mode, {})
+                ax.plot(
+                    x, y,
+                    color=s.get("color", "#888"),
+                    marker=s.get("marker", "."),
+                    markersize=5, linewidth=1.8,
+                    label=s.get("label", mode),
+                )
+            if col == 0:
+                ax.set_ylabel(label, fontsize=10)
+            if row_i == n_rows - 1:
+                ax.set_xlabel("Capacity", fontsize=10)
+            ax.grid(True, alpha=0.25, linewidth=0.5)
+            ax.tick_params(labelsize=8)
+            ax.set_xlim(left=0)
+            ax.set_ylim(bottom=0)
+
+    handles, labels = axes[0][0].get_legend_handles_labels()
+    if handles:
+        fig.legend(
+            handles, labels, loc="upper center",
+            ncol=len(modes), bbox_to_anchor=(0.5, 0.955),
+            fontsize=10, frameon=False,
+        )
+
+    plt.tight_layout(rect=[0, 0, 1, 0.94])
+    for ext in ("png", "svg"):
+        fig.savefig(f"{out_base}-grid.{ext}", dpi=150, bbox_inches="tight")
+    plt.close(fig)
+    print(f"  Grid:  {out_base}-grid.png")
+
+
+# ── Figure 2: Async Advantage Bars ────────────────────────────────────────────
+
+def plot_async_advantage(rows, out_base):
+    process_counts = sorted(set(int(r["processes"]) for r in rows))
+    capacities = sorted(set(int(r["capacity"]) for r in rows))
+    lookup = build_lookup(rows)
+
+    n = len(DELTA_METRICS)
+    fig, axes = plt.subplots(1, n, figsize=(4 * n, 4.2), squeeze=False)
+    fig.suptitle(
+        "Async Advantage Over Thread (%)",
+        fontsize=13, fontweight="bold", y=1.02,
+    )
+
+    bar_w = 0.8 / max(len(process_counts), 1)
+    colors = plt.cm.Set2(np.linspace(0, 0.6, len(process_counts)))
+
+    for mi, (metric, label, sign) in enumerate(DELTA_METRICS):
+        ax = axes[0][mi]
+        for pi, procs in enumerate(process_counts):
+            deltas = []
+            for cap in capacities:
+                t = lookup.get(("thread", procs, cap))
+                a = lookup.get(("async", procs, cap))
+                if t and a:
+                    tv = float(t.get(metric, 0) or 0)
+                    av = float(a.get(metric, 0) or 0)
+                    pct = sign * (av - tv) / tv * 100 if tv else 0
+                else:
+                    pct = 0
+                deltas.append(pct)
+            x = np.arange(len(capacities)) + pi * bar_w
+            ax.bar(
+                x, deltas, bar_w,
+                label=f"{procs}p", color=colors[pi],
+                edgecolor="white", linewidth=0.5,
+            )
+        ax.set_title(label, fontsize=10)
+        ticks = np.arange(len(capacities)) + bar_w * (len(process_counts) - 1) / 2
+        ax.set_xticks(ticks)
+        ax.set_xticklabels([str(c) for c in capacities], fontsize=8)
+        ax.set_xlabel("Capacity", fontsize=9)
+        ax.axhline(0, color="#666", linewidth=0.8)
+        ax.grid(True, axis="y", alpha=0.25, linewidth=0.5)
+        ax.tick_params(labelsize=8)
+        if mi == 0:
+            ax.set_ylabel("Advantage (%)", fontsize=10)
+            ax.legend(fontsize=8, title="Procs", title_fontsize=8)
+
+    plt.tight_layout()
+    for ext in ("png", "svg"):
+        fig.savefig(f"{out_base}-delta.{ext}", dpi=150, bbox_inches="tight")
+    plt.close(fig)
+    print(f"  Delta: {out_base}-delta.png")
+
+
+# ── Figure 3: Latency Breakdown ───────────────────────────────────────────────
+
+LATENCY_PCTS = [
+    ("total_latency_p50_ms", "p50"),
+    ("total_latency_p95_ms", "p95"),
+    ("total_latency_p99_ms", "p99"),
+    ("total_latency_max_ms", "max"),
+]
+
+def plot_latency_breakdown(rows, out_base):
+    process_counts = sorted(set(int(r["processes"]) for r in rows))
+    modes = sorted(set(r["mode"] for r in rows), key=lambda m: (m != "thread"))
+    by_mode_proc = defaultdict(list)
+    for r in rows:
+        by_mode_proc[(r["mode"], int(r["processes"]))].append(r)
+    for v in by_mode_proc.values():
+        v.sort(key=lambda r: r["capacity"])
+
+    n_cols = len(process_counts)
+    fig, axes = plt.subplots(
+        1, n_cols,
+        figsize=(5 * n_cols, 4),
+        squeeze=False,
+    )
+    fig.suptitle(
+        "Total Latency Percentiles (ms)",
+        fontsize=13, fontweight="bold",
+    )
+
+    linestyles = {"p50": "-", "p95": "--", "p99": ":", "max": "-."}
+    alphas = {"p50": 1.0, "p95": 0.8, "p99": 0.6, "max": 0.5}
+
+    for col, procs in enumerate(process_counts):
+        ax = axes[0][col]
+        ax.set_title(f"{procs} process{'es' if procs != 1 else ''}", fontsize=11)
+        for mode in modes:
+            data = by_mode_proc.get((mode, procs), [])
+            if not data:
+                continue
+            s = MODE_STYLE.get(mode, {})
+            x = [r["capacity"] for r in data]
+            for metric, pct_label in LATENCY_PCTS:
+                y = [float(r.get(metric, 0) or 0) for r in data]
+                ax.plot(
+                    x, y,
+                    color=s.get("color", "#888"),
+                    linestyle=linestyles[pct_label],
+                    alpha=alphas[pct_label],
+                    linewidth=1.5,
+                    label=f"{s.get('label', mode)} {pct_label}",
+                )
+        ax.set_xlabel("Capacity", fontsize=10)
+        if col == 0:
+            ax.set_ylabel("Latency (ms)", fontsize=10)
+            ax.legend(fontsize=7, ncol=2)
+        ax.grid(True, alpha=0.25, linewidth=0.5)
+        ax.tick_params(labelsize=8)
+        ax.set_xlim(left=0)
+        ax.set_ylim(bottom=0)
+
+    plt.tight_layout()
+    for ext in ("png", "svg"):
+        fig.savefig(f"{out_base}-latency.{ext}", dpi=150, bbox_inches="tight")
+    plt.close(fig)
+    print(f"  Latency: {out_base}-latency.png")
+
+
+# ── Text Summary ──────────────────────────────────────────────────────────────
+
+def print_summary(rows):
+    process_counts = sorted(set(int(r["processes"]) for r in rows))
+    capacities = sorted(set(int(r["capacity"]) for r in rows))
+    lookup = build_lookup(rows)
+
+    print()
+    print("Async vs Thread — per-cell advantage (positive = async wins):")
+    print(f"{'cap':>5}  {'proc':>4}  {'throughput':>11}  {'peak RSS':>11}  {'avg CPU':>9}  {'lat p50':>9}")
+    print("-" * 60)
+
+    for procs in process_counts:
+        for cap in capacities:
+            t = lookup.get(("thread", procs, cap))
+            a = lookup.get(("async", procs, cap))
+            if not (t and a):
+                continue
+
+            def delta(metric, invert=False):
+                tv = float(t.get(metric, 0) or 0)
+                av = float(a.get(metric, 0) or 0)
+                if tv == 0:
+                    return "    n/a"
+                pct = (av - tv) / tv * 100
+                if invert:
+                    pct = -pct
+                return f"{'+'if pct >= 0 else ''}{pct:.1f}%"
+
+            print(
+                f"{cap:>5}  {procs:>4}  "
+                f"{delta('jobs_per_second'):>11}  "
+                f"{delta('peak_rss_kb', True):>11}  "
+                f"{delta('avg_cpu_pct', True):>9}  "
+                f"{delta('total_latency_p50_ms', True):>9}"
+            )
+
+    print()
+    print("(Positive % = async is better: higher throughput, lower memory/CPU/latency)")
+
+
+# ── Main ──────────────────────────────────────────────────────────────────────
+
+def main():
+    parser = argparse.ArgumentParser(description="Plot matrix sweep results")
+    parser.add_argument("csv_file", help="Path to matrix CSV file")
+    parser.add_argument("--output-dir", default=None, help="Output directory (default: same as CSV)")
+    args = parser.parse_args()
+
+    if not os.path.exists(args.csv_file):
+        print(f"Error: {args.csv_file} not found", file=sys.stderr)
+        sys.exit(1)
+
+    output_dir = args.output_dir or os.path.dirname(args.csv_file) or "."
+    os.makedirs(output_dir, exist_ok=True)
+    base = os.path.splitext(os.path.basename(args.csv_file))[0]
+    out_base = os.path.join(output_dir, base)
+
+    rows = read_csv_data(args.csv_file)
+    if not rows:
+        print("Error: no data in CSV", file=sys.stderr)
+        sys.exit(1)
+
+    modes = set(r["mode"] for r in rows)
+    print(f"Loaded {len(rows)} rows, modes: {', '.join(sorted(modes))}")
+    print()
+
+    plot_comparison_grid(rows, out_base)
+
+    if "thread" in modes and "async" in modes:
+        plot_async_advantage(rows, out_base)
+        plot_latency_breakdown(rows, out_base)
+        print_summary(rows)
+
+    print("\nDone.")
+
+
+if __name__ == "__main__":
+    main()

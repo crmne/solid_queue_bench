@@ -1,0 +1,9 @@
+/log/*
+!/log/.keep
+/tmp/*
+!/tmp/.keep
+/.bundle/
+/vendor/bundle/
+/db/*.sqlite3
+/db/*.sqlite3-*
+/config/master.key
