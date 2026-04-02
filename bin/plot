@@ -120,7 +120,6 @@ def plot_comparison_grid(rows, out_base):
             ax.grid(True, alpha=0.25, linewidth=0.5)
             ax.tick_params(labelsize=8)
             ax.set_xlim(left=0)
-            ax.set_ylim(bottom=0)
 
     handles, labels = axes[0][0].get_legend_handles_labels()
     if handles:
