@@ -60,16 +60,23 @@ namespace :sweep do
 
       base = workload.tr("_", "-")
       FileUtils.cp(csv, "results/#{base}-data.csv")
-      FileUtils.cp(csv.sub(".csv", ".json"), "results/#{base}-data.json")
+
+      json = csv.sub(".csv", ".json")
+      FileUtils.cp(json, "results/#{base}-data.json") if File.exist?(json)
 
       puts "\nGenerating charts for #{workload}..."
-      system("python3", "bin/plot", csv, "--output-dir", "tmp/benchmarks")
+      system("python3", "bin/plot", "results/#{base}-data.csv", "--output-dir", "results")
 
+      # bin/plot outputs {base}-data-{chart}.png, rename to {base}-{chart}.png
       %w[grid delta latency].each do |chart|
-        src_name = chart == "delta" ? "advantage" : chart
-        src = csv.sub(".csv", "-#{chart}.png")
-        FileUtils.cp(src, "results/#{base}-#{src_name}.png") if File.exist?(src)
+        src = "results/#{base}-data-#{chart}.png"
+        dest_name = chart == "delta" ? "advantage" : chart
+        dest = "results/#{base}-#{dest_name}.png"
+        FileUtils.mv(src, dest) if File.exist?(src)
       end
+
+      # Clean up SVGs
+      Dir.glob("results/#{base}-data-*.svg").each { |f| File.delete(f) }
     end
 
     puts "\n#{"=" * 60}"
