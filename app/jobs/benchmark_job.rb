@@ -8,7 +8,7 @@ class BenchmarkJob < ApplicationJob
 
     Bench::Workloads.call(
       execution.workload,
-      execution.payload.deep_symbolize_keys
+      execution.payload.deep_symbolize_keys.merge(benchmark_execution_id: execution.id)
     )
 
     execution.update_columns(

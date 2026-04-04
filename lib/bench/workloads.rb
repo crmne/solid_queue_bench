@@ -1,4 +1,5 @@
 require "digest"
+require "erb"
 require "json"
 require "net/http"
 require "uri"
@@ -30,6 +31,8 @@ module Bench
         sleep(duration_s)
       when "llm_stream"
         llm_stream_request(payload)
+      when "ruby_llm_stream"
+        ruby_llm_stream_request(payload)
       else
         raise ArgumentError, "Unknown workload: #{name}"
       end
@@ -50,12 +53,45 @@ module Bench
     def llm_stream_request(payload)
       token_count = payload.fetch(:token_count)
       token_delay_ms = payload.fetch(:token_delay_ms)
+      benchmark_execution_id = payload.fetch(:benchmark_execution_id)
       benchmark_run_id = payload.fetch(:benchmark_run_id)
 
       token_count.times do
         sleep(token_delay_ms / 1000.0)
-        BroadcastJob.perform_later(benchmark_run_id)
+        Bench::Broadcasts.enqueue!(
+          benchmark_execution_id,
+          benchmark_run_id: benchmark_run_id
+        )
       end
+    end
+
+    def ruby_llm_stream_request(payload)
+      port = payload.fetch(:port)
+      benchmark_execution_id = payload.fetch(:benchmark_execution_id)
+      model_id = payload.fetch(:model_id)
+      prompt = payload.fetch(:prompt)
+
+      with_fake_openai_config(port) do
+        chat = Chat.create!(
+          model: Model.find_by!(provider: "openai", model_id: model_id),
+          benchmark_execution_id: benchmark_execution_id
+        )
+
+        ChatResponseJob.perform_now(chat.id, prompt)
+      end
+    end
+
+    def with_fake_openai_config(port)
+      previous_api_base = RubyLLM.config.openai_api_base
+      previous_api_key = RubyLLM.config.openai_api_key
+
+      RubyLLM.config.openai_api_base = "http://127.0.0.1:#{port}/v1"
+      RubyLLM.config.openai_api_key = "benchmark-openai-key"
+
+      yield
+    ensure
+      RubyLLM.config.openai_api_base = previous_api_base
+      RubyLLM.config.openai_api_key = previous_api_key
     end
   end
 end

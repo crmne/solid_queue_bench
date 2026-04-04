@@ -25,6 +25,21 @@ MODE_STYLE = {
     "async":  {"color": "#ef4444", "marker": "s", "label": "Async"},
 }
 
+BACKEND_LABEL = {
+    "solid_queue": "Solid Queue",
+    "async_job": "Async::Job",
+}
+
+WORKLOAD_LABEL = {
+    "sleep": "Sleep",
+    "cpu": "CPU",
+    "http": "Net::HTTP",
+    "async_http": "Async::HTTP",
+    "llm_batch": "LLM Batch",
+    "llm_stream": "LLM Stream",
+    "ruby_llm_stream": "RubyLLM Stream",
+}
+
 GRID_METRICS = [
     ("jobs_per_second",       "Throughput (jobs/s)", 1),
     ("peak_rss_kb",           "Peak RSS (MB)",       1 / 1024),
@@ -51,7 +66,7 @@ def read_csv_data(path):
                 if key == "mode":
                     parsed[key] = val
                 elif val in ("", None):
-                    parsed[key] = 0.0
+                    parsed[key] = None
                 else:
                     try:
                         parsed[key] = float(val)
@@ -66,6 +81,36 @@ def build_lookup(rows):
     for r in rows:
         lookup[(r["mode"], int(r["processes"]), int(r["capacity"]))] = r
     return lookup
+
+
+def scaled_metric(row, metric, scale=1):
+    value = row.get(metric)
+    if value is None:
+        return np.nan
+    return float(value) * scale
+
+
+def backend_title(rows):
+    backends = sorted({r.get("backend") for r in rows if r.get("backend")})
+    if len(backends) == 1:
+        return BACKEND_LABEL.get(backends[0], backends[0])
+    return "Benchmark"
+
+
+def infer_workload_label(path):
+    base = os.path.basename(path).replace(".csv", "")
+    for slug in sorted(WORKLOAD_LABEL.keys(), key=len, reverse=True):
+        if slug in base or slug.replace("_", "-") in base:
+            return WORKLOAD_LABEL[slug]
+    return None
+
+
+def chart_title(rows, out_base):
+    parts = [backend_title(rows)]
+    workload = infer_workload_label(out_base)
+    if workload:
+        parts.append(workload)
+    return " — ".join(parts)
 
 
 # ── Figure 1: Comparison Grid ─────────────────────────────────────────────────
@@ -87,10 +132,10 @@ def plot_comparison_grid(rows, out_base):
         figsize=(4.5 * n_cols + 0.8, 3.2 * n_rows + 1.2),
         squeeze=False,
     )
-    fig.suptitle(
-        "Solid Queue — Thread vs Async",
-        fontsize=14, fontweight="bold", y=0.98,
-    )
+    title = chart_title(rows, out_base)
+    if set(modes) == {"thread", "async"}:
+        title = f"{title} — Thread vs Async"
+    fig.suptitle(title, fontsize=14, fontweight="bold", y=0.98)
 
     for col, procs in enumerate(process_counts):
         axes[0][col].set_title(
@@ -104,7 +149,7 @@ def plot_comparison_grid(rows, out_base):
                 if not data:
                     continue
                 x = [r["capacity"] for r in data]
-                y = [float(r.get(metric, 0) or 0) * scale for r in data]
+                y = [scaled_metric(r, metric, scale) for r in data]
                 s = MODE_STYLE.get(mode, {})
                 ax.plot(
                     x, y,
@@ -146,7 +191,7 @@ def plot_async_advantage(rows, out_base):
     n = len(DELTA_METRICS)
     fig, axes = plt.subplots(1, n, figsize=(4 * n, 4.2), squeeze=False)
     fig.suptitle(
-        "Async Advantage Over Thread (%)",
+        f"{chart_title(rows, out_base)} — Async Advantage Over Thread (%)",
         fontsize=13, fontweight="bold", y=1.02,
     )
 
@@ -161,11 +206,14 @@ def plot_async_advantage(rows, out_base):
                 t = lookup.get(("thread", procs, cap))
                 a = lookup.get(("async", procs, cap))
                 if t and a:
-                    tv = float(t.get(metric, 0) or 0)
-                    av = float(a.get(metric, 0) or 0)
-                    pct = sign * (av - tv) / tv * 100 if tv else 0
+                    tv = t.get(metric)
+                    av = a.get(metric)
+                    if tv in (None, 0) or av is None:
+                        pct = np.nan
+                    else:
+                        pct = sign * (float(av) - float(tv)) / float(tv) * 100
                 else:
-                    pct = 0
+                    pct = np.nan
                 deltas.append(pct)
             x = np.arange(len(capacities)) + pi * bar_w
             ax.bar(
@@ -217,7 +265,7 @@ def plot_latency_breakdown(rows, out_base):
         squeeze=False,
     )
     fig.suptitle(
-        "Total Latency Percentiles (ms)",
+        f"{chart_title(rows, out_base)} — Total Latency Percentiles (ms)",
         fontsize=13, fontweight="bold",
     )
 
@@ -234,7 +282,7 @@ def plot_latency_breakdown(rows, out_base):
             s = MODE_STYLE.get(mode, {})
             x = [r["capacity"] for r in data]
             for metric, pct_label in LATENCY_PCTS:
-                y = [float(r.get(metric, 0) or 0) for r in data]
+                y = [scaled_metric(r, metric) for r in data]
                 ax.plot(
                     x, y,
                     color=s.get("color", "#888"),
@@ -279,11 +327,11 @@ def print_summary(rows):
                 continue
 
             def delta(metric, invert=False):
-                tv = float(t.get(metric, 0) or 0)
-                av = float(a.get(metric, 0) or 0)
-                if tv == 0:
+                tv = t.get(metric)
+                av = a.get(metric)
+                if tv in (None, 0) or av is None:
                     return "    n/a"
-                pct = (av - tv) / tv * 100
+                pct = (float(av) - float(tv)) / float(tv) * 100
                 if invert:
                     pct = -pct
                 return f"{'+'if pct >= 0 else ''}{pct:.1f}%"

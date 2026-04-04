@@ -1,0 +1,23 @@
+#!/usr/bin/env ruby
+
+require_relative "../config/environment"
+require "async"
+require "fileutils"
+
+%w[INT TERM].each do |signal|
+  trap(signal) { exit }
+end
+
+Sync do
+  dispatcher = Async::Job::Adapter::ActiveJob::Railtie.dispatcher
+  queue_names = ENV.fetch("ASYNC_JOB_ADAPTER_ACTIVE_JOB_QUEUE_NAMES", "default").split(",")
+
+  queue_names.each { |queue_name| dispatcher.start(queue_name) }
+
+  if (ready_file = ENV["BENCH_ASYNC_JOB_READY_FILE"]).present?
+    FileUtils.mkdir_p(File.dirname(ready_file))
+    File.write(ready_file, "#{Process.pid}\n")
+  end
+
+  sleep
+end

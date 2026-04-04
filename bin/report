@@ -1,0 +1,217 @@
+#!/usr/bin/env ruby
+
+require "json"
+require "pathname"
+require "time"
+
+RESULTS_ROOT = File.expand_path(ARGV.fetch(0, File.expand_path("../results", __dir__)))
+
+BACKEND_LABELS = {
+  "solid-queue" => "Solid Queue",
+  "async-job" => "Async::Job"
+}.freeze
+
+WORKLOAD_LABELS = {
+  "sleep" => "Sleep",
+  "cpu" => "CPU",
+  "http" => "Net::HTTP",
+  "async_http" => "Async::HTTP",
+  "llm_batch" => "LLM Batch",
+  "llm_stream" => "LLM Stream",
+  "ruby_llm_stream" => "RubyLLM Stream"
+}.freeze
+
+HEADLINE_WORKLOADS = %w[sleep cpu async_http ruby_llm_stream].freeze
+
+def workload_label(workload)
+  WORKLOAD_LABELS.fetch(workload, workload.tr("_", " ").split.map(&:capitalize).join(" "))
+end
+
+def backend_label(slug)
+  BACKEND_LABELS.fetch(slug, slug)
+end
+
+def read_dataset(json_path)
+  data = JSON.parse(File.read(json_path))
+  return unless data["results"].is_a?(Array)
+
+  {
+    json_path: json_path,
+    csv_path: json_path.sub(/\.json\z/, ".csv"),
+    workload: data["workload"] || File.basename(json_path).sub("-data.json", "").tr("-", "_"),
+    payload: data["payload"] || {},
+    repeat: data["repeat"],
+    generated_at: data["generated_at"],
+    results: data["results"]
+  }
+end
+
+def datasets_for(backend_dir)
+  Dir.glob(File.join(backend_dir, "*-data.json")).sort.filter_map { |path| read_dataset(path) }
+end
+
+def successful_rows(dataset)
+  dataset[:results].select { |row| row["successful_jobs"].to_i.positive? }
+end
+
+def best_row(rows, metric, direction: :max)
+  return unless rows.any?
+
+  rows.public_send(direction == :max ? :max_by : :min_by) do |row|
+    value = row[metric]
+    direction == :max ? (value || -Float::INFINITY) : (value || Float::INFINITY)
+  end
+end
+
+def paired_advantage(rows, metric, invert: false)
+  pairs = rows.group_by { |row| [ row["capacity"], row["processes"] ] }.filter_map do |(capacity, processes), grouped|
+    thread = grouped.find { |row| row["mode"] == "thread" }
+    async = grouped.find { |row| row["mode"] == "async" }
+    next unless thread && async
+
+    thread_value = thread[metric]
+    async_value = async[metric]
+    next unless thread_value.is_a?(Numeric) && async_value.is_a?(Numeric) && thread_value.nonzero?
+
+    delta = if invert
+      ((thread_value - async_value) / thread_value) * 100.0
+    else
+      ((async_value - thread_value) / thread_value) * 100.0
+    end
+
+    {
+      delta: delta,
+      capacity: capacity,
+      processes: processes,
+      thread: thread,
+      async: async
+    }
+  end
+
+  pairs.max_by { |pair| pair[:delta] }
+end
+
+def fmt_number(value, digits = 2)
+  return "n/a" unless value.is_a?(Numeric)
+
+  format("%.#{digits}f", value)
+end
+
+def fmt_percent(value)
+  return "n/a" unless value.is_a?(Numeric)
+
+  format("%+.1f%%", value)
+end
+
+def fmt_cell(row, metric:, unit: nil, scale: 1.0)
+  return "n/a" unless row
+
+  value = row[metric]
+  scaled = value.is_a?(Numeric) ? value * scale : value
+  rendered = fmt_number(scaled)
+  rendered = "#{rendered}#{unit}" if unit
+  [ row["mode"], "cap=#{row["capacity"]}", "proc=#{row["processes"]}", rendered ].join(", ")
+end
+
+def dataset_summary(dataset)
+  rows = successful_rows(dataset)
+
+  {
+    best_throughput: best_row(rows, "jobs_per_second", direction: :max),
+    best_latency: rows.min_by { |row| row.dig("total_latency_ms", "p50") || Float::INFINITY },
+    best_rss: best_row(rows, "peak_rss_kb", direction: :min),
+    throughput_advantage: paired_advantage(rows, "jobs_per_second"),
+    latency_advantage: paired_advantage(rows, "total_latency_p50_ms", invert: true),
+    rss_advantage: paired_advantage(rows, "peak_rss_kb", invert: true)
+  }
+end
+
+def relative_link(from_dir, target_path, label)
+  relative = Pathname.new(target_path).relative_path_from(Pathname.new(from_dir)).to_s
+  "[#{label}](#{relative})"
+end
+
+def write_family_readme(backend_dir, backend_slug, datasets)
+  path = File.join(backend_dir, "README.md")
+  lines = []
+  lines << "# #{backend_label(backend_slug)} Results"
+  lines << ""
+  lines << "Generated summary for the benchmark artifacts in this directory."
+  lines << ""
+
+  if datasets.empty?
+    lines << "No result datasets found."
+    File.write(path, lines.join("\n") + "\n")
+    return
+  end
+
+  latest_generated_at = datasets.filter_map { |dataset| dataset[:generated_at] }.max
+  lines << "Latest dataset timestamp: `#{latest_generated_at}`" if latest_generated_at
+  lines << ""
+  lines << "| Workload | Best Throughput | Lowest RSS | Lowest p50 Latency | Best Async Delta | Files |"
+  lines << "|---|---|---|---|---|---|"
+
+  datasets.sort_by { |dataset| [ HEADLINE_WORKLOADS.include?(dataset[:workload]) ? 0 : 1, dataset[:workload] ] }.each do |dataset|
+    summary = dataset_summary(dataset)
+    delta = summary[:throughput_advantage] ? "#{fmt_percent(summary[:throughput_advantage][:delta])} at cap=#{summary[:throughput_advantage][:capacity]}, proc=#{summary[:throughput_advantage][:processes]}" : "n/a"
+    files = [
+      relative_link(backend_dir, dataset[:csv_path], "CSV"),
+      relative_link(backend_dir, dataset[:json_path], "JSON")
+    ]
+
+    workload_slug = dataset[:workload].tr("_", "-")
+    %w[grid advantage latency].each do |suffix|
+      asset = File.join(backend_dir, "#{workload_slug}-#{suffix}.png")
+      files << relative_link(backend_dir, asset, suffix.capitalize) if File.exist?(asset)
+    end
+
+    lines << "| #{workload_label(dataset[:workload])} | #{fmt_cell(summary[:best_throughput], metric: "jobs_per_second", unit: " jobs/s")} | #{fmt_cell(summary[:best_rss], metric: "peak_rss_kb", unit: " MB", scale: 1.0 / 1024.0)} | #{summary[:best_latency] ? fmt_cell(summary[:best_latency].merge("total_latency_p50_ms" => summary[:best_latency].dig("total_latency_ms", "p50")), metric: "total_latency_p50_ms", unit: " ms") : "n/a"} | #{delta} | #{files.join(' / ')} |"
+  end
+
+  lines << ""
+  lines << "## Notes"
+  lines << ""
+  lines << "- `Best Async Delta` is the strongest paired `async` vs `thread` throughput improvement within the same `(capacity, processes)` cell."
+  lines << "- Async::Job datasets are single-mode, so paired async/thread deltas are `n/a` there."
+  lines << "- Headline workloads are `sleep`, `cpu`, `async_http`, and `ruby_llm_stream`."
+
+  File.write(path, lines.join("\n") + "\n")
+end
+
+def write_root_readme(results_root, family_dirs)
+  path = File.join(results_root, "README.md")
+  lines = []
+  lines << "# Benchmark Results"
+  lines << ""
+  lines << "Current benchmark outputs live in the per-family directories below."
+  lines << ""
+  lines << "| Family | Summary | Workloads |"
+  lines << "|---|---|---|"
+
+  family_dirs.sort.each do |backend_dir|
+    backend_slug = File.basename(backend_dir)
+    datasets = datasets_for(backend_dir)
+    workload_links = datasets.sort_by { |dataset| dataset[:workload] }.map do |dataset|
+      relative_link(results_root, dataset[:json_path], workload_label(dataset[:workload]))
+    end
+
+    lines << "| #{backend_label(backend_slug)} | #{relative_link(results_root, File.join(backend_dir, 'README.md'), 'README')} | #{workload_links.join(', ')} |"
+  end
+
+  lines << ""
+  lines << "## Headline Workloads"
+  lines << ""
+  lines << HEADLINE_WORKLOADS.map { |workload| "- `#{workload}`: #{workload_label(workload)}" }
+  lines << ""
+  lines << "Top-level legacy files outside these family directories may be older artifacts or smoke outputs."
+
+  File.write(path, Array(lines).flatten.join("\n") + "\n")
+end
+
+family_dirs = Dir.glob(File.join(RESULTS_ROOT, "*")).select { |path| File.directory?(path) && BACKEND_LABELS.key?(File.basename(path)) }
+
+family_dirs.each do |backend_dir|
+  write_family_readme(backend_dir, File.basename(backend_dir), datasets_for(backend_dir))
+end
+
+write_root_readme(RESULTS_ROOT, family_dirs)

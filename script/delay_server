@@ -6,10 +6,119 @@ require "uri"
 
 port = Integer(ARGV.fetch(0))
 server = TCPServer.new("127.0.0.1", port)
+fake_llm_token_count = Integer(ENV.fetch("BENCH_FAKE_LLM_TOKEN_COUNT", "80"))
+fake_llm_token_delay_ms = Integer(ENV.fetch("BENCH_FAKE_LLM_TOKEN_DELAY_MS", "20"))
 
 trap("TERM") do
-  server.close
   exit
+end
+
+def read_headers(socket)
+  headers = {}
+
+  while (line = socket.gets)
+    break if line == "\r\n"
+
+    key, value = line.split(":", 2)
+    headers[key.downcase] = value.to_s.strip if key
+  end
+
+  headers
+end
+
+def read_body(socket, headers)
+  length = headers.fetch("content-length", "0").to_i
+  return "" if length.zero?
+
+  socket.read(length)
+end
+
+def write_json(socket, body)
+  json = JSON.generate(body)
+  socket.write(
+    "HTTP/1.1 200 OK\r\n" \
+    "Content-Type: application/json\r\n" \
+    "Content-Length: #{json.bytesize}\r\n" \
+    "Connection: close\r\n\r\n" \
+    "#{json}"
+  )
+end
+
+def stream_openai_response(socket, model:, token_count:, token_delay_ms:)
+  socket.write(
+    "HTTP/1.1 200 OK\r\n" \
+    "Content-Type: text/event-stream\r\n" \
+    "Cache-Control: no-cache\r\n" \
+    "Connection: close\r\n\r\n"
+  )
+
+  token_count.times do |index|
+    payload = {
+      id: "chatcmpl-bench",
+      object: "chat.completion.chunk",
+      created: Time.now.to_i,
+      model: model,
+      choices: [
+        {
+          index: 0,
+          delta: { content: "t#{index} " },
+          finish_reason: nil
+        }
+      ]
+    }
+
+    socket.write("data: #{JSON.generate(payload)}\n\n")
+    socket.flush
+    sleep(token_delay_ms / 1000.0)
+  end
+
+  final_payload = {
+    id: "chatcmpl-bench",
+    object: "chat.completion.chunk",
+    created: Time.now.to_i,
+    model: model,
+    choices: [
+      {
+        index: 0,
+        delta: {},
+        finish_reason: "stop"
+      }
+    ],
+    usage: {
+      prompt_tokens: 12,
+      completion_tokens: token_count,
+      total_tokens: 12 + token_count,
+      prompt_tokens_details: { cached_tokens: 0 }
+    }
+  }
+
+  socket.write("data: #{JSON.generate(final_payload)}\n\n")
+  socket.write("data: [DONE]\n\n")
+  socket.flush
+end
+
+def write_openai_response(socket, model:, token_count:)
+  content = token_count.times.map { |index| "t#{index}" }.join(" ")
+
+  write_json(
+    socket,
+    id: "chatcmpl-bench",
+    object: "chat.completion",
+    created: Time.now.to_i,
+    model: model,
+    choices: [
+      {
+        index: 0,
+        message: { role: "assistant", content: content },
+        finish_reason: "stop"
+      }
+    ],
+    usage: {
+      prompt_tokens: 12,
+      completion_tokens: token_count,
+      total_tokens: 12 + token_count
+    }
+  )
 end
 
 begin
@@ -20,24 +129,37 @@ begin
       request_line = socket.gets
       next unless request_line
 
-      path = request_line.split[1]
-      params = URI.decode_www_form(URI(path).query.to_s).to_h
-      duration_ms = Integer(params.fetch("ms", "50"))
+      method, path = request_line.split.values_at(0, 1)
+      headers = read_headers(socket)
+      uri = URI(path)
 
-      while (line = socket.gets)
-        break if line == "\r\n"
+      case [ method, uri.path ]
+      when [ "GET", "/delay" ]
+        params = URI.decode_www_form(uri.query.to_s).to_h
+        duration_ms = Integer(params.fetch("ms", "50"))
+        sleep(duration_ms / 1000.0)
+        write_json(socket, ok: true, duration_ms: duration_ms)
+      when [ "POST", "/v1/chat/completions" ]
+        request_body = JSON.parse(read_body(socket, headers))
+        model = request_body.fetch("model", "gpt-4.1-mini")
+
+        if request_body["stream"]
+          stream_openai_response(
+            socket,
+            model: model,
+            token_count: fake_llm_token_count,
+            token_delay_ms: fake_llm_token_delay_ms
+          )
+        else
+          write_openai_response(socket, model: model, token_count: fake_llm_token_count)
+        end
+      else
+        socket.write(
+          "HTTP/1.1 404 Not Found\r\n" \
+          "Content-Length: 0\r\n" \
+          "Connection: close\r\n\r\n"
+        )
       end
-
-      sleep(duration_ms / 1000.0)
-
-      body = { ok: true, duration_ms: duration_ms }.to_json
-      socket.write(
-        "HTTP/1.1 200 OK\r\n" \
-        "Content-Type: application/json\r\n" \
-        "Content-Length: #{body.bytesize}\r\n" \
-        "Connection: close\r\n\r\n" \
-        "#{body}"
-      )
     ensure
       socket.close rescue nil
     end

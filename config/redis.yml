@@ -1,0 +1,20 @@
+development:
+  host: <%= ENV.fetch("REDIS_HOST", "127.0.0.1") %>
+  port: <%= ENV.fetch("REDIS_PORT", "6379") %>
+  db: <%= ENV.fetch("REDIS_DB", "15") %>
+  password: <%= ENV["REDIS_PASSWORD"] %>
+  prefix: <%= ENV.fetch("REDIS_PREFIX", "solid_queue_bench:development") %>
+
+test:
+  host: <%= ENV.fetch("REDIS_HOST", "127.0.0.1") %>
+  port: <%= ENV.fetch("REDIS_PORT", "6379") %>
+  db: <%= ENV.fetch("REDIS_DB", "14") %>
+  password: <%= ENV["REDIS_PASSWORD"] %>
+  prefix: <%= ENV.fetch("REDIS_PREFIX", "solid_queue_bench:test") %>
+
+production:
+  host: <%= ENV.fetch("REDIS_HOST", "127.0.0.1") %>
+  port: <%= ENV.fetch("REDIS_PORT", "6379") %>
+  db: <%= ENV.fetch("REDIS_DB", "15") %>
+  password: <%= ENV["REDIS_PASSWORD"] %>
+  prefix: <%= ENV.fetch("REDIS_PREFIX", "solid_queue_bench:production") %>
