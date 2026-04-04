@@ -25,6 +25,11 @@ module Bench
         JSON.parse(response.body)
       when "async_http"
         async_http_request(payload)
+      when "llm_batch"
+        duration_s = payload.fetch(:duration_s)
+        sleep(duration_s)
+      when "llm_stream"
+        llm_stream_request(payload)
       else
         raise ArgumentError, "Unknown workload: #{name}"
       end
@@ -40,6 +45,17 @@ module Bench
       JSON.parse(response.read)
     ensure
       internet&.close
+    end
+
+    def llm_stream_request(payload)
+      token_count = payload.fetch(:token_count)
+      token_delay_ms = payload.fetch(:token_delay_ms)
+      benchmark_run_id = payload.fetch(:benchmark_run_id)
+
+      token_count.times do
+        sleep(token_delay_ms / 1000.0)
+        BroadcastJob.perform_later(benchmark_run_id)
+      end
     end
   end
 end

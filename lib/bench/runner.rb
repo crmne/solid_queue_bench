@@ -80,7 +80,7 @@ module Bench
           execution = run.benchmark_executions.create!(
             job_index: job_index,
             workload: options.fetch(:workload),
-            payload: payload_for_execution,
+            payload: payload_for_execution(run),
             enqueued_at: Time.current
           )
 
@@ -89,9 +89,10 @@ module Bench
         end
       end
 
-      def payload_for_execution
+      def payload_for_execution(run = nil)
         payload = options.fetch(:payload).dup
         payload[:port] = options[:http_port] if %w[http async_http].include?(options[:workload])
+        payload[:benchmark_run_id] = run.id if options[:workload] == "llm_stream" && run
         payload
       end
 

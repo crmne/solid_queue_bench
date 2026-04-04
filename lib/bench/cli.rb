@@ -55,6 +55,13 @@ module Bench
           options[:payload] = { duration_ms: options[:payload][:duration_ms] || 50 }
         when "cpu"
           options[:payload] = { iterations: options[:payload][:iterations] || 25_000 }
+        when "llm_batch"
+          options[:payload] = { duration_s: options[:payload][:duration_s] || 5 }
+        when "llm_stream"
+          options[:payload] = {
+            token_count: options[:payload][:token_count] || 100,
+            token_delay_ms: options[:payload][:token_delay_ms] || 30
+          }
         else
           raise ArgumentError, "Unsupported workload: #{options[:workload]}"
         end
