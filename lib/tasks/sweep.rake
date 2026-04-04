@@ -2,7 +2,6 @@ namespace :sweep do
   CAPACITIES = "10,25,50,75,100,150,200"
   PROCESSES  = "1,2,4"
   REPEAT     = ENV.fetch("REPEAT", "3")
-  TIMEOUT    = ENV.fetch("TIMEOUT", "90")
   OUTPUT_DIR = "results"
 
   WORKLOADS = %w[sleep cpu llm_batch llm_stream http async_http]
@@ -15,32 +14,32 @@ namespace :sweep do
 
   desc "Sleep workload (2,000 jobs/cell)"
   task sleep: :environment do
-    run_matrix(workload: "sleep", jobs: 2000, extra: "--duration-ms 50")
+    run_matrix(workload: "sleep", jobs: 2000, timeout: 120, extra: "--duration-ms 50")
   end
 
   desc "CPU control workload (500 jobs/cell)"
   task cpu: :environment do
-    run_matrix(workload: "cpu", jobs: 500, extra: "--iterations 50000")
+    run_matrix(workload: "cpu", jobs: 500, timeout: 90, extra: "--iterations 50000")
   end
 
-  desc "LLM batch workload -- 5s sleep (500 jobs/cell)"
+  desc "LLM batch workload -- 5s sleep (100 jobs/cell)"
   task llm_batch: :environment do
-    run_matrix(workload: "llm_batch", jobs: 500, extra: "")
+    run_matrix(workload: "llm_batch", jobs: 100, timeout: 600, extra: "")
   end
 
-  desc "LLM streaming workload -- parent + child broadcast jobs (200 jobs/cell)"
+  desc "LLM streaming workload -- parent + child broadcast jobs (50 jobs/cell)"
   task llm_stream: :environment do
-    run_matrix(workload: "llm_stream", jobs: 200, extra: "")
+    run_matrix(workload: "llm_stream", jobs: 50, timeout: 300, extra: "")
   end
 
   desc "Net::HTTP workload (2,000 jobs/cell)"
   task http: :environment do
-    run_matrix(workload: "http", jobs: 2000, extra: "--duration-ms 50")
+    run_matrix(workload: "http", jobs: 2000, timeout: 120, extra: "--duration-ms 50")
   end
 
   desc "Async::HTTP workload (2,000 jobs/cell)"
   task async_http: :environment do
-    run_matrix(workload: "async_http", jobs: 2000, extra: "--duration-ms 50")
+    run_matrix(workload: "async_http", jobs: 2000, timeout: 120, extra: "--duration-ms 50")
   end
 
   desc "Copy latest results to results/ and regenerate charts"
@@ -75,7 +74,7 @@ namespace :sweep do
     system("ls", "-lh", "results/")
   end
 
-  def run_matrix(workload:, jobs:, extra:)
+  def run_matrix(workload:, jobs:, timeout:, extra:)
     cmd = [
       "bin/matrix",
       "--workload", workload,
@@ -83,7 +82,7 @@ namespace :sweep do
       "--capacities", CAPACITIES,
       "--processes", PROCESSES,
       "--repeat", REPEAT,
-      "--timeout-s", TIMEOUT,
+      "--timeout-s", timeout.to_s,
       "--output-dir", "tmp/benchmarks",
       "--name", "sweep",
       *extra.split.reject(&:empty?)
