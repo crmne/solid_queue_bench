@@ -1,6 +1,5 @@
 #!/usr/bin/env ruby
 
-require "cgi"
 require "json"
 require "socket"
 require "uri"
@@ -22,8 +21,8 @@ begin
       next unless request_line
 
       path = request_line.split[1]
-      query = URI(path).query.to_s
-      duration_ms = CGI.parse(query).fetch("ms", [ "50" ]).first.to_i
+      params = URI.decode_www_form(URI(path).query.to_s).to_h
+      duration_ms = Integer(params.fetch("ms", "50"))
 
       while (line = socket.gets)
         break if line == "\r\n"

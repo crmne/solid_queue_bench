@@ -83,25 +83,28 @@ completed with 0 failures. This is the primary benchmark.
 ![Comparison grid -- Sleep](results/sleep-grid.png)
 
 Each column is a process count (1, 2, 4). Each row is a metric. Blue = thread,
-red = async. At 1 and 2 processes, async matches or exceeds thread throughput
-while consuming 10-28% less memory. At 4 processes, throughput converges (both
-modes saturate the scheduler) but async still uses consistently less RSS. Thread
-mode's memory footprint grows with capacity due to per-thread stack allocations;
-async stays nearly flat because fibers share a single stack.
+red = async. Throughput is nearly identical between the two modes across all
+configurations (~27-30 j/s). The dominant finding is memory: async uses 6-26%
+less peak RSS across all cells, with the gap widening at higher capacities where
+thread mode allocates more per-thread stacks. At 4 processes, both modes
+saturate the scheduler at the same throughput, but async still uses consistently
+less RSS. Thread mode's memory footprint grows with capacity due to per-thread
+stack allocations; async stays nearly flat because fibers share a single stack.
 
 ![Async advantage -- Sleep](results/sleep-advantage.png)
 
 Bars show the percentage improvement of async over thread for each
-(capacity, processes) pair. Negative values on RSS and CPU mean async uses
-fewer resources. Throughput advantage is strongest at low process counts
-(up to +12% at 1 process). All 42 cells completed -- no thread failures in this
-workload.
+(capacity, processes) pair. Negative values on RSS mean async uses fewer
+resources. The throughput difference is small on this machine (within +/-3% at
+2-4 processes). RSS advantage is the dominant and most consistent signal,
+ranging from -6% to -26% across all 42 cells. CPU usage is comparable between
+the two modes.
 
 ![Latency percentiles -- Sleep](results/sleep-latency.png)
 
 Latency distributions (p50/p95/p99/max) for queue delay, service time, and total
-latency. Async shows tighter p50 total latency at 1 and 2 processes. Tail
-latencies (p95/p99) are comparable, with async generally lower at 1 process.
+latency. P50 total latency is ~92 ms for both modes across all configurations
+(50 ms sleep + ~42 ms queue delay). Tail latencies (p95/p99) are comparable.
 
 <details>
 <summary>Per-cell advantage data (sleep)</summary>
@@ -110,27 +113,27 @@ Advantage = (async - thread) / thread * 100. Negative RSS/CPU/latency values mea
 
 | Cap | Procs | Thread j/s | Async j/s | Tput % | Thread RSS MB | Async RSS MB | RSS % | Thread CPU % | Async CPU % | CPU % | Thread p50 ms | Async p50 ms | Lat p50 % |
 |-----|-------|-----------|----------|--------|--------------|-------------|-------|-------------|------------|-------|--------------|-------------|-----------|
-| 10 | 1 | 46.0 | 49.8 | +8.3 | 119 | 107 | -10.5 | 65.9 | 57.0 | -13.5 | 86 | 81 | -5.8 |
-| 25 | 1 | 44.9 | 49.6 | +10.3 | 115 | 112 | -2.4 | 67.6 | 56.4 | -16.6 | 87 | 81 | -6.6 |
-| 50 | 1 | 47.4 | 51.1 | +7.7 | 153 | 115 | -25.0 | 65.1 | 53.3 | -18.1 | 85 | 80 | -5.9 |
-| 75 | 1 | 44.2 | 49.6 | +12.4 | 148 | 107 | -27.7 | 66.5 | 56.9 | -14.4 | 87 | 81 | -6.4 |
-| 100 | 1 | 48.0 | 43.1 | -10.3 | 142 | 106 | -25.5 | 66.5 | 56.6 | -14.9 | 85 | 85 | -0.7 |
-| 150 | 1 | 47.8 | 48.8 | +2.0 | 142 | 107 | -24.8 | 66.6 | 56.7 | -14.9 | 85 | 81 | -4.3 |
-| 200 | 1 | 47.4 | 51.9 | +9.5 | 148 | 111 | -25.1 | 67.3 | 54.1 | -19.6 | 85 | 80 | -6.1 |
-| 10 | 2 | 46.7 | 47.2 | +1.1 | 240 | 213 | -11.5 | 81.4 | 73.6 | -9.6 | 82 | 80 | -2.1 |
-| 25 | 2 | 44.6 | 48.1 | +7.8 | 227 | 216 | -4.9 | 85.6 | 74.6 | -12.9 | 83 | 80 | -3.2 |
-| 50 | 2 | 45.2 | 47.5 | +5.1 | 272 | 212 | -21.9 | 83.8 | 73.7 | -12.1 | 82 | 80 | -2.4 |
-| 75 | 2 | 46.5 | 44.3 | -4.6 | 262 | 209 | -20.1 | 81.8 | 77.4 | -5.4 | 82 | 81 | -1.0 |
-| 100 | 2 | 44.9 | 44.4 | -1.1 | 263 | 212 | -19.5 | 82.4 | 78.8 | -4.4 | 83 | 81 | -1.7 |
-| 150 | 2 | 45.1 | 47.9 | +6.3 | 268 | 226 | -15.6 | 82.3 | 73.5 | -10.7 | 82 | 80 | -3.0 |
-| 200 | 2 | 46.5 | 48.8 | +5.0 | 261 | 226 | -13.7 | 82.7 | 73.7 | -10.9 | 82 | 80 | -2.8 |
-| 10 | 4 | 47.3 | 46.4 | -2.1 | 477 | 420 | -11.8 | 104.2 | 104.1 | -0.1 | 79 | 80 | +0.5 |
-| 25 | 4 | 47.9 | 43.2 | -9.8 | 459 | 419 | -8.7 | 104.1 | 108.1 | +3.8 | 79 | 80 | +0.4 |
-| 50 | 4 | 47.4 | 39.3 | -17.0 | 478 | 414 | -13.5 | 102.7 | 112.8 | +9.8 | 79 | 81 | +2.8 |
-| 75 | 4 | 47.4 | 47.4 | +0.0 | 486 | 416 | -14.5 | 103.0 | 103.5 | +0.5 | 79 | 79 | -0.1 |
-| 100 | 4 | 47.6 | 47.0 | -1.2 | 463 | 415 | -10.3 | 103.3 | 103.0 | -0.3 | 79 | 79 | +0.2 |
-| 150 | 4 | 47.2 | 47.9 | +1.5 | 478 | 416 | -13.0 | 102.8 | 102.7 | -0.1 | 79 | 79 | -0.5 |
-| 200 | 4 | 42.2 | 47.2 | +11.7 | 482 | 417 | -13.5 | 111.5 | 102.3 | -8.3 | 81 | 79 | -2.2 |
+| 10 | 1 | 30.1 | 27.5 | -8.6 | 129 | 100 | -22.6 | 20.3 | 19.0 | -6.4 | 92 | 92 | -0.1 |
+| 25 | 1 | 27.3 | 27.9 | +1.9 | 128 | 101 | -21.4 | 19.1 | 19.2 | +0.5 | 93 | 92 | -1.0 |
+| 50 | 1 | 27.6 | 27.6 | +0.3 | 125 | 101 | -19.4 | 19.3 | 19.1 | -1.0 | 93 | 92 | -1.1 |
+| 75 | 1 | 27.7 | 27.6 | -0.4 | 124 | 101 | -19.1 | 19.4 | 19.1 | -1.5 | 93 | 92 | -0.9 |
+| 100 | 1 | 28.5 | 27.5 | -3.4 | 127 | 101 | -20.7 | 19.6 | 19.1 | -2.6 | 92 | 92 | -0.6 |
+| 150 | 1 | 28.0 | 27.3 | -2.5 | 137 | 101 | -26.3 | 19.5 | 19.1 | -2.1 | 93 | 92 | -0.6 |
+| 200 | 1 | 28.0 | 27.5 | -1.8 | 123 | 101 | -18.3 | 19.5 | 19.1 | -2.1 | 93 | 92 | -0.6 |
+| 10 | 2 | 27.7 | 27.7 | +0.1 | 249 | 200 | -19.7 | 25.7 | 25.7 | 0.0 | 92 | 92 | -0.5 |
+| 25 | 2 | 27.7 | 27.7 | -0.2 | 232 | 202 | -12.8 | 25.9 | 25.6 | -1.2 | 92 | 92 | -0.4 |
+| 50 | 2 | 27.8 | 27.6 | -0.5 | 231 | 201 | -13.0 | 25.8 | 25.7 | -0.4 | 92 | 92 | -0.4 |
+| 75 | 2 | 27.7 | 27.6 | -0.3 | 231 | 200 | -13.4 | 25.7 | 25.7 | 0.0 | 92 | 92 | -0.4 |
+| 100 | 2 | 27.8 | 27.8 | +0.1 | 227 | 214 | -5.7 | 25.8 | 25.8 | 0.0 | 92 | 92 | -0.5 |
+| 150 | 2 | 27.7 | 27.9 | +0.7 | 248 | 201 | -19.1 | 25.5 | 25.7 | +0.8 | 92 | 92 | -0.5 |
+| 200 | 2 | 27.8 | 27.8 | +0.1 | 235 | 213 | -9.2 | 25.6 | 25.7 | +0.4 | 92 | 92 | -0.2 |
+| 10 | 4 | 27.6 | 27.4 | -0.6 | 461 | 401 | -13.0 | 35.6 | 35.9 | +0.8 | 92 | 92 | -0.1 |
+| 25 | 4 | 27.6 | 27.5 | -0.3 | 439 | 400 | -8.8 | 35.5 | 35.9 | +1.1 | 92 | 91 | -0.5 |
+| 50 | 4 | 27.7 | 27.4 | -1.1 | 438 | 400 | -8.7 | 35.5 | 35.7 | +0.6 | 91 | 92 | +0.1 |
+| 75 | 4 | 27.6 | 27.2 | -1.5 | 453 | 402 | -11.4 | 35.6 | 35.6 | 0.0 | 92 | 91 | -0.1 |
+| 100 | 4 | 27.7 | 27.5 | -0.8 | 450 | 402 | -10.7 | 35.6 | 35.8 | +0.6 | 91 | 91 | +0.2 |
+| 150 | 4 | 27.7 | 27.4 | -1.0 | 442 | 401 | -9.3 | 35.7 | 35.6 | -0.3 | 92 | 91 | -0.2 |
+| 200 | 4 | 27.8 | 27.6 | -0.7 | 440 | 400 | -9.0 | 35.6 | 35.9 | +0.8 | 92 | 92 | -0.0 |
 
 </details>
 
@@ -141,34 +144,40 @@ This is the **control** workload -- async fibers cannot parallelize CPU-bound
 work any better than threads because both are limited by Ruby's GVL to one core
 per process.
 
-Thread mode data is incomplete: many high-capacity thread cells failed due to
-database connection exhaustion or excessive scheduling overhead. Thread data
-exists only for capacity 10-75 at 1 process, capacity 10-25 at 2 processes, and
-capacity 10/25/150 at 4 processes. All 21 async cells completed.
+Thread mode data is incomplete: capacity 100, 150, and 200 at 1 process failed
+due to database connection exhaustion (3 of 21 thread cells). All 21 async cells
+completed. The remaining 18 thread cells completed, though at 2 processes with
+capacity 50+ and at 4 processes across all capacities, throughput drops to ~27
+j/s (single-core GVL bound) compared to the expected ~42 j/s (2 proc) or ~45
+j/s (4 proc) seen at low capacities -- indicating that high thread counts under
+GVL contention prevent effective multi-core utilization.
 
 ![Comparison grid -- CPU](results/cpu-grid.png)
 
-Where both modes ran, throughput is GVL-limited and roughly equal: ~16-19 j/s at
-1 process, ~29-31 j/s at 2 processes, ~44-45 j/s at 4 processes. However, async
-is actually slightly **faster** at 1 process (~19 j/s vs ~16 j/s) because fiber
-scheduling has less overhead than thread scheduling under the GVL.
+Where both modes ran at 1 process, throughput is comparable: ~22-23 j/s for both.
+Async shows a small advantage at higher capacities (+3-5% at capacity 50-75)
+because fiber scheduling has less overhead than thread scheduling under the GVL.
+At 2 processes with low capacity (10-25), both modes achieve ~42 j/s as expected.
+At higher capacities and process counts, GVL contention dominates and both
+modes converge to ~27 j/s.
 
 Two things stand out:
 
-1. **Thread mode fails at high capacity.** Thread scheduling overhead with 100+
-   threads doing CPU-bound work under the GVL causes timeouts and connection
-   exhaustion. Async runs all capacities without issue.
+1. **Thread mode fails at high capacity (1 process).** Capacity 100+ at 1
+   process requires more database connections than PostgreSQL's default
+   `max_connections = 100` allows. Async runs all capacities without issue.
 
 2. **RSS diverges massively.** Where both modes ran, thread RSS grows linearly
    with capacity while async stays flat. At 1 process with capacity 75, thread
-   uses 324 MB vs async's 111 MB -- a 66% reduction.
+   uses 295 MB vs async's 118 MB -- a 60% reduction.
 
 ![Async advantage -- CPU](results/cpu-advantage.png)
 
-FAILED cells indicate where thread mode did not complete. Where both ran,
-throughput is within a few percent at 2+ processes (confirming the GVL
-bottleneck), but async is 16-22% faster at 1 process. RSS advantage for async
-is dramatic across all process counts.
+FAILED cells indicate where thread mode did not complete. Where both ran at
+1 process, async is 3-5% faster at capacity 50-75 (and 1-3% slower at capacity
+10-25). The throughput advantage is smaller on this machine than previously
+observed. RSS advantage for async is dramatic across all process counts,
+ranging from -19% at capacity 10 to -60% at capacity 75 (1 process).
 
 <details>
 <summary>Per-cell advantage data (CPU)</summary>
@@ -177,26 +186,27 @@ Advantage = (async - thread) / thread * 100. FAILED = thread mode did not comple
 
 | Cap | Procs | Thread j/s | Async j/s | Tput % | Thread RSS MB | Async RSS MB | RSS % | Thread CPU % | Async CPU % | CPU % |
 |-----|-------|-----------|----------|--------|--------------|-------------|-------|-------------|------------|-------|
-| 10 | 1 | 16.3 | 19.0 | +16.5 | 130 | 114 | -12.6 | 97.0 | 96.5 | -0.5 |
-| 25 | 1 | 16.5 | 19.7 | +19.0 | 185 | 113 | -38.7 | 96.8 | 96.7 | -0.1 |
-| 50 | 1 | 16.4 | 19.5 | +18.9 | 257 | 113 | -56.0 | 96.8 | 96.4 | -0.4 |
-| 75 | 1 | 16.2 | 19.8 | +22.2 | 324 | 111 | -65.6 | 96.8 | 96.4 | -0.4 |
-| 100 | 1 | FAILED | 19.7 | -- | FAILED | 112 | -- | FAILED | 96.1 | -- |
-| 150 | 1 | FAILED | 19.0 | -- | FAILED | 109 | -- | FAILED | 96.3 | -- |
-| 10 | 2 | 30.2 | 30.9 | +2.1 | 245 | 207 | -15.2 | 187.9 | 189.3 | +0.7 |
-| 25 | 2 | 29.7 | 31.0 | +4.4 | 327 | 225 | -31.1 | 189.4 | 185.3 | -2.2 |
-| 50 | 2 | FAILED | 31.6 | -- | FAILED | 220 | -- | FAILED | 186.5 | -- |
-| 75 | 2 | FAILED | 31.3 | -- | FAILED | 218 | -- | FAILED | 187.0 | -- |
-| 100 | 2 | FAILED | 30.6 | -- | FAILED | 216 | -- | FAILED | 182.4 | -- |
-| 150 | 2 | FAILED | 28.7 | -- | FAILED | 215 | -- | FAILED | 174.2 | -- |
-| 200 | 2 | FAILED | 29.8 | -- | FAILED | 215 | -- | FAILED | 177.4 | -- |
-| 10 | 4 | 45.3 | 45.3 | +0.1 | 472 | 408 | -13.4 | 358.8 | 366.8 | +2.2 |
-| 25 | 4 | 44.3 | 44.9 | +1.3 | 572 | 410 | -28.3 | 305.8 | 364.3 | +19.1 |
-| 50 | 4 | FAILED | 44.3 | -- | FAILED | 406 | -- | FAILED | 366.0 | -- |
-| 75 | 4 | FAILED | 43.7 | -- | FAILED | 401 | -- | FAILED | 365.3 | -- |
-| 100 | 4 | FAILED | 43.4 | -- | FAILED | 405 | -- | FAILED | 361.9 | -- |
-| 150 | 4 | 44.2 | 44.1 | -0.2 | 638 | 408 | -36.0 | 352.4 | 362.7 | +2.9 |
-| 200 | 4 | FAILED | 44.0 | -- | FAILED | 406 | -- | FAILED | 366.1 | -- |
+| 10 | 1 | 23.2 | 22.8 | -1.6 | 135 | 110 | -19.1 | 96.7 | 92.8 | -4.0 |
+| 25 | 1 | 23.1 | 22.5 | -2.6 | 198 | 123 | -37.6 | 96.8 | 91.9 | -5.1 |
+| 50 | 1 | 22.7 | 23.5 | +3.4 | 258 | 118 | -54.4 | 96.8 | 94.6 | -2.3 |
+| 75 | 1 | 22.5 | 23.6 | +4.8 | 295 | 118 | -60.0 | 96.9 | 94.4 | -2.6 |
+| 100 | 1 | FAILED | 23.5 | -- | FAILED | 117 | -- | FAILED | 94.6 | -- |
+| 150 | 1 | FAILED | 23.2 | -- | FAILED | 114 | -- | FAILED | 94.4 | -- |
+| 200 | 1 | FAILED | 23.1 | -- | FAILED | 118 | -- | FAILED | 94.2 | -- |
+| 10 | 2 | 41.8 | 42.1 | +0.8 | 254 | 211 | -16.8 | 187.5 | 184.1 | -1.8 |
+| 25 | 2 | 41.1 | 42.9 | +4.3 | 351 | 224 | -36.3 | 186.7 | 184.6 | -1.1 |
+| 50 | 2 | 26.8 | 27.2 | +1.3 | 273 | 208 | -23.8 | 126.6 | 127.1 | +0.4 |
+| 75 | 2 | 26.9 | 26.9 | -0.3 | 276 | 208 | -24.6 | 124.7 | 125.4 | +0.6 |
+| 100 | 2 | 27.0 | 26.7 | -0.8 | 281 | 208 | -26.2 | 125.0 | 124.8 | -0.2 |
+| 150 | 2 | 26.9 | 27.0 | +0.6 | 289 | 208 | -27.7 | 125.5 | 126.1 | +0.5 |
+| 200 | 2 | 27.1 | 26.9 | -0.6 | 290 | 207 | -28.5 | 125.5 | 125.3 | -0.2 |
+| 10 | 4 | 27.9 | 27.8 | -0.4 | 423 | 393 | -7.1 | 144.4 | 145.2 | +0.6 |
+| 25 | 4 | 27.6 | 27.8 | +0.5 | 439 | 396 | -9.8 | 143.8 | 144.6 | +0.6 |
+| 50 | 4 | 27.7 | 27.7 | 0.0 | 456 | 394 | -13.5 | 144.6 | 145.5 | +0.6 |
+| 75 | 4 | 27.7 | 27.8 | +0.3 | 446 | 397 | -11.0 | 144.0 | 143.9 | -0.1 |
+| 100 | 4 | 27.7 | 27.6 | -0.1 | 439 | 394 | -10.1 | 144.0 | 144.8 | +0.6 |
+| 150 | 4 | 27.8 | 27.6 | -0.8 | 443 | 397 | -10.4 | 144.3 | 147.2 | +2.0 |
+| 200 | 4 | 27.8 | 27.8 | +0.0 | 444 | 395 | -11.1 | 145.4 | 143.5 | -1.3 |
 
 </details>
 
@@ -204,7 +214,7 @@ Advantage = (async - thread) / thread * 100. FAILED = thread mode did not comple
 
 **Caveat: the delay server was not running on the benchmark machine.** All HTTP
 jobs (both Net::HTTP and Async::HTTP) errored immediately -- every cell shows
-`failed_jobs=2000` with ~3 ms service time instead of the intended 50 ms delay.
+`failed_jobs=2000` with ~1-2 ms service time instead of the intended 50 ms delay.
 **Throughput and latency data is not meaningful** because it measures error
 processing speed, not actual I/O concurrency.
 
@@ -214,62 +224,72 @@ whether the job payload succeeds or fails. The worker still allocates thread
 stacks (in thread mode) or fiber contexts (in async mode) regardless of workload
 outcome.
 
+The delay server has since been fixed (the CGI gem dependency was removed and
+replaced with `URI.decode_www_form`) and needs a rerun.
+
 **Net::HTTP results:**
 
 ![Comparison grid -- HTTP](results/http-grid.png)
 
 Thread RSS grows with capacity while async stays flat, consistent with the sleep
-and CPU workloads. Async uses 14-44% less peak RSS across all cells.
+and CPU workloads. Async uses 6-33% less peak RSS across all cells.
 
 ![Async advantage -- HTTP](results/http-advantage.png)
 
-The RSS bars are deeply negative (async uses far less memory). CPU usage is
-consistently lower for async. Throughput bars should be disregarded due to the
-failed workload.
+The RSS bars are deeply negative (async uses far less memory). Throughput bars
+should be disregarded due to the failed workload.
 
 **Async::HTTP results:** Chart data was collected but charts were not generated
 for the async_http workload. The same delay-server caveat applies. Raw data is
-available in `results/async-http-data.csv`.
+available in `results/async-http-data.csv`. Async uses 2-31% less peak RSS than
+thread mode across all cells.
 
-**Recommendation:** Rerun both HTTP workloads with the delay server running to
+**Recommendation:** Rerun both HTTP workloads with the fixed delay server to
 get valid throughput and latency comparisons.
 
 ## Key Findings
 
 The following findings are based on the clean sleep data (all 42 cells, 0
 failures, 3x repeat with median) and the CPU control data (all 21 async cells,
-9 of 21 thread cells completed).
+18 of 21 thread cells completed).
 
-1. **Async matches or exceeds thread throughput on I/O-bound work.** On the
-   sleep workload: at 1 process, async is 2-12% faster (median across
-   capacities). At 2 processes, async is 1-8% faster. At 4 processes,
-   throughput converges as both modes saturate the scheduler.
+1. **Async throughput matches thread on I/O-bound work.** On the sleep workload,
+   both modes achieve ~27-28 j/s across all configurations. The throughput
+   difference is within +/-3% at 2-4 processes. At 1 process, thread is
+   marginally faster at some capacities and marginally slower at others (range:
+   -8.6% to +1.9%). On this machine, there is no consistent throughput advantage
+   for either mode on the sleep workload.
 
-2. **Async uses 10-28% less peak RSS on I/O-bound work.** Thread RSS grows
-   linearly with capacity (each thread stack costs ~1 MB). Async RSS stays flat
-   because fibers share the process heap without per-unit stack allocations. At
-   capacity 75 with 1 process on sleep: thread uses 148 MB, async uses 107 MB
-   (28% savings).
+2. **Async uses 6-26% less peak RSS on I/O-bound work.** This is the most
+   consistent finding. Thread RSS grows with capacity (each thread stack costs
+   ~1 MB). Async RSS stays flat at ~100 MB (1 proc), ~200-214 MB (2 proc), or
+   ~400-402 MB (4 proc) because fibers share the process heap without per-unit
+   stack allocations. At capacity 150 with 1 process: thread uses 137 MB, async
+   uses 101 MB (26% savings).
 
-3. **Async uses 10-20% less CPU at 1-2 processes.** Cooperative fiber scheduling
-   avoids the OS context-switch overhead of thread scheduling. At 4 processes
-   the CPU difference narrows as fork overhead dominates.
+3. **CPU usage is comparable between the two modes on I/O-bound work.** On the
+   sleep workload, the CPU difference is within +/-2% at all process counts.
+   Both modes are light on CPU for this workload (~19-20% at 1 proc, ~26% at
+   2 proc, ~36% at 4 proc).
 
-4. **Async is faster than threads on CPU-bound work at 1 process.** Async
-   achieves ~19 j/s vs thread's ~16 j/s (+16-22%). This is because fiber
-   scheduling has less overhead than thread scheduling under the GVL -- fibers
-   context-switch in userspace without OS involvement. At 2+ processes the
-   difference narrows as fork parallelism dominates.
+4. **Async shows a small throughput advantage on CPU-bound work at higher
+   capacities (1 process).** At capacity 50-75, async is 3-5% faster than
+   thread (~23.5 j/s vs ~22.5 j/s). This is because fiber scheduling has less
+   overhead than thread scheduling under the GVL -- fibers context-switch in
+   userspace without OS involvement. At capacity 10-25, the difference reverses
+   slightly (-1.6% to -2.6%). The advantage is smaller on this machine than
+   previously observed on other hardware.
 
-5. **Thread mode fails at high capacity on CPU workloads.** Thread scheduling
-   overhead with 100+ threads doing CPU-bound work under the GVL causes timeouts.
-   12 of 21 thread cells failed. Async ran all 21 capacities without issue.
+5. **Thread mode fails at high capacity on CPU workloads.** Capacity 100+ at
+   1 process requires more database connections than PostgreSQL's default
+   `max_connections = 100`. 3 of 21 thread cells failed. Async ran all 21
+   capacities without issue.
 
 6. **Memory divergence is most dramatic on CPU-bound work.** At 1 process with
-   capacity 75 on the CPU workload: thread uses 324 MB vs async's 111 MB (66%
-   savings). On the sleep workload at the same configuration: thread uses 148 MB
-   vs async's 107 MB (28% savings). Thread RSS grows with capacity; async RSS is
-   constant.
+   capacity 75: thread uses 295 MB vs async's 118 MB (60% savings). At capacity
+   50: thread uses 258 MB vs async's 118 MB (54% savings). Thread RSS grows
+   linearly with capacity; async RSS stays flat at ~110-123 MB regardless of
+   capacity.
 
 7. **DB connections are the practical scaling ceiling for thread mode.** Thread
    mode needs `capacity + 5` connections per worker process; async needs
@@ -277,6 +297,14 @@ failures, 3x repeat with median) and the CPU control data (all 21 async cells,
    820 connections, async needs 8. PostgreSQL's default `max_connections = 100`
    makes high-capacity thread deployments impractical without connection poolers
    like PgBouncer. Async mode sidesteps this entirely.
+
+8. **GVL contention limits multi-process scaling on CPU-bound work.** At 2
+   processes with capacity 50+, both thread and async throughput drops from the
+   expected ~42 j/s to ~27 j/s, and at 4 processes all capacities are stuck at
+   ~27-28 j/s. This suggests that high concurrency levels (many threads or
+   fibers doing CPU work) create GVL scheduling contention that prevents
+   effective multi-core utilization. Only low-capacity configurations (10-25) at
+   2 processes achieve the expected 2x throughput scaling.
 
 ## Setup
 
