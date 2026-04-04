@@ -43,6 +43,7 @@ module Bench
 
     def run_mode(mode)
       validate_backend_mode!(mode)
+      ensure_database_ready!
       stop_registered_processes
       ensure_backend_dependencies!
       cleanup_benchmark_tables
@@ -559,6 +560,31 @@ module Bench
       ActiveRecord::Base.connection.execute("TRUNCATE TABLE #{quoted} RESTART IDENTITY CASCADE")
     end
 
+    def ensure_database_ready!
+      missing_tables = required_tables.reject { |table| ActiveRecord::Base.connection.data_source_exists?(table) }
+      missing_columns = required_columns.each_with_object({}) do |(table, columns), hash|
+        klass = table_model(table)
+        klass.reset_column_information
+        absent = columns - klass.column_names
+        hash[table] = absent if absent.any?
+      end
+
+      return if missing_tables.empty? && missing_columns.empty?
+
+      details = []
+      details << "missing tables: #{missing_tables.join(', ')}" if missing_tables.any?
+      missing_columns.each do |table, columns|
+        details << "missing columns on #{table}: #{columns.join(', ')}"
+      end
+
+      raise <<~MSG.strip
+        Benchmark database is not up to date (#{details.join('; ')}).
+        Run `bin/rails db:prepare`.
+        If Solid Queue tables are missing, also run:
+        `bin/rails runner 'unless ActiveRecord::Base.connection.table_exists?(\"solid_queue_jobs\"); load Rails.root.join(\"db/queue_schema.rb\"); end'`
+      MSG
+    end
+
     def stop_registered_processes
       registered_process_pids.each do |pid|
         next if pid == Process.pid
@@ -617,6 +643,38 @@ module Bench
           Array(supervisor_pids).all? { |pid| process_alive?(pid) }
       else
         false
+      end
+    end
+
+    def required_tables
+      tables = %w[benchmark_runs benchmark_executions]
+      tables += %w[solid_queue_processes solid_queue_jobs] if backend == "solid_queue"
+      tables += %w[chats messages models tool_calls] if options[:workload] == "ruby_llm_stream"
+      tables
+    end
+
+    def required_columns
+      columns = {
+        "benchmark_runs" => %w[backend],
+        "benchmark_executions" => %w[
+          child_jobs_enqueued
+          child_jobs_finished
+          child_jobs_failed
+          last_child_enqueued_at
+          last_child_finished_at
+        ]
+      }
+      columns["chats"] = %w[benchmark_execution_id] if options[:workload] == "ruby_llm_stream"
+      columns
+    end
+
+    def table_model(table)
+      case table
+      when "benchmark_runs" then BenchmarkRun
+      when "benchmark_executions" then BenchmarkExecution
+      when "chats" then Chat
+      else
+        raise ArgumentError, "No model mapping for #{table}"
       end
     end
 

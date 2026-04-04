@@ -110,6 +110,7 @@ namespace :sweep do
   end
 
   def run_workload(backend:, workload:, include_stress:)
+    prepare_database!
     spec = workload_spec(workload)
     capacities = include_stress ? [ HEADLINE_CAPACITIES, STRESS_CAPACITIES ].join(",") : HEADLINE_CAPACITIES
 
@@ -225,6 +226,18 @@ namespace :sweep do
 
   def latest_file(dir, glob)
     Dir.glob(File.join(dir, glob)).max_by { |file| File.mtime(file) }
+  end
+
+  def prepare_database!
+    system("bin/rails", "db:prepare") || raise("db:prepare failed")
+    system(
+      "bin/rails",
+      "runner",
+      "unless ActiveRecord::Base.connection.table_exists?(\"solid_queue_jobs\"); load Rails.root.join(\"db/queue_schema.rb\"); end"
+    ) || raise("solid queue schema setup failed")
+
+    [ BenchmarkRun, BenchmarkExecution ].each(&:reset_column_information)
+    Chat.reset_column_information if defined?(Chat)
   end
 end
 
