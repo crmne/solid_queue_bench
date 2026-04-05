@@ -117,13 +117,19 @@ These statements reflect the latest headline family sweep from **April 5,
 
 | Comparison | Current takeaway |
 |------------|------------------|
-| Solid Queue `async` vs `thread` | `async` is mixed in the comparable headline region, not a blanket throughput win. It is near-neutral on `cpu`, mixed on short `sleep` and `async_http`, and clearest on the more realistic `ruby_llm_stream` workload where it reaches `+17.2%`. |
-| Async::Job + Redis vs Solid Queue `async` | `Async::Job` is faster across the shared headline cells in this run: `+6.6%` to `+192.7%` on `sleep`, `+20.3%` to `+153.2%` on `async_http`, `+87.5%` to `+209.2%` on `ruby_llm_stream`, and `+6.5%` to `+14.3%` on `cpu`. |
+| Solid Queue `async` vs `thread` | The latest headline rerun is modestly positive for `async`, but still not a blanket win. It wins `6/9` shared `sleep` cells, `5/9` `async_http` cells, `7/9` `cpu` cells, and `9/9` `ruby_llm_stream` cells. The strongest headline gains are `+27.2%` on `sleep`, `+26.0%` on `async_http`, `+5.1%` on `cpu`, and `+20.2%` on `ruby_llm_stream`. |
+| Async::Job + Redis vs Solid Queue `async` | `Async::Job` remains materially faster across the shared headline cells: `+11.8%` to `+159.9%` on `sleep`, `+16.6%` to `+157.8%` on `async_http`, `+93.3%` to `+213.1%` on `ruby_llm_stream`, and `+7.2%` to `+13.9%` on `cpu`. |
 
 The cleanest production-shaped Solid Queue result is `ruby_llm_stream`: the
 real RubyLLM streaming path plus Turbo broadcast jobs benefits from `async`
 without changing the app-level topology. `cpu` is the negative control and is
 roughly neutral, which makes the I/O and streaming gains more credible.
+
+So the headline story is:
+
+- inside Solid Queue, `async` is a real but moderate win for this workload set
+- the streaming-shaped workload is the strongest and cleanest internal result
+- Async::Job is still the clear cross-backend throughput leader
 
 ![Throughput advantage ranges across shared headline cells](results/headline-throughput-ranges.png)
 
@@ -160,6 +166,12 @@ exist, `bin/report` also generates:
 
 This suite is for failure envelope, queueing pressure, and resource blow-up,
 not for the main apples-to-apples headline comparison.
+
+In the current stress run, thread mode completed only the baseline
+`cap=25, proc=2` cell for each workload, while `async` completed all `10/10`
+stress cells per workload. That is the clearest evidence that "threads start
+to hurt" is mostly a failure-envelope story rather than a small per-cell
+throughput story.
 
 ## Setup
 
