@@ -5,7 +5,7 @@ Current benchmark outputs live in the per-family directories below.
 | Family | Summary | Workloads |
 |---|---|---|
 | Async::Job | [README](async-job/README.md) | [Sleep](async-job/sleep-data.json) |
-| Solid Queue | [README](solid-queue/README.md) | [Sleep](solid-queue/sleep-data.json) |
+| Solid Queue | [README](solid-queue/README.md) | [Async::HTTP](solid-queue/async-http-data.json), [CPU](solid-queue/cpu-data.json), [Net::HTTP](solid-queue/http-data.json), [LLM Batch](solid-queue/llm-batch-data.json), [LLM Stream](solid-queue/llm-stream-data.json), [RubyLLM Stream](solid-queue/ruby-llm-stream-data.json), [Sleep](solid-queue/sleep-data.json) |
 
 ## Headline Workloads
 
