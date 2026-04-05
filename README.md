@@ -48,7 +48,8 @@ Useful controls, not the main story:
 ## Current Results
 
 Latest headline sweep: **April 5, 2026**.
-Solid Queue commit under test: [`305bf40`](../solid_queue).
+Solid Queue commit under test: [305bf4018352e099019f9f24502a18ee4794e64e](https://github.com/crmne/solid_queue/commit/305bf4018352e099019f9f24502a18ee4794e64e)
+(`305bf40`, `Relax async lifecycle start wait`).
 
 Full generated summaries:
 [results/](results/README.md) |
@@ -114,7 +115,8 @@ Configuration:
 - Capacities: `25,50,100,150,200`
 - Processes: `2,6`
 - Workloads: `sleep`, `async_http`, `ruby_llm_stream`
-- Longer waits (`250 ms` default)
+- Longer waits for `sleep` and `async_http` (`250 ms` default)
+- `ruby_llm_stream` keeps the same token count and token delay as the headline suite
 
 In the current run, thread mode completed only the baseline `cap=25, proc=2`
 test per workload. `async` completed all 10/10 planned tests per workload. The
@@ -233,7 +235,8 @@ Override with environment variables:
 
 ```bash
 CAPACITIES=5,10,25,50,100
-STRESS_CAPACITIES=150,200
+PRESSURE_CAPACITIES=25,50,100,150,200
+STRESS_CAPACITIES=150,200   # appended only by sweep:full
 HEADLINE_MAX_TOTAL_CONCURRENCY=60
 SOLID_QUEUE_PROCESSES=1,2,6
 ASYNC_JOB_PROCESSES=1,2,6
