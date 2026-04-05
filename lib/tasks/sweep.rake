@@ -1,6 +1,7 @@
 namespace :sweep do
   HEADLINE_CAPACITIES = ENV.fetch("CAPACITIES", "5,10,25,50,100")
   STRESS_CAPACITIES = ENV.fetch("STRESS_CAPACITIES", "150,200")
+  HEADLINE_MAX_TOTAL_CONCURRENCY = ENV.fetch("HEADLINE_MAX_TOTAL_CONCURRENCY", "60")
   SOLID_QUEUE_PROCESSES = ENV.fetch("SOLID_QUEUE_PROCESSES", "1,2,6")
   ASYNC_JOB_PROCESSES = ENV.fetch("ASYNC_JOB_PROCESSES", "1,2,6")
   REPEAT = ENV.fetch("REPEAT", "3")
@@ -120,7 +121,8 @@ namespace :sweep do
       jobs: spec.fetch(:jobs),
       timeout: spec.fetch(:timeout),
       extra: spec.fetch(:extra),
-      capacities:
+      capacities:,
+      max_total_concurrency: max_total_concurrency_for(include_stress:)
     )
   end
 
@@ -145,7 +147,7 @@ namespace :sweep do
     end
   end
 
-  def run_matrix(backend:, workload:, jobs:, timeout:, extra:, capacities:)
+  def run_matrix(backend:, workload:, jobs:, timeout:, extra:, capacities:, max_total_concurrency: nil)
     cmd = [
       "bin/matrix",
       "--backend", backend,
@@ -160,6 +162,7 @@ namespace :sweep do
       "--name", "sweep",
       *extra.split.reject(&:empty?)
     ]
+    cmd += [ "--max-total-concurrency", max_total_concurrency.to_s ] if max_total_concurrency
 
     puts "\n#{"=" * 60}"
     puts "Starting #{backend} #{workload} sweep..."
@@ -214,6 +217,13 @@ namespace :sweep do
 
   def modes_for(backend)
     backend == "async_job" ? "async" : "thread,async"
+  end
+
+  def max_total_concurrency_for(include_stress:)
+    return if include_stress
+    return if HEADLINE_MAX_TOTAL_CONCURRENCY.to_s.empty?
+
+    HEADLINE_MAX_TOTAL_CONCURRENCY
   end
 
   def tmp_output_dir_for(backend)

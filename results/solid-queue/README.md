@@ -17,5 +17,6 @@ Latest dataset timestamp: `2026-04-04T22:19:42Z`
 ## Notes
 
 - `Best Async Delta` is the strongest paired `async` vs `thread` throughput improvement within the same `(capacity, processes)` cell.
+- `Cells` is `completed/planned`, so incomplete matrices are visible in the summaries.
 - Async::Job datasets are single-mode, so paired async/thread deltas are `n/a` there.
 - Headline workloads are `sleep`, `cpu`, `async_http`, and `ruby_llm_stream`.

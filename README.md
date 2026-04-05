@@ -44,7 +44,7 @@ These are the ones intended for charts and conclusions:
 |----------|-------|---------|
 | `sleep` | `Kernel.sleep` | Pure cooperative wait upper bound |
 | `cpu` | SHA256 loop | CPU-bound control |
-| `async_http` | local `Async::HTTP` call | realistic fiber-friendly I/O |
+| `async_http` | local `Async::HTTP` call | realistic fiber-friendly I/O using the same async client path in both modes |
 | `ruby_llm_stream` | fake OpenAI SSE + real RubyLLM chat path + Turbo broadcast jobs | production-shaped streaming chat workload |
 
 ### Supplementary workloads
@@ -77,6 +77,8 @@ Each result row includes:
 - `execution_jobs_per_second`: successful jobs / first successful start to last finish
 - RSS and CPU samples across worker processes
 - queue delay, service time, and total latency percentiles
+- planned vs completed cell counts in the JSON/report output, so failed cells
+  are visible in summaries
 
 ## Headline Matrix Defaults
 
@@ -86,6 +88,9 @@ The default headline sweep is intentionally narrower than the old one:
 - Solid Queue processes: `1,2,6`
 - Async::Job processes: `1,2,6`
 - repeats: `3`
+- headline sweeps skip cells where `capacity * processes > 60`, so the main
+  suite stays in the comparable region instead of spending time in known
+  failure envelopes
 
 Stress capacities `150,200` are available in the full suites.
 
@@ -94,6 +99,7 @@ Environment overrides:
 ```bash
 CAPACITIES=5,10,25,50,100
 STRESS_CAPACITIES=150,200
+HEADLINE_MAX_TOTAL_CONCURRENCY=60
 SOLID_QUEUE_PROCESSES=1,2,6
 ASYNC_JOB_PROCESSES=1,2,6
 REPEAT=3
@@ -126,6 +132,7 @@ export REDIS_HOST=127.0.0.1
 export REDIS_PORT=6379
 export REDIS_DB=15
 export REDIS_PREFIX=solid_queue_bench:development
+export ASYNC_JOB_DB_POOL=10  # optional override for Async::Job AR pool sizing
 ```
 
 Then:
@@ -179,14 +186,16 @@ Solid Queue:
 
 ```bash
 bin/matrix --backend solid_queue --workload async_http --jobs 1000 \
-  --capacities 5,10,25,50,100 --processes 1,2,6 --modes thread,async --repeat 3
+  --capacities 5,10,25,50,100 --processes 1,2,6 --modes thread,async \
+  --repeat 3 --max-total-concurrency 60
 ```
 
 Async::Job:
 
 ```bash
 bin/matrix --backend async_job --workload async_http --jobs 1000 \
-  --capacities 5,10,25,50,100 --processes 1,2,6 --modes async --repeat 3
+  --capacities 5,10,25,50,100 --processes 1,2,6 --modes async \
+  --repeat 3 --max-total-concurrency 60
 ```
 
 ### Sweep tasks
@@ -274,6 +283,10 @@ It uses:
 
 That keeps the benchmark local and repeatable while still exercising the Rails
 job topology you would actually use in a streaming chat UI.
+
+`async_http` is also normalized now: thread-mode workers wrap the
+`Async::HTTP` client call in `Sync`, so the benchmark compares worker
+execution models instead of “has a reactor” vs “does not have a reactor”.
 
 ## Caveats
 

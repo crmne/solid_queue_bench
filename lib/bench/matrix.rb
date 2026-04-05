@@ -18,7 +18,8 @@ module Bench
       payload: { duration_ms: 50 },
       http_port: 9393,
       name: nil,
-      repeat: 1
+      repeat: 1,
+      max_total_concurrency: nil
     }.freeze
 
     def initialize(argv)
@@ -28,8 +29,9 @@ module Bench
 
     def run
       parse!
-      results = sweep
-      write_output(results)
+      cells = build_cells
+      results = sweep(cells)
+      write_output(results, planned_cells: cells.size)
     end
 
     private
@@ -58,6 +60,7 @@ module Bench
           parser.on("--output-dir PATH", "Output directory") { |v| options[:output_dir] = v }
           parser.on("--name NAME", "Run name prefix for output files") { |v| options[:name] = v }
           parser.on("--repeat N", Integer, "Runs per cell, report median (default: 1)") { |v| options[:repeat] = v }
+          parser.on("--max-total-concurrency N", Integer, "Skip cells where capacity * processes exceeds N") { |v| options[:max_total_concurrency] = v }
         end.parse!(argv)
 
         normalize_backend_modes!
@@ -102,8 +105,7 @@ module Bench
         end
       end
 
-      def sweep
-        cells = build_cells
+      def sweep(cells = build_cells)
         total = cells.size
 
         puts "Matrix sweep: #{total} cells"
@@ -111,6 +113,9 @@ module Bench
         puts "  Modes:      #{options[:modes].join(", ")}"
         puts "  Capacities: #{options[:capacities].join(", ")}"
         puts "  Processes:  #{options[:processes].join(", ")}"
+        if options[:max_total_concurrency]
+          puts "  Max Slots:  #{options[:max_total_concurrency]} (capacity * processes)"
+        end
         puts "  Workload:   #{options[:workload]} (#{options[:payload].map { |k, v| "#{k}=#{v}" }.join(", ")})"
         puts "  Jobs/cell:  #{options[:jobs]}"
         puts "  Repeat:     #{options[:repeat]}x (median)" if options[:repeat] > 1
@@ -153,6 +158,10 @@ module Bench
               [ mode, cap, procs ]
             end
           end
+        end.filter do |_mode, cap, procs|
+          next true unless options[:max_total_concurrency]
+
+          (cap * procs) <= options[:max_total_concurrency]
         end
       end
 
@@ -193,7 +202,7 @@ module Bench
         "#{prefix}-#{mode}-cap#{capacity}-proc#{procs}"
       end
 
-      def write_output(results)
+      def write_output(results, planned_cells:)
         FileUtils.mkdir_p(options[:output_dir])
         timestamp = Time.current.strftime("%Y%m%d-%H%M%S")
         base = "#{options[:name] || "matrix"}-#{options[:backend].tr('_', '-')}-#{options[:workload]}-#{timestamp}"
@@ -210,6 +219,10 @@ module Bench
           processes: options[:processes],
           modes: options[:modes],
           repeat: options[:repeat],
+          max_total_concurrency: options[:max_total_concurrency],
+          planned_cells: planned_cells,
+          successful_cells: results.size,
+          failed_cells: planned_cells - results.size,
           results: results
         }
 
@@ -220,7 +233,8 @@ module Bench
         write_csv(csv_path, results)
 
         puts "\n#{"=" * 72}"
-        puts "Matrix sweep complete: #{results.size} cells"
+        puts "Matrix sweep complete: #{results.size}/#{planned_cells} cells"
+        puts "Failed cells: #{planned_cells - results.size}" if results.size < planned_cells
         puts "JSON: #{json_path}"
         puts "CSV:  #{csv_path}"
 

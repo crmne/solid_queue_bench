@@ -3,6 +3,7 @@ require "erb"
 require "json"
 require "net/http"
 require "uri"
+require "async"
 require "async/http/internet"
 
 module Bench
@@ -41,13 +42,18 @@ module Bench
     def async_http_request(payload)
       duration_ms = payload.fetch(:duration_ms)
       port = payload.fetch(:port)
-      internet = Async::HTTP::Internet.new
-      response = internet.get("http://127.0.0.1:#{port}/delay?ms=#{duration_ms}")
-      raise "Unexpected response: #{response.status}" unless response.success?
 
-      JSON.parse(response.read)
-    ensure
-      internet&.close
+      # Thread-mode workers do not run inside an Async task by default, so use
+      # Sync to exercise the same client path in both execution modes.
+      Sync do
+        internet = Async::HTTP::Internet.new
+        response = internet.get("http://127.0.0.1:#{port}/delay?ms=#{duration_ms}")
+        raise "Unexpected response: #{response.status}" unless response.success?
+
+        JSON.parse(response.read)
+      ensure
+        internet&.close
+      end
     end
 
     def llm_stream_request(payload)

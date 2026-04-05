@@ -42,6 +42,11 @@ def read_dataset(json_path)
     payload: data["payload"] || {},
     repeat: data["repeat"],
     generated_at: data["generated_at"],
+    capacities: data["capacities"] || [],
+    processes: data["processes"] || [],
+    modes: data["modes"] || [],
+    max_total_concurrency: data["max_total_concurrency"],
+    planned_cells: data["planned_cells"],
     results: data["results"]
   }
 end
@@ -52,6 +57,25 @@ end
 
 def successful_rows(dataset)
   dataset[:results].select { |row| row["successful_jobs"].to_i.positive? }
+end
+
+def planned_cell_count(dataset)
+  return dataset[:planned_cells] if dataset[:planned_cells]
+
+  capacities = Array(dataset[:capacities]).map(&:to_i)
+  processes = Array(dataset[:processes]).map(&:to_i)
+  modes = Array(dataset[:modes])
+  max_total_concurrency = dataset[:max_total_concurrency]
+
+  modes.sum do
+    processes.sum do |procs|
+      capacities.count do |capacity|
+        next true unless max_total_concurrency
+
+        (capacity * procs) <= max_total_concurrency.to_i
+      end
+    end
+  end
 end
 
 def best_row(rows, metric, direction: :max)
@@ -117,6 +141,8 @@ def dataset_summary(dataset)
   rows = successful_rows(dataset)
 
   {
+    planned_cells: planned_cell_count(dataset),
+    completed_cells: dataset[:results].size,
     best_throughput: best_row(rows, "jobs_per_second", direction: :max),
     best_latency: rows.min_by { |row| row.dig("total_latency_ms", "p50") || Float::INFINITY },
     best_rss: best_row(rows, "peak_rss_kb", direction: :min),
@@ -148,12 +174,13 @@ def write_family_readme(backend_dir, backend_slug, datasets)
   latest_generated_at = datasets.filter_map { |dataset| dataset[:generated_at] }.max
   lines << "Latest dataset timestamp: `#{latest_generated_at}`" if latest_generated_at
   lines << ""
-  lines << "| Workload | Best Throughput | Lowest RSS | Lowest p50 Latency | Best Async Delta | Files |"
-  lines << "|---|---|---|---|---|---|"
+  lines << "| Workload | Cells | Best Throughput | Lowest RSS | Lowest p50 Latency | Best Async Delta | Files |"
+  lines << "|---|---|---|---|---|---|---|"
 
   datasets.sort_by { |dataset| [ HEADLINE_WORKLOADS.include?(dataset[:workload]) ? 0 : 1, dataset[:workload] ] }.each do |dataset|
     summary = dataset_summary(dataset)
     delta = summary[:throughput_advantage] ? "#{fmt_percent(summary[:throughput_advantage][:delta])} at cap=#{summary[:throughput_advantage][:capacity]}, proc=#{summary[:throughput_advantage][:processes]}" : "n/a"
+    cells = "#{summary[:completed_cells]}/#{summary[:planned_cells]}"
     files = [
       relative_link(backend_dir, dataset[:csv_path], "CSV"),
       relative_link(backend_dir, dataset[:json_path], "JSON")
@@ -165,13 +192,14 @@ def write_family_readme(backend_dir, backend_slug, datasets)
       files << relative_link(backend_dir, asset, suffix.capitalize) if File.exist?(asset)
     end
 
-    lines << "| #{workload_label(dataset[:workload])} | #{fmt_cell(summary[:best_throughput], metric: "jobs_per_second", unit: " jobs/s")} | #{fmt_cell(summary[:best_rss], metric: "peak_rss_kb", unit: " MB", scale: 1.0 / 1024.0)} | #{summary[:best_latency] ? fmt_cell(summary[:best_latency].merge("total_latency_p50_ms" => summary[:best_latency].dig("total_latency_ms", "p50")), metric: "total_latency_p50_ms", unit: " ms") : "n/a"} | #{delta} | #{files.join(' / ')} |"
+    lines << "| #{workload_label(dataset[:workload])} | #{cells} | #{fmt_cell(summary[:best_throughput], metric: "jobs_per_second", unit: " jobs/s")} | #{fmt_cell(summary[:best_rss], metric: "peak_rss_kb", unit: " MB", scale: 1.0 / 1024.0)} | #{summary[:best_latency] ? fmt_cell(summary[:best_latency].merge("total_latency_p50_ms" => summary[:best_latency].dig("total_latency_ms", "p50")), metric: "total_latency_p50_ms", unit: " ms") : "n/a"} | #{delta} | #{files.join(' / ')} |"
   end
 
   lines << ""
   lines << "## Notes"
   lines << ""
   lines << "- `Best Async Delta` is the strongest paired `async` vs `thread` throughput improvement within the same `(capacity, processes)` cell."
+  lines << "- `Cells` is `completed/planned`, so incomplete matrices are visible in the summaries."
   lines << "- Async::Job datasets are single-mode, so paired async/thread deltas are `n/a` there."
   lines << "- Headline workloads are `sleep`, `cpu`, `async_http`, and `ruby_llm_stream`."
 

@@ -385,7 +385,13 @@ module Bench
     end
 
     def db_pool_for(mode)
-      return options.fetch(:capacity) + 5 if backend == "async_job"
+      if backend == "async_job"
+        return Integer(ENV["ASYNC_JOB_DB_POOL"]) if ENV["ASYNC_JOB_DB_POOL"]
+
+        # Redis-backed async workers should not be forced into a thread-sized
+        # Active Record pool; that mostly benchmarks Postgres saturation.
+        return [ 5, options.fetch(:processes) + 4 ].max
+      end
 
       if mode == "thread"
         options.fetch(:capacity) + 5
