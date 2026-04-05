@@ -2,6 +2,8 @@
 
 Current benchmark outputs live in the per-family directories below.
 
+Solid Queue commit under test: `305bf4018352e099019f9f24502a18ee4794e64e`
+
 | Family | What It Shows | Summary | Workloads |
 |---|---|---|---|
 | Async::Job | Separate backend reference point. This family answers the maximum-throughput question, not the same-backend execution-mode question. | [README](async-job/README.md) | [Async::HTTP](async-job/async-http-data.json), [CPU](async-job/cpu-data.json), [RubyLLM Stream](async-job/ruby-llm-stream-data.json), [Sleep](async-job/sleep-data.json) |

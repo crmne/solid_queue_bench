@@ -59,7 +59,7 @@ These are useful controls or topology probes, but they are not the main story:
 
 ## Measurement Notes
 
-The harness now fixes the earlier measurement problems:
+The harness is set up so that:
 
 - timing starts **after workers are ready**
 - benchmark rows are created and enqueued in bulk
@@ -82,7 +82,7 @@ Each result row includes:
 
 ## Headline Matrix Defaults
 
-The default headline sweep is intentionally narrower than the old one:
+The default headline sweep is intentionally narrow:
 
 - capacities: `5,10,25,50,100`
 - Solid Queue processes: `1,2,6`
@@ -114,6 +114,9 @@ These statements reflect the latest headline family sweep from **April 5,
 [`results/README.md`](results/README.md),
 [`results/solid-queue/README.md`](results/solid-queue/README.md), and
 [`results/async-job/README.md`](results/async-job/README.md).
+
+Solid Queue commit under test: `305bf4018352e099019f9f24502a18ee4794e64e`
+(`305bf40`, `Relax async lifecycle start wait`)
 
 These are directionally expected results. That is useful here: it suggests the
 `async` path is behaving the way you would expect, with modest throughput gains

@@ -2,6 +2,7 @@
 
 require "json"
 require "pathname"
+require "shellwords"
 require "time"
 
 RESULTS_ROOT = File.expand_path(ARGV.fetch(0, File.expand_path("../results", __dir__)))
@@ -50,6 +51,14 @@ end
 
 def backend_takeaway(slug)
   BACKEND_TAKEAWAYS.fetch(slug, "")
+end
+
+def solid_queue_revision
+  repo = File.expand_path("../../solid_queue", __dir__)
+  return unless Dir.exist?(repo)
+
+  sha = `git -C #{Shellwords.escape(repo)} rev-parse HEAD 2>/dev/null`.strip
+  sha.empty? ? nil : sha
 end
 
 def read_dataset(json_path)
@@ -235,6 +244,9 @@ def write_family_readme(backend_dir, backend_slug, datasets)
 
   latest_generated_at = datasets.filter_map { |dataset| dataset[:generated_at] }.max
   lines << "Latest dataset timestamp: `#{latest_generated_at}`" if latest_generated_at
+  if %w[solid-queue solid-queue-stress].include?(backend_slug) && (sha = solid_queue_revision)
+    lines << "Solid Queue commit under test: `#{sha}`"
+  end
   lines << ""
   lines << "Takeaway: #{backend_takeaway(backend_slug)}"
   lines << ""
@@ -276,6 +288,10 @@ def write_root_readme(results_root, family_dirs, headline_assets, stress_assets)
   lines << "# Benchmark Results"
   lines << ""
   lines << "Current benchmark outputs live in the per-family directories below."
+  if (sha = solid_queue_revision)
+    lines << ""
+    lines << "Solid Queue commit under test: `#{sha}`"
+  end
   lines << ""
   lines << "| Family | What It Shows | Summary | Workloads |"
   lines << "|---|---|---|---|"
