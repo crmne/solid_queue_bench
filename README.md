@@ -1,10 +1,12 @@
 # Solid Queue Bench
 
-Benchmark harness for two questions:
+Benchmark harness for three questions:
 
 1. **Within Solid Queue:** how much do I/O-heavy workloads benefit from `async`
    execution compared to `thread` mode?
-2. **Across backends:** how does Solid Queue compare to Async::Job + Redis when
+2. **DB pool ceiling:** at what concurrency does `thread` mode exhaust the
+   database connection pool, and how much further does `async` go?
+3. **Across backends:** how does Solid Queue compare to Async::Job + Redis when
    both run through ActiveJob?
 
 Measures throughput, memory, CPU, queue delay, service time, and end-to-end
@@ -93,6 +95,7 @@ reference, not a same-backend comparison.
 
 - Inside Solid Queue, `async` is a real win for I/O-heavy work
 - Streaming workloads see the strongest gains
+- Under stress, `thread` hits the DB pool wall early; `async` keeps going
 - For maximum throughput, Async::Job is faster
 - For staying on Solid Queue, `async` trades some throughput ceiling for smaller
   DB pools and the Rails-native / Mission Control story
@@ -101,10 +104,11 @@ reference, not a same-backend comparison.
 
 ![Representative headline test](results/headline-representative-cell.png)
 
-## Stress Suite
+## Stress Suite (DB Pool Ceiling)
 
-The headline suite caps total concurrency. The stress suite removes that cap to
-show where thread mode breaks:
+The headline suite caps total concurrency to keep the comparison fair. The stress
+suite removes that cap to answer the second question: where does `thread` mode
+hit the DB connection pool wall, and how much further can `async` push?
 
 ```bash
 bundle exec rake sweep:solid_queue_stress
@@ -118,9 +122,11 @@ Configuration:
 - Longer waits for `sleep` and `async_http` (`250 ms` default)
 - `ruby_llm_stream` keeps the same token count and token delay as the headline suite
 
-In the current run, thread mode completed only the baseline `cap=25, proc=2`
-test per workload. `async` completed all 10/10 planned tests per workload. The
-stress story is about survivability, not small per-test speedups.
+In the current run, `thread` mode hit the DB pool ceiling after the baseline
+`cap=25, proc=2` test and failed every higher-concurrency cell. `async`
+completed all 10/10 planned tests per workload. Thread mode needs one DB
+connection per concurrent job; `async` multiplexes fibers over a much smaller
+pool, so it survives where threads cannot.
 
 ![Stress cell status](results/solid-queue-stress/stress-cell-status.png)
 
