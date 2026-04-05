@@ -173,6 +173,21 @@ stress cells per workload. That is the clearest evidence that "threads start
 to hurt" is mostly a failure-envelope story rather than a small per-cell
 throughput story.
 
+Current stress takeaway:
+
+- thread mode mostly falls out of the matrix once capacity moves past the first
+  stress cell
+- async keeps completing the higher-capacity cells and pushes much further on
+  throughput
+- the stress story is therefore about survivability and scaling envelope, not
+  just small per-cell speedups
+
+![Solid Queue stress cell completion status](results/solid-queue-stress/stress-cell-status.png)
+
+![Solid Queue stress throughput envelope](results/solid-queue-stress/stress-throughput-envelope.png)
+
+![Solid Queue stress RSS envelope](results/solid-queue-stress/stress-rss-envelope.png)
+
 ## Setup
 
 Requirements:
