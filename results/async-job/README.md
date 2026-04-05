@@ -1,10 +1,10 @@
 # Async::Job Results
 
-Generated summary for the benchmark artifacts in this directory.
+Auto-generated from the benchmark artifacts in this directory.
 
 Latest dataset timestamp: `2026-04-05T03:19:32Z`
 
-Takeaway: Throughput-oriented reference point: `Async::Job` is faster in the headline tests here, but it is answering a different question because the backend changes as well as the execution model.
+Takeaway: `Async::Job` is faster across the headline tests, but it answers a different question -- the backend changes along with the execution model.
 
 | Workload | Tests | Best Throughput | Lowest RSS | Lowest p50 Latency | Best Async Delta | Files |
 |---|---|---|---|---|---|---|

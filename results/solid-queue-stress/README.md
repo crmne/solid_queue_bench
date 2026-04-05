@@ -1,11 +1,11 @@
 # Solid Queue Stress Results
 
-Generated summary for the benchmark artifacts in this directory.
+Auto-generated from the benchmark artifacts in this directory.
 
 Latest dataset timestamp: `2026-04-05T12:59:02Z`
 Solid Queue commit under test: `305bf4018352e099019f9f24502a18ee4794e64e`
 
-Takeaway: This suite is about survivability more than average throughput. In the current run, thread mode only completed the baseline test for each workload, while `async` completed the rest of the planned stress tests.
+Takeaway: Thread mode falls out of the matrix past baseline capacity. `async` completes the full stress grid. This is about survivability, not per-test speedups.
 
 | Workload | Tests | Best Throughput | Lowest RSS | Lowest p50 Latency | Best Async Delta | Files |
 |---|---|---|---|---|---|---|

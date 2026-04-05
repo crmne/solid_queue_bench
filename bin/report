@@ -14,15 +14,15 @@ BACKEND_LABELS = {
 }.freeze
 
 BACKEND_SUMMARIES = {
-  "solid-queue" => "Same backend, different execution mode. The practical question here is whether `async` preserves good performance while avoiding thread-sized DB pools and connection pressure.",
-  "async-job" => "Separate backend reference point. This family answers the maximum-throughput question, not the same-backend execution-mode question.",
-  "solid-queue-stress" => "Failure-envelope tests for Solid Queue. This family is about where `thread` stops completing tests under higher pressure, while `async` keeps going."
+  "solid-queue" => "Same backend, different execution mode. Shows whether `async` delivers good I/O performance without thread-sized DB pools.",
+  "async-job" => "Throughput ceiling reference. Different backend (Redis), so read as a separate claim from the Solid Queue comparison.",
+  "solid-queue-stress" => "Failure-envelope tests. Shows where `thread` stops completing tests under pressure while `async` keeps going."
 }.freeze
 
 BACKEND_TAKEAWAYS = {
-  "solid-queue" => "Directionally expected result: `async` is a moderate win in the headline tests, with the clearest internal result on `ruby_llm_stream`. The main practical gain is keeping good performance without thread-sized DB pools.",
-  "async-job" => "Throughput-oriented reference point: `Async::Job` is faster in the headline tests here, but it is answering a different question because the backend changes as well as the execution model.",
-  "solid-queue-stress" => "This suite is about survivability more than average throughput. In the current run, thread mode only completed the baseline test for each workload, while `async` completed the rest of the planned stress tests."
+  "solid-queue" => "`async` wins the majority of headline tests. The clearest result is `ruby_llm_stream`. The practical gain is good I/O performance without thread-sized DB pools.",
+  "async-job" => "`Async::Job` is faster across the headline tests, but it answers a different question -- the backend changes along with the execution model.",
+  "solid-queue-stress" => "Thread mode falls out of the matrix past baseline capacity. `async` completes the full stress grid. This is about survivability, not per-test speedups."
 }.freeze
 
 WORKLOAD_LABELS = {
@@ -233,7 +233,7 @@ def write_family_readme(backend_dir, backend_slug, datasets)
   lines = []
   lines << "# #{backend_label(backend_slug)} Results"
   lines << ""
-  lines << "Generated summary for the benchmark artifacts in this directory."
+  lines << "Auto-generated from the benchmark artifacts in this directory."
   lines << ""
 
   if datasets.empty?
@@ -287,7 +287,7 @@ def write_root_readme(results_root, family_dirs, headline_assets, stress_assets)
   lines = []
   lines << "# Benchmark Results"
   lines << ""
-  lines << "Current benchmark outputs live in the per-family directories below."
+  lines << "Benchmark outputs live in the per-family directories below."
   if (sha = solid_queue_revision)
     lines << ""
     lines << "Solid Queue commit under test: `#{sha}`"
@@ -330,7 +330,7 @@ def write_root_readme(results_root, family_dirs, headline_assets, stress_assets)
     lines << ""
   end
 
-  lines << "Published outputs live in these family directories. If loose top-level files ever appear here, treat them as non-authoritative scratch artifacts."
+  lines << "Authoritative outputs live in the family directories above. Loose top-level files are scratch artifacts."
 
   File.write(path, Array(lines).flatten.join("\n") + "\n")
 end

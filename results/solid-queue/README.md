@@ -1,11 +1,11 @@
 # Solid Queue Results
 
-Generated summary for the benchmark artifacts in this directory.
+Auto-generated from the benchmark artifacts in this directory.
 
 Latest dataset timestamp: `2026-04-05T02:57:45Z`
 Solid Queue commit under test: `305bf4018352e099019f9f24502a18ee4794e64e`
 
-Takeaway: Directionally expected result: `async` is a moderate win in the headline tests, with the clearest internal result on `ruby_llm_stream`. The main practical gain is keeping good performance without thread-sized DB pools.
+Takeaway: `async` wins the majority of headline tests. The clearest result is `ruby_llm_stream`. The practical gain is good I/O performance without thread-sized DB pools.
 
 | Workload | Tests | Best Throughput | Lowest RSS | Lowest p50 Latency | Best Async Delta | Files |
 |---|---|---|---|---|---|---|
