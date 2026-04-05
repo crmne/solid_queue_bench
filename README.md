@@ -65,7 +65,7 @@ The harness now fixes the earlier measurement problems:
 - benchmark rows are created and enqueued in bulk
 - `jobs_per_second` counts **successful jobs only**
 - latency percentiles are computed from **successful jobs only**
-- repeated cells report a real representative run, not a synthetic hybrid row
+- repeated tests report a real representative run, not a synthetic hybrid row
 - streaming workloads are **child-job aware**, so a run is not complete until
   downstream broadcast jobs finish too
 
@@ -77,8 +77,8 @@ Each result row includes:
 - `execution_jobs_per_second`: successful jobs / first successful start to last finish
 - RSS and CPU samples across worker processes
 - queue delay, service time, and total latency percentiles
-- planned vs completed cell counts in the JSON/report output, so failed cells
-  are visible in summaries
+- planned vs completed test counts in the JSON/report output, so failed tests
+  remain visible in summaries
 
 ## Headline Matrix Defaults
 
@@ -88,8 +88,8 @@ The default headline sweep is intentionally narrower than the old one:
 - Solid Queue processes: `1,2,6`
 - Async::Job processes: `1,2,6`
 - repeats: `3`
-- headline sweeps skip cells where `capacity * processes > 60`, so the main
-  suite stays in the comparable region instead of spending time in known
+- headline sweeps skip combinations where `capacity * processes > 60`, so the
+  main suite stays in the comparable region instead of spending time in known
   failure envelopes
 
 Stress capacities `150,200` are available in the full suites.
@@ -115,25 +115,37 @@ These statements reflect the latest headline family sweep from **April 5,
 [`results/solid-queue/README.md`](results/solid-queue/README.md), and
 [`results/async-job/README.md`](results/async-job/README.md).
 
+These are directionally expected results. That is useful here: it suggests the
+`async` path is behaving the way you would expect, with modest throughput gains
+where worker execution matters and bigger practical benefits around connection
+pressure and operating envelope.
+
 | Comparison | Current takeaway |
 |------------|------------------|
-| Solid Queue `async` vs `thread` | The latest headline rerun is modestly positive for `async`, but still not a blanket win. It wins `6/9` shared `sleep` cells, `5/9` `async_http` cells, `7/9` `cpu` cells, and `9/9` `ruby_llm_stream` cells. The strongest headline gains are `+27.2%` on `sleep`, `+26.0%` on `async_http`, `+5.1%` on `cpu`, and `+20.2%` on `ruby_llm_stream`. |
-| Async::Job + Redis vs Solid Queue `async` | `Async::Job` remains materially faster across the shared headline cells: `+11.8%` to `+159.9%` on `sleep`, `+16.6%` to `+157.8%` on `async_http`, `+93.3%` to `+213.1%` on `ruby_llm_stream`, and `+7.2%` to `+13.9%` on `cpu`. |
+| Solid Queue `async` vs `thread` | The latest headline rerun is modestly positive for `async`, but still not a blanket win. It wins `6/9` shared `sleep` tests, `5/9` `async_http` tests, `7/9` `cpu` tests, and `9/9` `ruby_llm_stream` tests. The strongest headline gains are `+27.2%` on `sleep`, `+26.0%` on `async_http`, `+5.1%` on `cpu`, and `+20.2%` on `ruby_llm_stream`. |
+| Async::Job + Redis vs Solid Queue `async` | `Async::Job` remains materially faster across the shared headline tests: `+11.8%` to `+159.9%` on `sleep`, `+16.6%` to `+157.8%` on `async_http`, `+93.3%` to `+213.1%` on `ruby_llm_stream`, and `+7.2%` to `+13.9%` on `cpu`. |
 
 The cleanest production-shaped Solid Queue result is `ruby_llm_stream`: the
 real RubyLLM streaming path plus Turbo broadcast jobs benefits from `async`
 without changing the app-level topology. `cpu` is the negative control and is
 roughly neutral, which makes the I/O and streaming gains more credible.
 
+The main Solid Queue benefit here is not maximum throughput. It is keeping
+good performance for I/O-heavy work without thread-sized DB pools and the
+connection pressure that comes with them.
+
 So the headline story is:
 
 - inside Solid Queue, `async` is a real but moderate win for this workload set
 - the streaming-shaped workload is the strongest and cleanest internal result
-- Async::Job is still the clear cross-backend throughput leader
+- if raw throughput is the main goal, `Async::Job` is the stronger choice
+- if staying on Solid Queue matters, `async` is a good tradeoff: good
+  performance, smaller DB-pool requirements, and the existing Rails-native /
+  Mission Control Jobs story
 
-![Throughput advantage ranges across shared headline cells](results/headline-throughput-ranges.png)
+![Throughput advantage ranges across shared headline tests](results/headline-throughput-ranges.png)
 
-![Representative headline cell throughput comparison](results/headline-representative-cell.png)
+![Representative headline test throughput comparison](results/headline-representative-cell.png)
 
 The two benchmark families should be read as separate claims:
 
@@ -168,21 +180,21 @@ This suite is for failure envelope, queueing pressure, and resource blow-up,
 not for the main apples-to-apples headline comparison.
 
 In the current stress run, thread mode completed only the baseline
-`cap=25, proc=2` cell for each workload, while `async` completed all `10/10`
-stress cells per workload. That is the clearest evidence that "threads start
-to hurt" is mostly a failure-envelope story rather than a small per-cell
-throughput story.
+`cap=25, proc=2` test for each workload, while `async` completed all `10/10`
+planned stress tests per workload. That is the clearest evidence that
+"threads start to hurt" is mostly a failure-envelope story rather than a small
+per-test throughput story.
 
 Current stress takeaway:
 
 - thread mode mostly falls out of the matrix once capacity moves past the first
-  stress cell
-- async keeps completing the higher-capacity cells and pushes much further on
+  stress test
+- async keeps completing the higher-capacity tests and pushes much further on
   throughput
 - the stress story is therefore about survivability and scaling envelope, not
-  just small per-cell speedups
+  just small per-test speedups
 
-![Solid Queue stress cell completion status](results/solid-queue-stress/stress-cell-status.png)
+![Solid Queue stress test completion status](results/solid-queue-stress/stress-cell-status.png)
 
 ![Solid Queue stress throughput envelope](results/solid-queue-stress/stress-throughput-envelope.png)
 

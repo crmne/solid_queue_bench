@@ -12,6 +12,18 @@ BACKEND_LABELS = {
   "solid-queue-stress" => "Solid Queue Stress"
 }.freeze
 
+BACKEND_SUMMARIES = {
+  "solid-queue" => "Same backend, different execution mode. The practical question here is whether `async` preserves good performance while avoiding thread-sized DB pools and connection pressure.",
+  "async-job" => "Separate backend reference point. This family answers the maximum-throughput question, not the same-backend execution-mode question.",
+  "solid-queue-stress" => "Failure-envelope tests for Solid Queue. This family is about where `thread` stops completing tests under higher pressure, while `async` keeps going."
+}.freeze
+
+BACKEND_TAKEAWAYS = {
+  "solid-queue" => "Directionally expected result: `async` is a moderate win in the headline tests, with the clearest internal result on `ruby_llm_stream`. The main practical gain is keeping good performance without thread-sized DB pools.",
+  "async-job" => "Throughput-oriented reference point: `Async::Job` is faster in the headline tests here, but it is answering a different question because the backend changes as well as the execution model.",
+  "solid-queue-stress" => "This suite is about survivability more than average throughput. In the current run, thread mode only completed the baseline test for each workload, while `async` completed the rest of the planned stress tests."
+}.freeze
+
 WORKLOAD_LABELS = {
   "sleep" => "Sleep",
   "cpu" => "CPU",
@@ -30,6 +42,14 @@ end
 
 def backend_label(slug)
   BACKEND_LABELS.fetch(slug, slug)
+end
+
+def backend_summary(slug)
+  BACKEND_SUMMARIES.fetch(slug, "")
+end
+
+def backend_takeaway(slug)
+  BACKEND_TAKEAWAYS.fetch(slug, "")
 end
 
 def read_dataset(json_path)
@@ -184,6 +204,21 @@ def generate_stress_plots(results_root)
   ].map { |name| File.join(stress_dir, name) }.select { |path| File.exist?(path) }
 end
 
+def asset_label(path)
+  labels = {
+    "headline-throughput-ranges" => "Headline Throughput Ranges",
+    "headline-representative-cell" => "Headline Representative Test",
+    "stress-cell-status" => "Stress Test Status",
+    "stress-throughput-envelope" => "Stress Throughput Envelope",
+    "stress-rss-envelope" => "Stress RSS Envelope"
+  }
+
+  labels.fetch(
+    File.basename(path, File.extname(path)),
+    File.basename(path, File.extname(path)).split("-").map(&:capitalize).join(" ")
+  )
+end
+
 def write_family_readme(backend_dir, backend_slug, datasets)
   path = File.join(backend_dir, "README.md")
   lines = []
@@ -201,13 +236,15 @@ def write_family_readme(backend_dir, backend_slug, datasets)
   latest_generated_at = datasets.filter_map { |dataset| dataset[:generated_at] }.max
   lines << "Latest dataset timestamp: `#{latest_generated_at}`" if latest_generated_at
   lines << ""
-  lines << "| Workload | Cells | Best Throughput | Lowest RSS | Lowest p50 Latency | Best Async Delta | Files |"
+  lines << "Takeaway: #{backend_takeaway(backend_slug)}"
+  lines << ""
+  lines << "| Workload | Tests | Best Throughput | Lowest RSS | Lowest p50 Latency | Best Async Delta | Files |"
   lines << "|---|---|---|---|---|---|---|"
 
   datasets.sort_by { |dataset| [ HEADLINE_WORKLOADS.include?(dataset[:workload]) ? 0 : 1, dataset[:workload] ] }.each do |dataset|
     summary = dataset_summary(dataset)
     delta = summary[:throughput_advantage] ? "#{fmt_percent(summary[:throughput_advantage][:delta])} at cap=#{summary[:throughput_advantage][:capacity]}, proc=#{summary[:throughput_advantage][:processes]}" : "n/a"
-    cells = "#{summary[:completed_cells]}/#{summary[:planned_cells]}"
+    tests = "#{summary[:completed_cells]}/#{summary[:planned_cells]}"
     files = [
       relative_link(backend_dir, dataset[:csv_path], "CSV"),
       relative_link(backend_dir, dataset[:json_path], "JSON")
@@ -219,14 +256,14 @@ def write_family_readme(backend_dir, backend_slug, datasets)
       files << relative_link(backend_dir, asset, suffix.capitalize) if File.exist?(asset)
     end
 
-    lines << "| #{workload_label(dataset[:workload])} | #{cells} | #{fmt_cell(summary[:best_throughput], metric: "jobs_per_second", unit: " jobs/s")} | #{fmt_cell(summary[:best_rss], metric: "peak_rss_kb", unit: " MB", scale: 1.0 / 1024.0)} | #{summary[:best_latency] ? fmt_cell(summary[:best_latency].merge("total_latency_p50_ms" => summary[:best_latency].dig("total_latency_ms", "p50")), metric: "total_latency_p50_ms", unit: " ms") : "n/a"} | #{delta} | #{files.join(' / ')} |"
+    lines << "| #{workload_label(dataset[:workload])} | #{tests} | #{fmt_cell(summary[:best_throughput], metric: "jobs_per_second", unit: " jobs/s")} | #{fmt_cell(summary[:best_rss], metric: "peak_rss_kb", unit: " MB", scale: 1.0 / 1024.0)} | #{summary[:best_latency] ? fmt_cell(summary[:best_latency].merge("total_latency_p50_ms" => summary[:best_latency].dig("total_latency_ms", "p50")), metric: "total_latency_p50_ms", unit: " ms") : "n/a"} | #{delta} | #{files.join(' / ')} |"
   end
 
   lines << ""
   lines << "## Notes"
   lines << ""
-  lines << "- `Best Async Delta` is the strongest paired `async` vs `thread` throughput improvement within the same `(capacity, processes)` cell."
-  lines << "- `Cells` is `completed/planned`, so incomplete matrices are visible in the summaries."
+  lines << "- `Best Async Delta` is the strongest paired `async` vs `thread` throughput improvement within the same `(capacity, processes)` test."
+  lines << "- `Tests` is `completed/planned`, so missing or timed-out tests remain visible in the summaries."
   lines << "- Async::Job datasets are single-mode, so paired async/thread deltas are `n/a` there."
   lines << "- Headline workloads are `sleep`, `cpu`, `async_http`, and `ruby_llm_stream`."
 
@@ -240,8 +277,8 @@ def write_root_readme(results_root, family_dirs, headline_assets, stress_assets)
   lines << ""
   lines << "Current benchmark outputs live in the per-family directories below."
   lines << ""
-  lines << "| Family | Summary | Workloads |"
-  lines << "|---|---|---|"
+  lines << "| Family | What It Shows | Summary | Workloads |"
+  lines << "|---|---|---|---|"
 
   family_dirs.sort.each do |backend_dir|
     backend_slug = File.basename(backend_dir)
@@ -250,7 +287,7 @@ def write_root_readme(results_root, family_dirs, headline_assets, stress_assets)
       relative_link(results_root, dataset[:json_path], workload_label(dataset[:workload]))
     end
 
-    lines << "| #{backend_label(backend_slug)} | #{relative_link(results_root, File.join(backend_dir, 'README.md'), 'README')} | #{workload_links.join(', ')} |"
+    lines << "| #{backend_label(backend_slug)} | #{backend_summary(backend_slug)} | #{relative_link(results_root, File.join(backend_dir, 'README.md'), 'README')} | #{workload_links.join(', ')} |"
   end
 
   lines << ""
@@ -263,8 +300,7 @@ def write_root_readme(results_root, family_dirs, headline_assets, stress_assets)
     lines << "## Headline Plots"
     lines << ""
     headline_assets.each do |asset|
-      label = File.basename(asset, File.extname(asset)).split("-").map(&:capitalize).join(" ")
-      lines << "- #{relative_link(results_root, asset, label)}"
+      lines << "- #{relative_link(results_root, asset, asset_label(asset))}"
     end
     lines << ""
   end
@@ -273,8 +309,7 @@ def write_root_readme(results_root, family_dirs, headline_assets, stress_assets)
     lines << "## Stress Plots"
     lines << ""
     stress_assets.each do |asset|
-      label = File.basename(asset, File.extname(asset)).split("-").map(&:capitalize).join(" ")
-      lines << "- #{relative_link(results_root, asset, label)}"
+      lines << "- #{relative_link(results_root, asset, asset_label(asset))}"
     end
     lines << ""
   end
