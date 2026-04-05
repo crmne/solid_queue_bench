@@ -60,54 +60,54 @@ namespace :sweep do
   desc "Run only the Solid Queue sleep sweep"
   task sleep: :environment do
     run_workload(backend: "solid_queue", workload: "sleep", include_stress: false)
-    finalize(backend: "solid_queue", workloads: [ "sleep" ])
+    finalize(backend: "solid_queue", workloads: [ "sleep" ], prune_stale: false)
   end
 
   desc "Run only the Solid Queue cpu sweep"
   task cpu: :environment do
     run_workload(backend: "solid_queue", workload: "cpu", include_stress: false)
-    finalize(backend: "solid_queue", workloads: [ "cpu" ])
+    finalize(backend: "solid_queue", workloads: [ "cpu" ], prune_stale: false)
   end
 
   desc "Run only the Solid Queue async_http sweep"
   task async_http: :environment do
     run_workload(backend: "solid_queue", workload: "async_http", include_stress: false)
-    finalize(backend: "solid_queue", workloads: [ "async_http" ])
+    finalize(backend: "solid_queue", workloads: [ "async_http" ], prune_stale: false)
   end
 
   desc "Run only the Solid Queue ruby_llm_stream sweep"
   task ruby_llm_stream: :environment do
     run_workload(backend: "solid_queue", workload: "ruby_llm_stream", include_stress: false)
-    finalize(backend: "solid_queue", workloads: [ "ruby_llm_stream" ])
+    finalize(backend: "solid_queue", workloads: [ "ruby_llm_stream" ], prune_stale: false)
   end
 
   desc "Run only the Async::Job sleep sweep"
   task async_job_sleep: :environment do
     run_workload(backend: "async_job", workload: "sleep", include_stress: false)
-    finalize(backend: "async_job", workloads: [ "sleep" ])
+    finalize(backend: "async_job", workloads: [ "sleep" ], prune_stale: false)
   end
 
   desc "Run only the Async::Job cpu sweep"
   task async_job_cpu: :environment do
     run_workload(backend: "async_job", workload: "cpu", include_stress: false)
-    finalize(backend: "async_job", workloads: [ "cpu" ])
+    finalize(backend: "async_job", workloads: [ "cpu" ], prune_stale: false)
   end
 
   desc "Run only the Async::Job async_http sweep"
   task async_job_async_http: :environment do
     run_workload(backend: "async_job", workload: "async_http", include_stress: false)
-    finalize(backend: "async_job", workloads: [ "async_http" ])
+    finalize(backend: "async_job", workloads: [ "async_http" ], prune_stale: false)
   end
 
   desc "Run only the Async::Job ruby_llm_stream sweep"
   task async_job_ruby_llm_stream: :environment do
     run_workload(backend: "async_job", workload: "ruby_llm_stream", include_stress: false)
-    finalize(backend: "async_job", workloads: [ "ruby_llm_stream" ])
+    finalize(backend: "async_job", workloads: [ "ruby_llm_stream" ], prune_stale: false)
   end
 
   def run_suite(backend:, workloads:, include_stress:)
     workloads.each { |workload| run_workload(backend:, workload:, include_stress:) }
-    finalize(backend:, workloads:)
+    finalize(backend:, workloads:, prune_stale: true)
   end
 
   def run_workload(backend:, workload:, include_stress:)
@@ -172,11 +172,12 @@ namespace :sweep do
     system(*cmd) || warn("WARNING: #{backend} #{workload} sweep exited with errors (some cells may have failed)")
   end
 
-  def finalize(backend:, workloads:)
+  def finalize(backend:, workloads:, prune_stale:)
     require "fileutils"
 
     destination_dir = results_dir_for(backend)
     FileUtils.mkdir_p(destination_dir)
+    prune_stale_family_results!(destination_dir, keep_workloads: workloads) if prune_stale
 
     workloads.each do |workload|
       csv = latest_file(tmp_output_dir_for(backend), "sweep-#{backend_slug(backend)}-#{workload}-*.csv")
@@ -205,6 +206,17 @@ namespace :sweep do
     puts "\n#{"=" * 60}"
     puts "#{backend} results in #{destination_dir}"
     system("ls", "-lh", destination_dir)
+  end
+
+  def prune_stale_family_results!(destination_dir, keep_workloads:)
+    keep_slugs = keep_workloads.map { |workload| workload.tr("_", "-") }
+    stale_slugs = ALL_WORKLOADS.map { |workload| workload.tr("_", "-") } - keep_slugs
+
+    stale_slugs.each do |slug|
+      Dir.glob(File.join(destination_dir, "#{slug}-*")).each do |path|
+        FileUtils.rm_f(path)
+      end
+    end
   end
 
   def backend_slug(backend)

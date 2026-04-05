@@ -105,6 +105,29 @@ ASYNC_JOB_PROCESSES=1,2,6
 REPEAT=3
 ```
 
+## Current Headline Results
+
+These statements reflect the latest headline family sweep from **April 5,
+2026**. The generated summaries live in
+[`results/README.md`](results/README.md),
+[`results/solid-queue/README.md`](results/solid-queue/README.md), and
+[`results/async-job/README.md`](results/async-job/README.md).
+
+| Comparison | Current takeaway |
+|------------|------------------|
+| Solid Queue `async` vs `thread` | `async` is a real but workload-dependent win. In the shared headline cells, it improves throughput by up to `+16.8%` on `sleep`, `+20.6%` on `async_http`, and `+17.2%` on `ruby_llm_stream`, while `cpu` stays near-neutral at `+4.3%` max. |
+| Async::Job + Redis vs Solid Queue `async` | `Async::Job` is faster across the shared headline cells in this run: `+6.6%` to `+192.7%` on `sleep`, `+20.3%` to `+153.2%` on `async_http`, `+87.5%` to `+209.2%` on `ruby_llm_stream`, and `+6.5%` to `+14.3%` on `cpu`. |
+
+The cleanest production-shaped Solid Queue result is `ruby_llm_stream`: the
+real RubyLLM streaming path plus Turbo broadcast jobs benefits from `async`
+without changing the app-level topology. `cpu` is the negative control and is
+roughly neutral, which makes the I/O and streaming gains more credible.
+
+The two benchmark families should be read as separate claims:
+
+- **Same backend, different execution mode:** Solid Queue `thread` vs `async`
+- **Different backends, same Rails API:** Solid Queue vs Async::Job + Redis
+
 ## Setup
 
 Requirements:

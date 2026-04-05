@@ -231,7 +231,7 @@ def write_root_readme(results_root, family_dirs)
   lines << ""
   lines << HEADLINE_WORKLOADS.map { |workload| "- `#{workload}`: #{workload_label(workload)}" }
   lines << ""
-  lines << "Top-level legacy files outside these family directories may be older artifacts or smoke outputs."
+  lines << "Published outputs live in these family directories. If loose top-level files ever appear here, treat them as non-authoritative scratch artifacts."
 
   File.write(path, Array(lines).flatten.join("\n") + "\n")
 end
