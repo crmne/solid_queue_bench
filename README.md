@@ -123,6 +123,10 @@ real RubyLLM streaming path plus Turbo broadcast jobs benefits from `async`
 without changing the app-level topology. `cpu` is the negative control and is
 roughly neutral, which makes the I/O and streaming gains more credible.
 
+![Throughput advantage ranges across shared headline cells](results/headline-throughput-ranges.png)
+
+![Representative headline cell throughput comparison](results/headline-representative-cell.png)
+
 The two benchmark families should be read as separate claims:
 
 - **Same backend, different execution mode:** Solid Queue `thread` vs `async`
@@ -273,6 +277,8 @@ This regenerates:
 - `results/README.md`
 - `results/solid-queue/README.md`
 - `results/async-job/README.md`
+- `results/headline-throughput-ranges.png`
+- `results/headline-representative-cell.png`
 
 Manual plotting:
 

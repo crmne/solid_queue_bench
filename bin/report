@@ -157,6 +157,17 @@ def relative_link(from_dir, target_path, label)
   "[#{label}](#{relative})"
 end
 
+def generate_headline_plots(results_root)
+  script = File.expand_path("headline_plot", __dir__)
+  return [] unless File.exist?(script)
+  return [] unless system(script, results_root.to_s)
+
+  %w[
+    headline-throughput-ranges.png
+    headline-representative-cell.png
+  ].map { |name| File.join(results_root, name) }.select { |path| File.exist?(path) }
+end
+
 def write_family_readme(backend_dir, backend_slug, datasets)
   path = File.join(backend_dir, "README.md")
   lines = []
@@ -206,7 +217,7 @@ def write_family_readme(backend_dir, backend_slug, datasets)
   File.write(path, lines.join("\n") + "\n")
 end
 
-def write_root_readme(results_root, family_dirs)
+def write_root_readme(results_root, family_dirs, headline_assets)
   path = File.join(results_root, "README.md")
   lines = []
   lines << "# Benchmark Results"
@@ -231,6 +242,17 @@ def write_root_readme(results_root, family_dirs)
   lines << ""
   lines << HEADLINE_WORKLOADS.map { |workload| "- `#{workload}`: #{workload_label(workload)}" }
   lines << ""
+
+  if headline_assets.any?
+    lines << "## Headline Plots"
+    lines << ""
+    headline_assets.each do |asset|
+      label = File.basename(asset, File.extname(asset)).split("-").map(&:capitalize).join(" ")
+      lines << "- #{relative_link(results_root, asset, label)}"
+    end
+    lines << ""
+  end
+
   lines << "Published outputs live in these family directories. If loose top-level files ever appear here, treat them as non-authoritative scratch artifacts."
 
   File.write(path, Array(lines).flatten.join("\n") + "\n")
@@ -242,4 +264,5 @@ family_dirs.each do |backend_dir|
   write_family_readme(backend_dir, File.basename(backend_dir), datasets_for(backend_dir))
 end
 
-write_root_readme(RESULTS_ROOT, family_dirs)
+headline_assets = generate_headline_plots(RESULTS_ROOT)
+write_root_readme(RESULTS_ROOT, family_dirs, headline_assets)

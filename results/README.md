@@ -14,4 +14,9 @@ Current benchmark outputs live in the per-family directories below.
 - `async_http`: Async::HTTP
 - `ruby_llm_stream`: RubyLLM Stream
 
+## Headline Plots
+
+- [Headline Throughput Ranges](headline-throughput-ranges.png)
+- [Headline Representative Cell](headline-representative-cell.png)
+
 Published outputs live in these family directories. If loose top-level files ever appear here, treat them as non-authoritative scratch artifacts.

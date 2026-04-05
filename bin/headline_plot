@@ -1,0 +1,246 @@
+#!/usr/bin/env python3
+
+import csv
+import sys
+from pathlib import Path
+
+import matplotlib
+
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+import numpy as np
+
+RESULTS_ROOT = Path(sys.argv[1] if len(sys.argv) > 1 else Path(__file__).resolve().parents[1] / "results")
+
+WORKLOAD_ORDER = ["ruby_llm_stream", "async_http", "sleep", "cpu"]
+
+WORKLOAD_LABELS = {
+    "sleep": "Sleep",
+    "cpu": "CPU",
+    "async_http": "Async::HTTP",
+    "ruby_llm_stream": "RubyLLM Stream",
+}
+
+SERIES_COLORS = {
+    "sq_thread": "#2563eb",
+    "sq_async": "#ef4444",
+    "async_job": "#10b981",
+}
+
+WORKLOAD_COLORS = {
+    "ruby_llm_stream": "#ef4444",
+    "async_http": "#10b981",
+    "sleep": "#3b82f6",
+    "cpu": "#6b7280",
+}
+
+REPRESENTATIVE_CELL = (25, 2)
+
+
+def read_csv(path):
+    rows = []
+    with path.open() as handle:
+        for row in csv.DictReader(handle):
+            parsed = {}
+            for key, value in row.items():
+                if key in {"backend", "mode"}:
+                    parsed[key] = value
+                else:
+                    try:
+                        parsed[key] = int(value)
+                    except (TypeError, ValueError):
+                        try:
+                            parsed[key] = float(value)
+                        except (TypeError, ValueError):
+                            parsed[key] = value
+            rows.append(parsed)
+    return rows
+
+
+def dataset_rows(results_root, backend_slug, workload_slug):
+    filename = workload_slug.replace("_", "-") + "-data.csv"
+    return read_csv(results_root / backend_slug / filename)
+
+
+def paired_rows(rows, left_mode, right_mode):
+    left = {(row["capacity"], row["processes"]): row for row in rows if row.get("mode") == left_mode}
+    right = {(row["capacity"], row["processes"]): row for row in rows if row.get("mode") == right_mode}
+    shared = sorted(set(left) & set(right))
+    return [(left[key], right[key]) for key in shared]
+
+
+def throughput_deltas(pairs):
+    deltas = []
+    for left, right in pairs:
+        left_value = left.get("jobs_per_second")
+        right_value = right.get("jobs_per_second")
+        if not left_value or right_value is None:
+            continue
+        deltas.append(((right_value - left_value) / left_value) * 100.0)
+    return deltas
+
+
+def paired_backend_rows(sq_rows, aj_rows):
+    sq_async = {(row["capacity"], row["processes"]): row for row in sq_rows if row.get("mode") == "async"}
+    async_job = {(row["capacity"], row["processes"]): row for row in aj_rows}
+    shared = sorted(set(sq_async) & set(async_job))
+    return [(sq_async[key], async_job[key]) for key in shared]
+
+
+def representative_value(rows, mode=None):
+    for row in rows:
+        if row.get("capacity") != REPRESENTATIVE_CELL[0] or row.get("processes") != REPRESENTATIVE_CELL[1]:
+            continue
+        if mode is not None and row.get("mode") != mode:
+            continue
+        return row.get("jobs_per_second")
+    return None
+
+
+def plot_delta_ranges(results_root):
+    sq_series = {}
+    backend_series = {}
+    all_values = []
+
+    for workload in WORKLOAD_ORDER:
+        sq_rows = dataset_rows(results_root, "solid-queue", workload)
+        aj_rows = dataset_rows(results_root, "async-job", workload)
+
+        sq_deltas = throughput_deltas(paired_rows(sq_rows, "thread", "async"))
+        aj_deltas = throughput_deltas(paired_backend_rows(sq_rows, aj_rows))
+
+        sq_series[workload] = sq_deltas
+        backend_series[workload] = aj_deltas
+        all_values.extend(sq_deltas)
+        all_values.extend(aj_deltas)
+
+    fig, axes = plt.subplots(1, 2, figsize=(13.5, 5.6), sharey=True)
+    fig.suptitle("Headline Throughput Ranges Across Shared Cells", fontsize=15, fontweight="bold", y=0.98)
+
+    panels = [
+        (axes[0], "Solid Queue async over thread", sq_series),
+        (axes[1], "Async::Job over Solid Queue async", backend_series),
+    ]
+
+    min_x = min(all_values) - 10
+    max_x = max(all_values) + 15
+
+    y_positions = np.arange(len(WORKLOAD_ORDER))[::-1]
+
+    for ax, title, series in panels:
+        ax.set_title(title, fontsize=12, pad=10)
+        ax.axvline(0, color="#6b7280", linewidth=1.0)
+        ax.grid(True, axis="x", alpha=0.2, linewidth=0.5)
+        ax.set_xlim(min_x, max_x)
+        ax.set_xlabel("Throughput advantage (%)", fontsize=10)
+        ax.set_yticks(y_positions)
+        ax.set_yticklabels([WORKLOAD_LABELS[w] for w in WORKLOAD_ORDER], fontsize=10)
+
+        for index, workload in enumerate(WORKLOAD_ORDER):
+            values = series.get(workload, [])
+            color = WORKLOAD_COLORS[workload]
+            if not values:
+                continue
+            y = y_positions[index]
+            ax.hlines(y, min(values), max(values), color=color, linewidth=3, alpha=0.85)
+            ax.scatter(values, [y] * len(values), color=color, s=35, alpha=0.8, edgecolors="white", linewidths=0.7, zorder=3)
+            median = float(np.median(values))
+            ax.scatter([median], [y], color="#111827", s=30, zorder=4)
+            ax.text(max(values) + 2, y, f"{min(values):+.1f}% to {max(values):+.1f}%", va="center", fontsize=9, color="#374151")
+
+    axes[0].text(
+        0.01,
+        -0.18,
+        "Dots are individual headline cells. Thick bars show min-to-max throughput deltas.",
+        transform=axes[0].transAxes,
+        fontsize=9,
+        color="#4b5563",
+    )
+
+    plt.tight_layout(rect=[0, 0.03, 1, 0.94])
+    for suffix in ("png", "svg"):
+        fig.savefig(results_root / f"headline-throughput-ranges.{suffix}", dpi=160, bbox_inches="tight")
+    plt.close(fig)
+
+
+def plot_representative_cell(results_root):
+    fig, axes = plt.subplots(2, 2, figsize=(12.5, 8.2))
+    fig.suptitle(
+        f"Representative Headline Cell: capacity={REPRESENTATIVE_CELL[0]}, processes={REPRESENTATIVE_CELL[1]}",
+        fontsize=15,
+        fontweight="bold",
+        y=0.98,
+    )
+
+    labels = ["SQ Thread", "SQ Async", "Async::Job"]
+    colors = [SERIES_COLORS["sq_thread"], SERIES_COLORS["sq_async"], SERIES_COLORS["async_job"]]
+
+    for ax, workload in zip(axes.flatten(), WORKLOAD_ORDER):
+        sq_rows = dataset_rows(results_root, "solid-queue", workload)
+        aj_rows = dataset_rows(results_root, "async-job", workload)
+
+        values = [
+            representative_value(sq_rows, "thread"),
+            representative_value(sq_rows, "async"),
+            representative_value(aj_rows),
+        ]
+
+        bars = ax.bar(labels, values, color=colors, width=0.62)
+        ax.set_title(WORKLOAD_LABELS[workload], fontsize=12, pad=10)
+        ax.set_ylabel("Throughput (jobs/s)", fontsize=10)
+        ax.grid(True, axis="y", alpha=0.2, linewidth=0.5)
+        ax.set_axisbelow(True)
+        ax.tick_params(axis="x", labelrotation=0, labelsize=9)
+
+        ymax = max(values) * 1.18 if max(values) else 1
+        ax.set_ylim(0, ymax)
+
+        for bar, value in zip(bars, values):
+            ax.text(
+                bar.get_x() + bar.get_width() / 2,
+                bar.get_height() + ymax * 0.02,
+                f"{value:.2f}",
+                ha="center",
+                va="bottom",
+                fontsize=9,
+                color="#111827",
+            )
+
+        sq_delta = ((values[1] - values[0]) / values[0]) * 100.0 if values[0] else 0.0
+        aj_delta = ((values[2] - values[1]) / values[1]) * 100.0 if values[1] else 0.0
+        ax.text(
+            0.03,
+            0.93,
+            f"SQ async vs thread: {sq_delta:+.1f}%\nAsync::Job vs SQ async: {aj_delta:+.1f}%",
+            transform=ax.transAxes,
+            ha="left",
+            va="top",
+            fontsize=9,
+            bbox={"boxstyle": "round,pad=0.35", "facecolor": "#f9fafb", "edgecolor": "#d1d5db"},
+        )
+
+    plt.tight_layout(rect=[0, 0, 1, 0.95])
+    for suffix in ("png", "svg"):
+        fig.savefig(results_root / f"headline-representative-cell.{suffix}", dpi=160, bbox_inches="tight")
+    plt.close(fig)
+
+
+def main():
+    required = [
+        RESULTS_ROOT / "solid-queue" / "sleep-data.csv",
+        RESULTS_ROOT / "async-job" / "sleep-data.csv",
+    ]
+    missing = [str(path) for path in required if not path.exists()]
+    if missing:
+        print("Missing required result files:", file=sys.stderr)
+        for path in missing:
+            print(f"  - {path}", file=sys.stderr)
+        return 1
+
+    plot_delta_ranges(RESULTS_ROOT)
+    plot_representative_cell(RESULTS_ROOT)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
