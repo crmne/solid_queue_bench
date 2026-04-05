@@ -1,0 +1,180 @@
+#!/usr/bin/env python3
+
+import json
+import sys
+from pathlib import Path
+
+import matplotlib
+
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+import numpy as np
+
+RESULTS_DIR = Path(sys.argv[1] if len(sys.argv) > 1 else Path(__file__).resolve().parents[1] / "results" / "solid-queue-stress")
+
+WORKLOAD_ORDER = ["ruby_llm_stream", "async_http", "sleep"]
+WORKLOAD_LABELS = {
+    "sleep": "Sleep",
+    "async_http": "Async::HTTP",
+    "ruby_llm_stream": "RubyLLM Stream",
+}
+MODE_COLORS = {
+    "thread": "#2563eb",
+    "async": "#ef4444",
+}
+STATUS_COLORS = {
+    "ok": "#10b981",
+    "failed": "#ef4444",
+}
+
+
+def load_dataset(workload):
+    path = RESULTS_DIR / f"{workload.replace('_', '-')}-data.json"
+    with path.open() as handle:
+        return json.load(handle)
+
+
+def dataset_lookup(dataset):
+    return {
+        (row["mode"], int(row["processes"]), int(row["capacity"])): row
+        for row in dataset["results"]
+    }
+
+
+def plot_status(datasets):
+    modes = ["thread", "async"]
+    fig, axes = plt.subplots(len(WORKLOAD_ORDER), len(modes), figsize=(11.5, 9.0), sharex=True, sharey=True)
+    fig.suptitle("Solid Queue Stress Suite: Cell Status", fontsize=15, fontweight="bold", y=0.98)
+
+    for row_index, workload in enumerate(WORKLOAD_ORDER):
+        dataset = datasets[workload]
+        lookup = dataset_lookup(dataset)
+        capacities = [int(value) for value in dataset["capacities"]]
+        processes = [int(value) for value in dataset["processes"]]
+
+        for col_index, mode in enumerate(modes):
+            ax = axes[row_index][col_index]
+            ax.set_title(f"{WORKLOAD_LABELS[workload]} — {mode}", fontsize=11, pad=8)
+
+            for process in processes:
+                for capacity in capacities:
+                    row = lookup.get((mode, process, capacity))
+                    if row:
+                        ax.scatter(capacity, process, s=140, color=STATUS_COLORS["ok"], edgecolors="white", linewidths=0.8, zorder=3)
+                    else:
+                        ax.scatter(capacity, process, s=120, color=STATUS_COLORS["failed"], marker="x", linewidths=2.0, zorder=4)
+
+            ax.set_xticks(capacities)
+            ax.set_yticks(processes)
+            ax.grid(True, alpha=0.18, linewidth=0.5)
+            ax.set_axisbelow(True)
+            if row_index == len(WORKLOAD_ORDER) - 1:
+                ax.set_xlabel("Capacity", fontsize=10)
+            if col_index == 0:
+                ax.set_ylabel("Processes", fontsize=10)
+
+    handles = [
+        plt.Line2D([], [], marker="o", linestyle="", color=STATUS_COLORS["ok"], markersize=8, label="completed"),
+        plt.Line2D([], [], marker="x", linestyle="", color=STATUS_COLORS["failed"], markersize=8, markeredgewidth=2.0, label="failed / timed out"),
+    ]
+    fig.legend(handles=handles, loc="upper center", bbox_to_anchor=(0.5, 0.955), ncol=2, frameon=False, fontsize=10)
+
+    plt.tight_layout(rect=[0, 0, 1, 0.94])
+    for suffix in ("png", "svg"):
+        fig.savefig(RESULTS_DIR / f"stress-cell-status.{suffix}", dpi=160, bbox_inches="tight")
+    plt.close(fig)
+
+
+def plot_metric_envelope(datasets, metric, ylabel, out_name, scale=1.0):
+    fig, axes = plt.subplots(len(WORKLOAD_ORDER), 2, figsize=(12.5, 9.5), sharex=True)
+    fig.suptitle(f"Solid Queue Stress Suite: {ylabel}", fontsize=15, fontweight="bold", y=0.98)
+
+    for row_index, workload in enumerate(WORKLOAD_ORDER):
+        dataset = datasets[workload]
+        lookup = dataset_lookup(dataset)
+        capacities = [int(value) for value in dataset["capacities"]]
+        processes = [int(value) for value in dataset["processes"]]
+
+        for col_index, process in enumerate(processes):
+            ax = axes[row_index][col_index]
+            ax.set_title(f"{WORKLOAD_LABELS[workload]} — {process} processes", fontsize=11, pad=8)
+
+            maxima = []
+
+            for mode in ["thread", "async"]:
+                values = []
+                missing_caps = []
+                for capacity in capacities:
+                    row = lookup.get((mode, process, capacity))
+                    if row:
+                        values.append(float(row[metric]) * scale)
+                        maxima.append(float(row[metric]) * scale)
+                    else:
+                        values.append(np.nan)
+                        missing_caps.append(capacity)
+
+                ax.plot(
+                    capacities,
+                    values,
+                    color=MODE_COLORS[mode],
+                    marker="o",
+                    linewidth=2.0,
+                    markersize=5,
+                    label=mode,
+                )
+
+                if missing_caps:
+                    ax.scatter(
+                        missing_caps,
+                        [0] * len(missing_caps),
+                        color=MODE_COLORS[mode],
+                        marker="x",
+                        s=70,
+                        linewidths=2.0,
+                        zorder=4,
+                    )
+
+            ymax = max(maxima) * 1.14 if maxima else 1
+            ax.set_ylim(bottom=0, top=ymax)
+            ax.grid(True, axis="y", alpha=0.18, linewidth=0.5)
+            ax.set_axisbelow(True)
+            ax.set_xticks(capacities)
+            if row_index == len(WORKLOAD_ORDER) - 1:
+                ax.set_xlabel("Capacity", fontsize=10)
+            if col_index == 0:
+                ax.set_ylabel(ylabel, fontsize=10)
+            if row_index == 0 and col_index == 1:
+                ax.legend(frameon=False, fontsize=9, loc="upper left")
+
+    axes[-1][0].text(
+        0.0,
+        -0.32,
+        "Cross markers at y=0 indicate planned cells that failed or timed out.",
+        transform=axes[-1][0].transAxes,
+        fontsize=9,
+        color="#4b5563",
+    )
+
+    plt.tight_layout(rect=[0, 0.03, 1, 0.94])
+    for suffix in ("png", "svg"):
+        fig.savefig(RESULTS_DIR / f"{out_name}.{suffix}", dpi=160, bbox_inches="tight")
+    plt.close(fig)
+
+
+def main():
+    missing = [workload for workload in WORKLOAD_ORDER if not (RESULTS_DIR / f"{workload.replace('_', '-')}-data.json").exists()]
+    if missing:
+        print("Missing required stress datasets:", file=sys.stderr)
+        for workload in missing:
+            print(f"  - {workload}", file=sys.stderr)
+        return 1
+
+    datasets = {workload: load_dataset(workload) for workload in WORKLOAD_ORDER}
+    plot_status(datasets)
+    plot_metric_envelope(datasets, "jobs_per_second", "Throughput (jobs/s)", "stress-throughput-envelope")
+    plot_metric_envelope(datasets, "peak_rss_kb", "Peak RSS (MB)", "stress-rss-envelope", scale=1.0 / 1024.0)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

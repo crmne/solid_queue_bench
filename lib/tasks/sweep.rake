@@ -1,119 +1,129 @@
 namespace :sweep do
   HEADLINE_CAPACITIES = ENV.fetch("CAPACITIES", "5,10,25,50,100")
   STRESS_CAPACITIES = ENV.fetch("STRESS_CAPACITIES", "150,200")
+  PRESSURE_CAPACITIES = ENV.fetch("PRESSURE_CAPACITIES", "25,50,100,150,200")
   HEADLINE_MAX_TOTAL_CONCURRENCY = ENV.fetch("HEADLINE_MAX_TOTAL_CONCURRENCY", "60")
   SOLID_QUEUE_PROCESSES = ENV.fetch("SOLID_QUEUE_PROCESSES", "1,2,6")
   ASYNC_JOB_PROCESSES = ENV.fetch("ASYNC_JOB_PROCESSES", "1,2,6")
+  STRESS_SOLID_QUEUE_PROCESSES = ENV.fetch("STRESS_SOLID_QUEUE_PROCESSES", "2,6")
   REPEAT = ENV.fetch("REPEAT", "3")
+  STRESS_REPEAT = ENV.fetch("STRESS_REPEAT", REPEAT)
 
   HEADLINE_WORKLOADS = %w[sleep cpu async_http ruby_llm_stream]
+  STRESS_WORKLOADS = %w[sleep async_http ruby_llm_stream]
   SUPPLEMENTARY_WORKLOADS = %w[http llm_batch llm_stream]
   ALL_WORKLOADS = HEADLINE_WORKLOADS + SUPPLEMENTARY_WORKLOADS
 
   BACKEND_LABELS = {
     "solid_queue" => "solid-queue",
-    "async_job" => "async-job"
+    "async_job" => "async-job",
+    "solid_queue_stress" => "solid-queue-stress"
   }.freeze
 
   desc "Run the Solid Queue headline suite"
   task all: :environment do
-    run_suite(backend: "solid_queue", workloads: HEADLINE_WORKLOADS, include_stress: false)
+    run_suite(backend: "solid_queue", workloads: HEADLINE_WORKLOADS, profile: :headline)
   end
 
   desc "Run the Solid Queue headline suite"
   task solid_queue_headline: :environment do
-    run_suite(backend: "solid_queue", workloads: HEADLINE_WORKLOADS, include_stress: false)
+    run_suite(backend: "solid_queue", workloads: HEADLINE_WORKLOADS, profile: :headline)
   end
 
   desc "Run the Solid Queue full suite including supplementary workloads and stress capacities"
   task solid_queue_full: :environment do
-    run_suite(backend: "solid_queue", workloads: ALL_WORKLOADS, include_stress: true)
+    run_suite(backend: "solid_queue", workloads: ALL_WORKLOADS, profile: :full)
   end
 
   desc "Run the Async::Job headline suite"
   task async_job_headline: :environment do
-    run_suite(backend: "async_job", workloads: HEADLINE_WORKLOADS, include_stress: false)
+    run_suite(backend: "async_job", workloads: HEADLINE_WORKLOADS, profile: :headline)
   end
 
   desc "Run the Async::Job full suite including supplementary workloads and stress capacities"
   task async_job_full: :environment do
-    run_suite(backend: "async_job", workloads: ALL_WORKLOADS, include_stress: true)
+    run_suite(backend: "async_job", workloads: ALL_WORKLOADS, profile: :full)
   end
 
   desc "Run both headline benchmark families"
   task families: :environment do
-    run_suite(backend: "solid_queue", workloads: HEADLINE_WORKLOADS, include_stress: false)
-    run_suite(backend: "async_job", workloads: HEADLINE_WORKLOADS, include_stress: false)
+    run_suite(backend: "solid_queue", workloads: HEADLINE_WORKLOADS, profile: :headline)
+    run_suite(backend: "async_job", workloads: HEADLINE_WORKLOADS, profile: :headline)
   end
 
   desc "Run every benchmark family, including supplementary workloads and stress capacities"
   task full: :environment do
-    run_suite(backend: "solid_queue", workloads: ALL_WORKLOADS, include_stress: true)
-    run_suite(backend: "async_job", workloads: ALL_WORKLOADS, include_stress: true)
+    run_suite(backend: "solid_queue", workloads: ALL_WORKLOADS, profile: :full)
+    run_suite(backend: "async_job", workloads: ALL_WORKLOADS, profile: :full)
   end
 
   desc "Run the Solid Queue supplementary synthetic/control suite"
   task supplementary: :environment do
-    run_suite(backend: "solid_queue", workloads: SUPPLEMENTARY_WORKLOADS, include_stress: false)
+    run_suite(backend: "solid_queue", workloads: SUPPLEMENTARY_WORKLOADS, profile: :headline)
+  end
+
+  desc "Run the Solid Queue stress suite focused on high-concurrency I/O and failure envelope"
+  task solid_queue_stress: :environment do
+    run_suite(backend: "solid_queue", workloads: STRESS_WORKLOADS, profile: :stress)
   end
 
   desc "Run only the Solid Queue sleep sweep"
   task sleep: :environment do
-    run_workload(backend: "solid_queue", workload: "sleep", include_stress: false)
-    finalize(backend: "solid_queue", workloads: [ "sleep" ], prune_stale: false)
+    run_workload(backend: "solid_queue", workload: "sleep", profile: :headline)
+    finalize(backend: "solid_queue", workloads: [ "sleep" ], prune_stale: false, profile: :headline)
   end
 
   desc "Run only the Solid Queue cpu sweep"
   task cpu: :environment do
-    run_workload(backend: "solid_queue", workload: "cpu", include_stress: false)
-    finalize(backend: "solid_queue", workloads: [ "cpu" ], prune_stale: false)
+    run_workload(backend: "solid_queue", workload: "cpu", profile: :headline)
+    finalize(backend: "solid_queue", workloads: [ "cpu" ], prune_stale: false, profile: :headline)
   end
 
   desc "Run only the Solid Queue async_http sweep"
   task async_http: :environment do
-    run_workload(backend: "solid_queue", workload: "async_http", include_stress: false)
-    finalize(backend: "solid_queue", workloads: [ "async_http" ], prune_stale: false)
+    run_workload(backend: "solid_queue", workload: "async_http", profile: :headline)
+    finalize(backend: "solid_queue", workloads: [ "async_http" ], prune_stale: false, profile: :headline)
   end
 
   desc "Run only the Solid Queue ruby_llm_stream sweep"
   task ruby_llm_stream: :environment do
-    run_workload(backend: "solid_queue", workload: "ruby_llm_stream", include_stress: false)
-    finalize(backend: "solid_queue", workloads: [ "ruby_llm_stream" ], prune_stale: false)
+    run_workload(backend: "solid_queue", workload: "ruby_llm_stream", profile: :headline)
+    finalize(backend: "solid_queue", workloads: [ "ruby_llm_stream" ], prune_stale: false, profile: :headline)
   end
 
   desc "Run only the Async::Job sleep sweep"
   task async_job_sleep: :environment do
-    run_workload(backend: "async_job", workload: "sleep", include_stress: false)
-    finalize(backend: "async_job", workloads: [ "sleep" ], prune_stale: false)
+    run_workload(backend: "async_job", workload: "sleep", profile: :headline)
+    finalize(backend: "async_job", workloads: [ "sleep" ], prune_stale: false, profile: :headline)
   end
 
   desc "Run only the Async::Job cpu sweep"
   task async_job_cpu: :environment do
-    run_workload(backend: "async_job", workload: "cpu", include_stress: false)
-    finalize(backend: "async_job", workloads: [ "cpu" ], prune_stale: false)
+    run_workload(backend: "async_job", workload: "cpu", profile: :headline)
+    finalize(backend: "async_job", workloads: [ "cpu" ], prune_stale: false, profile: :headline)
   end
 
   desc "Run only the Async::Job async_http sweep"
   task async_job_async_http: :environment do
-    run_workload(backend: "async_job", workload: "async_http", include_stress: false)
-    finalize(backend: "async_job", workloads: [ "async_http" ], prune_stale: false)
+    run_workload(backend: "async_job", workload: "async_http", profile: :headline)
+    finalize(backend: "async_job", workloads: [ "async_http" ], prune_stale: false, profile: :headline)
   end
 
   desc "Run only the Async::Job ruby_llm_stream sweep"
   task async_job_ruby_llm_stream: :environment do
-    run_workload(backend: "async_job", workload: "ruby_llm_stream", include_stress: false)
-    finalize(backend: "async_job", workloads: [ "ruby_llm_stream" ], prune_stale: false)
+    run_workload(backend: "async_job", workload: "ruby_llm_stream", profile: :headline)
+    finalize(backend: "async_job", workloads: [ "ruby_llm_stream" ], prune_stale: false, profile: :headline)
   end
 
-  def run_suite(backend:, workloads:, include_stress:)
-    workloads.each { |workload| run_workload(backend:, workload:, include_stress:) }
-    finalize(backend:, workloads:, prune_stale: true)
+  def run_suite(backend:, workloads:, profile:)
+    workloads.each { |workload| run_workload(backend:, workload:, profile:) }
+    finalize(backend:, workloads:, prune_stale: true, profile:)
   end
 
-  def run_workload(backend:, workload:, include_stress:)
+  def run_workload(backend:, workload:, profile:)
     prepare_database!
-    spec = workload_spec(workload)
-    capacities = include_stress ? [ HEADLINE_CAPACITIES, STRESS_CAPACITIES ].join(",") : HEADLINE_CAPACITIES
+    spec = workload_spec(workload, profile:)
+    capacities = capacities_for(backend:, profile:)
 
     run_matrix(
       backend:,
@@ -122,11 +132,39 @@ namespace :sweep do
       timeout: spec.fetch(:timeout),
       extra: spec.fetch(:extra),
       capacities:,
-      max_total_concurrency: max_total_concurrency_for(include_stress:)
+      processes: processes_for(backend, profile:),
+      repeat: repeat_for(profile:),
+      output_dir: tmp_output_dir_for(backend, profile:),
+      max_total_concurrency: max_total_concurrency_for(profile:)
     )
   end
 
-  def workload_spec(workload)
+  def workload_spec(workload, profile:)
+    if profile == :stress
+      case workload
+      when "sleep"
+        return {
+          jobs: Integer(ENV.fetch("STRESS_SLEEP_JOBS", "500")),
+          timeout: Integer(ENV.fetch("STRESS_SLEEP_TIMEOUT_S", "300")),
+          extra: "--duration-ms #{ENV.fetch("STRESS_SLEEP_DURATION_MS", "250")}"
+        }
+      when "async_http"
+        return {
+          jobs: Integer(ENV.fetch("STRESS_ASYNC_HTTP_JOBS", "500")),
+          timeout: Integer(ENV.fetch("STRESS_ASYNC_HTTP_TIMEOUT_S", "300")),
+          extra: "--duration-ms #{ENV.fetch("STRESS_ASYNC_HTTP_DURATION_MS", "250")}"
+        }
+      when "ruby_llm_stream"
+        return {
+          jobs: Integer(ENV.fetch("STRESS_RUBY_LLM_STREAM_JOBS", "240")),
+          timeout: Integer(ENV.fetch("STRESS_RUBY_LLM_STREAM_TIMEOUT_S", "600")),
+          extra: "--token-count #{ENV.fetch("STRESS_RUBY_LLM_TOKEN_COUNT", "40")} --token-delay-ms #{ENV.fetch("STRESS_RUBY_LLM_TOKEN_DELAY_MS", "20")} --llm-model gpt-4.1-mini"
+        }
+      else
+        raise ArgumentError, "Unknown stress workload: #{workload}"
+      end
+    end
+
     case workload
     when "sleep"
       { jobs: 1000, timeout: 120, extra: "--duration-ms 50" }
@@ -147,18 +185,18 @@ namespace :sweep do
     end
   end
 
-  def run_matrix(backend:, workload:, jobs:, timeout:, extra:, capacities:, max_total_concurrency: nil)
+  def run_matrix(backend:, workload:, jobs:, timeout:, extra:, capacities:, processes:, repeat:, output_dir:, max_total_concurrency: nil)
     cmd = [
       "bin/matrix",
       "--backend", backend,
       "--workload", workload,
       "--jobs", jobs.to_s,
       "--capacities", capacities,
-      "--processes", processes_for(backend),
+      "--processes", processes,
       "--modes", modes_for(backend),
-      "--repeat", REPEAT,
+      "--repeat", repeat,
       "--timeout-s", timeout.to_s,
-      "--output-dir", tmp_output_dir_for(backend),
+      "--output-dir", output_dir,
       "--name", "sweep",
       *extra.split.reject(&:empty?)
     ]
@@ -172,15 +210,15 @@ namespace :sweep do
     system(*cmd) || warn("WARNING: #{backend} #{workload} sweep exited with errors (some cells may have failed)")
   end
 
-  def finalize(backend:, workloads:, prune_stale:)
+  def finalize(backend:, workloads:, prune_stale:, profile:)
     require "fileutils"
 
-    destination_dir = results_dir_for(backend)
+    destination_dir = results_dir_for(backend, profile:)
     FileUtils.mkdir_p(destination_dir)
     prune_stale_family_results!(destination_dir, keep_workloads: workloads) if prune_stale
 
     workloads.each do |workload|
-      csv = latest_file(tmp_output_dir_for(backend), "sweep-#{backend_slug(backend)}-#{workload}-*.csv")
+      csv = latest_file(tmp_output_dir_for(backend, profile:), "sweep-#{backend_slug(backend)}-#{workload}-*.csv")
       next unless csv
 
       base = workload.tr("_", "-")
@@ -223,7 +261,9 @@ namespace :sweep do
     BACKEND_LABELS.fetch(backend)
   end
 
-  def processes_for(backend)
+  def processes_for(backend, profile:)
+    return STRESS_SOLID_QUEUE_PROCESSES if profile == :stress
+
     backend == "async_job" ? ASYNC_JOB_PROCESSES : SOLID_QUEUE_PROCESSES
   end
 
@@ -231,19 +271,44 @@ namespace :sweep do
     backend == "async_job" ? "async" : "thread,async"
   end
 
-  def max_total_concurrency_for(include_stress:)
-    return if include_stress
+  def capacities_for(backend:, profile:)
+    case profile
+    when :headline
+      HEADLINE_CAPACITIES
+    when :full
+      [ HEADLINE_CAPACITIES, STRESS_CAPACITIES ].join(",")
+    when :stress
+      raise ArgumentError, "stress suite is only supported for solid_queue" unless backend == "solid_queue"
+
+      PRESSURE_CAPACITIES
+    else
+      raise ArgumentError, "Unknown profile: #{profile}"
+    end
+  end
+
+  def repeat_for(profile:)
+    profile == :stress ? STRESS_REPEAT : REPEAT
+  end
+
+  def max_total_concurrency_for(profile:)
+    return if profile != :headline
     return if HEADLINE_MAX_TOTAL_CONCURRENCY.to_s.empty?
 
     HEADLINE_MAX_TOTAL_CONCURRENCY
   end
 
-  def tmp_output_dir_for(backend)
-    File.join("tmp/benchmarks", backend_slug(backend))
+  def tmp_output_dir_for(backend, profile:)
+    File.join("tmp/benchmarks", results_slug_for(backend, profile:))
   end
 
-  def results_dir_for(backend)
-    File.join("results", backend_slug(backend))
+  def results_dir_for(backend, profile:)
+    File.join("results", results_slug_for(backend, profile:))
+  end
+
+  def results_slug_for(backend, profile:)
+    return backend_slug("solid_queue_stress") if profile == :stress
+
+    backend_slug(backend)
   end
 
   def latest_file(dir, glob)

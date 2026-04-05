@@ -99,10 +99,12 @@ Environment overrides:
 ```bash
 CAPACITIES=5,10,25,50,100
 STRESS_CAPACITIES=150,200
+PRESSURE_CAPACITIES=25,50,100,150,200
 HEADLINE_MAX_TOTAL_CONCURRENCY=60
 SOLID_QUEUE_PROCESSES=1,2,6
 ASYNC_JOB_PROCESSES=1,2,6
 REPEAT=3
+STRESS_SOLID_QUEUE_PROCESSES=2,6
 ```
 
 ## Current Headline Results
@@ -115,7 +117,7 @@ These statements reflect the latest headline family sweep from **April 5,
 
 | Comparison | Current takeaway |
 |------------|------------------|
-| Solid Queue `async` vs `thread` | `async` is a real but workload-dependent win. In the shared headline cells, it improves throughput by up to `+16.8%` on `sleep`, `+20.6%` on `async_http`, and `+17.2%` on `ruby_llm_stream`, while `cpu` stays near-neutral at `+4.3%` max. |
+| Solid Queue `async` vs `thread` | `async` is mixed in the comparable headline region, not a blanket throughput win. It is near-neutral on `cpu`, mixed on short `sleep` and `async_http`, and clearest on the more realistic `ruby_llm_stream` workload where it reaches `+17.2%`. |
 | Async::Job + Redis vs Solid Queue `async` | `Async::Job` is faster across the shared headline cells in this run: `+6.6%` to `+192.7%` on `sleep`, `+20.3%` to `+153.2%` on `async_http`, `+87.5%` to `+209.2%` on `ruby_llm_stream`, and `+6.5%` to `+14.3%` on `cpu`. |
 
 The cleanest production-shaped Solid Queue result is `ruby_llm_stream`: the
@@ -131,6 +133,33 @@ The two benchmark families should be read as separate claims:
 
 - **Same backend, different execution mode:** Solid Queue `thread` vs `async`
 - **Different backends, same Rails API:** Solid Queue vs Async::Job + Redis
+
+## Stress Suite
+
+The headline suite intentionally stays in a comparable region. To show where
+thread mode starts to hurt, there is now a separate Solid Queue stress suite:
+
+```bash
+bundle exec rake sweep:solid_queue_stress
+```
+
+This suite changes the shape on purpose:
+
+- capacities: `25,50,100,150,200`
+- processes: `2,6`
+- workloads: `sleep`, `async_http`, `ruby_llm_stream`
+- longer waits for `sleep` and `async_http` (`250 ms` by default)
+- no `max_total_concurrency` cap
+
+Outputs are written to `results/solid-queue-stress/`. When stress results
+exist, `bin/report` also generates:
+
+- `results/solid-queue-stress/stress-cell-status.png`
+- `results/solid-queue-stress/stress-throughput-envelope.png`
+- `results/solid-queue-stress/stress-rss-envelope.png`
+
+This suite is for failure envelope, queueing pressure, and resource blow-up,
+not for the main apples-to-apples headline comparison.
 
 ## Setup
 
@@ -233,6 +262,12 @@ Headline Solid Queue suite:
 bundle exec rake sweep:solid_queue_headline
 ```
 
+Solid Queue stress suite:
+
+```bash
+bundle exec rake sweep:solid_queue_stress
+```
+
 Headline Async::Job suite:
 
 ```bash
@@ -279,6 +314,9 @@ This regenerates:
 - `results/async-job/README.md`
 - `results/headline-throughput-ranges.png`
 - `results/headline-representative-cell.png`
+- `results/solid-queue-stress/stress-cell-status.png` when stress results exist
+- `results/solid-queue-stress/stress-throughput-envelope.png` when stress results exist
+- `results/solid-queue-stress/stress-rss-envelope.png` when stress results exist
 
 Manual plotting:
 
@@ -293,11 +331,13 @@ Per-family results are written to:
 
 - `results/solid-queue/`
 - `results/async-job/`
+- `results/solid-queue-stress/` for the failure-envelope stress suite
 
 Matrix JSON/CSV artifacts are written to:
 
 - `tmp/benchmarks/solid-queue/`
 - `tmp/benchmarks/async-job/`
+- `tmp/benchmarks/solid-queue-stress/`
 
 ## RubyLLM Streaming Benchmark
 
