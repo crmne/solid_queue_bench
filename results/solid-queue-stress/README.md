@@ -3,19 +3,19 @@
 Auto-generated from the benchmark artifacts in this directory.
 
 Latest dataset timestamp: `2026-04-05T12:59:02Z`
-Solid Queue commit under test: `305bf4018352e099019f9f24502a18ee4794e64e`
+Solid Queue commit under test: `2f845aaf82084f6391d3bac2cebc8726e9366f20`
 
-Takeaway: Thread mode falls out of the matrix past baseline capacity. `async` completes the full stress grid. This is about survivability, not per-test speedups.
+Takeaway: Thread mode falls out of the matrix past baseline concurrency. `fiber` completes the full stress grid. This is about survivability, not per-test speedups.
 
-| Workload | Tests | Best Throughput | Lowest RSS | Lowest p50 Latency | Best Async Delta | Files |
+| Workload | Tests | Best Throughput | Lowest RSS | Lowest p50 Latency | Best Fiber Delta | Files |
 |---|---|---|---|---|---|---|
-| Async::HTTP | 11/20 | async, cap=100, proc=6, 726.78 jobs/s | async, cap=25, proc=2, 236.55 MB | async, cap=50, proc=6, 586.06 ms | +5.6% at cap=25, proc=2 | [CSV](async-http-data.csv) / [JSON](async-http-data.json) / [Grid](async-http-grid.png) / [Advantage](async-http-advantage.png) / [Latency](async-http-latency.png) |
-| RubyLLM Stream | 11/20 | async, cap=50, proc=6, 8.72 jobs/s | async, cap=25, proc=2, 427.11 MB | async, cap=25, proc=6, 23206.81 ms | +7.4% at cap=25, proc=2 | [CSV](ruby-llm-stream-data.csv) / [JSON](ruby-llm-stream-data.json) / [Grid](ruby-llm-stream-grid.png) / [Advantage](ruby-llm-stream-advantage.png) / [Latency](ruby-llm-stream-latency.png) |
-| Sleep | 11/20 | async, cap=100, proc=6, 779.32 jobs/s | thread, cap=25, proc=2, 230.54 MB | async, cap=50, proc=6, 534.57 ms | +9.4% at cap=25, proc=2 | [CSV](sleep-data.csv) / [JSON](sleep-data.json) / [Grid](sleep-grid.png) / [Advantage](sleep-advantage.png) / [Latency](sleep-latency.png) |
+| Async::HTTP | 11/20 | fiber, c=100, proc=6, 726.78 jobs/s | fiber, c=25, proc=2, 236.55 MB | fiber, c=50, proc=6, 586.06 ms | +5.6% at c=25, proc=2 | [CSV](async-http-data.csv) / [JSON](async-http-data.json) / [Grid](async-http-grid.png) / [Advantage](async-http-advantage.png) / [Latency](async-http-latency.png) |
+| RubyLLM Stream | 11/20 | fiber, c=50, proc=6, 8.72 jobs/s | fiber, c=25, proc=2, 427.11 MB | fiber, c=25, proc=6, 23206.81 ms | +7.4% at c=25, proc=2 | [CSV](ruby-llm-stream-data.csv) / [JSON](ruby-llm-stream-data.json) / [Grid](ruby-llm-stream-grid.png) / [Advantage](ruby-llm-stream-advantage.png) / [Latency](ruby-llm-stream-latency.png) |
+| Sleep | 11/20 | fiber, c=100, proc=6, 779.32 jobs/s | thread, c=25, proc=2, 230.54 MB | fiber, c=50, proc=6, 534.57 ms | +9.4% at c=25, proc=2 | [CSV](sleep-data.csv) / [JSON](sleep-data.json) / [Grid](sleep-grid.png) / [Advantage](sleep-advantage.png) / [Latency](sleep-latency.png) |
 
 ## Notes
 
-- `Best Async Delta` is the strongest paired `async` vs `thread` throughput improvement within the same `(capacity, processes)` test.
+- `Best Fiber Delta` is the strongest paired `fiber` vs `thread` throughput improvement within the same `(concurrency, processes)` test.
 - `Tests` is `completed/planned`, so missing or timed-out tests remain visible in the summaries.
-- Async::Job datasets are single-mode, so paired async/thread deltas are `n/a` there.
+- Async::Job datasets are single-mode, so paired fiber/thread deltas are `n/a` there.
 - Headline workloads are `sleep`, `cpu`, `async_http`, and `ruby_llm_stream`.

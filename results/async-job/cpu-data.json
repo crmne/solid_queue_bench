@@ -8,7 +8,7 @@
     "iterations": 50000
   },
   "jobs_per_cell": 500,
-  "capacities": [
+  "concurrencies": [
     5,
     10,
     25,
@@ -21,7 +21,7 @@
     6
   ],
   "modes": [
-    "async"
+    "fiber"
   ],
   "repeat": 5,
   "max_total_concurrency": 60,
@@ -31,10 +31,10 @@
   "results": [
     {
       "backend": "async_job",
-      "mode": "async",
+      "mode": "fiber",
       "workload": "cpu",
       "jobs": 500,
-      "capacity": 5,
+      "concurrency": 5,
       "processes": 1,
       "db_pool": 5,
       "completed_jobs": 500,
@@ -92,10 +92,10 @@
     },
     {
       "backend": "async_job",
-      "mode": "async",
+      "mode": "fiber",
       "workload": "cpu",
       "jobs": 500,
-      "capacity": 10,
+      "concurrency": 10,
       "processes": 1,
       "db_pool": 5,
       "completed_jobs": 500,
@@ -153,10 +153,10 @@
     },
     {
       "backend": "async_job",
-      "mode": "async",
+      "mode": "fiber",
       "workload": "cpu",
       "jobs": 500,
-      "capacity": 25,
+      "concurrency": 25,
       "processes": 1,
       "db_pool": 5,
       "completed_jobs": 500,
@@ -214,10 +214,10 @@
     },
     {
       "backend": "async_job",
-      "mode": "async",
+      "mode": "fiber",
       "workload": "cpu",
       "jobs": 500,
-      "capacity": 50,
+      "concurrency": 50,
       "processes": 1,
       "db_pool": 5,
       "completed_jobs": 500,
@@ -275,10 +275,10 @@
     },
     {
       "backend": "async_job",
-      "mode": "async",
+      "mode": "fiber",
       "workload": "cpu",
       "jobs": 500,
-      "capacity": 5,
+      "concurrency": 5,
       "processes": 2,
       "db_pool": 6,
       "completed_jobs": 500,
@@ -336,10 +336,10 @@
     },
     {
       "backend": "async_job",
-      "mode": "async",
+      "mode": "fiber",
       "workload": "cpu",
       "jobs": 500,
-      "capacity": 10,
+      "concurrency": 10,
       "processes": 2,
       "db_pool": 6,
       "completed_jobs": 500,
@@ -397,10 +397,10 @@
     },
     {
       "backend": "async_job",
-      "mode": "async",
+      "mode": "fiber",
       "workload": "cpu",
       "jobs": 500,
-      "capacity": 25,
+      "concurrency": 25,
       "processes": 2,
       "db_pool": 6,
       "completed_jobs": 500,
@@ -458,10 +458,10 @@
     },
     {
       "backend": "async_job",
-      "mode": "async",
+      "mode": "fiber",
       "workload": "cpu",
       "jobs": 500,
-      "capacity": 5,
+      "concurrency": 5,
       "processes": 6,
       "db_pool": 10,
       "completed_jobs": 500,
@@ -519,10 +519,10 @@
     },
     {
       "backend": "async_job",
-      "mode": "async",
+      "mode": "fiber",
       "workload": "cpu",
       "jobs": 500,
-      "capacity": 10,
+      "concurrency": 10,
       "processes": 6,
       "db_pool": 10,
       "completed_jobs": 500,

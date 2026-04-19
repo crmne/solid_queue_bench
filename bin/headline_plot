@@ -89,7 +89,7 @@ def paired_backend_rows(sq_rows, aj_rows):
 
 def representative_value(rows, mode=None):
     for row in rows:
-        if row.get("capacity") != REPRESENTATIVE_CELL[0] or row.get("processes") != REPRESENTATIVE_CELL[1]:
+        if row.get("concurrency") != REPRESENTATIVE_CELL[0] or row.get("processes") != REPRESENTATIVE_CELL[1]:
             continue
         if mode is not None and row.get("mode") != mode:
             continue
