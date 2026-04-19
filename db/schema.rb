@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_04_123500) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_19_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -42,9 +42,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_04_123500) do
     t.float "avg_cpu_pct"
     t.integer "avg_rss_kb"
     t.string "backend", default: "solid_queue", null: false
-    t.string "concurrency_model", null: false
-    t.integer "concurrency", null: false
     t.datetime "completed_at"
+    t.integer "concurrency", null: false
+    t.string "concurrency_model", null: false
     t.datetime "created_at", null: false
     t.datetime "enqueued_at"
     t.integer "jobs_count", null: false
