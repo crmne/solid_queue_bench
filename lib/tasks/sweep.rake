@@ -246,6 +246,72 @@ namespace :sweep do
     system("ls", "-lh", destination_dir)
   end
 
+  desc "Regenerate all plots and report from existing results"
+  task replot: :environment do
+    replot_workloads
+    replot_headline
+    replot_stress
+    replot_report
+  end
+
+  namespace :replot do
+    desc "Regenerate per-workload plots for all backends"
+    task workloads: :environment do
+      replot_workloads
+    end
+
+    desc "Regenerate headline comparison plots"
+    task headline: :environment do
+      replot_headline
+    end
+
+    desc "Regenerate stress suite plots"
+    task stress: :environment do
+      replot_stress
+    end
+
+    desc "Regenerate the report only"
+    task report: :environment do
+      replot_report
+    end
+  end
+
+  def replot_workloads
+    require "fileutils"
+
+    Dir.glob("results/*").select { |d| File.directory?(d) }.each do |dir|
+      Dir.glob(File.join(dir, "*-data.csv")).each do |csv|
+        base = File.basename(csv, "-data.csv")
+        puts "\nRegenerating charts for #{csv}..."
+        system("python3", "bin/plot", csv, "--output-dir", dir)
+
+        %w[grid delta latency].each do |chart|
+          src = File.join(dir, "#{base}-data-#{chart}.png")
+          dest_name = chart == "delta" ? "advantage" : chart
+          dest = File.join(dir, "#{base}-#{dest_name}.png")
+          FileUtils.mv(src, dest) if File.exist?(src)
+        end
+
+        Dir.glob(File.join(dir, "#{base}-data-*.svg")).each { |file| File.delete(file) }
+      end
+    end
+  end
+
+  def replot_headline
+    puts "\nRegenerating headline plots..."
+    system("python3", "bin/headline_plot") || warn("WARNING: headline_plot failed")
+  end
+
+  def replot_stress
+    puts "\nRegenerating stress plots..."
+    system("python3", "bin/stress_plot") || warn("WARNING: stress_plot failed")
+  end
+
+  def replot_report
+    puts "\nRegenerating report..."
+    system("ruby", "bin/report")
+  end
+
   def prune_stale_family_results!(destination_dir, keep_workloads:)
     keep_slugs = keep_workloads.map { |workload| workload.tr("_", "-") }
     stale_slugs = ALL_WORKLOADS.map { |workload| workload.tr("_", "-") } - keep_slugs
