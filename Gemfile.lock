@@ -16,8 +16,10 @@ GIT
       async-job (~> 0.10)
       async-redis
 
-PATH
-  remote: ../solid_queue
+GIT
+  remote: https://github.com/crmne/solid_queue.git
+  revision: 2f845aaf82084f6391d3bac2cebc8726e9366f20
+  branch: async-worker-execution-mode
   specs:
     solid_queue (1.4.0)
       activejob (>= 7.1)
