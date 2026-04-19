@@ -1,7 +1,7 @@
 namespace :sweep do
-  HEADLINE_CAPACITIES = ENV.fetch("CAPACITIES", "5,10,25,50,100")
-  STRESS_CAPACITIES = ENV.fetch("STRESS_CAPACITIES", "150,200")
-  PRESSURE_CAPACITIES = ENV.fetch("PRESSURE_CAPACITIES", "25,50,100,150,200")
+  HEADLINE_CONCURRENCIES = ENV.fetch("CONCURRENCIES", "5,10,25,50,100")
+  STRESS_CONCURRENCIES = ENV.fetch("STRESS_CONCURRENCIES", "150,200")
+  PRESSURE_CONCURRENCIES = ENV.fetch("PRESSURE_CONCURRENCIES", "25,50,100,150,200")
   HEADLINE_MAX_TOTAL_CONCURRENCY = ENV.fetch("HEADLINE_MAX_TOTAL_CONCURRENCY", "60")
   SOLID_QUEUE_PROCESSES = ENV.fetch("SOLID_QUEUE_PROCESSES", "1,2,6")
   ASYNC_JOB_PROCESSES = ENV.fetch("ASYNC_JOB_PROCESSES", "1,2,6")
@@ -30,7 +30,7 @@ namespace :sweep do
     run_suite(backend: "solid_queue", workloads: HEADLINE_WORKLOADS, profile: :headline)
   end
 
-  desc "Run the Solid Queue full suite including supplementary workloads and stress capacities"
+  desc "Run the Solid Queue full suite including supplementary workloads and stress concurrencies"
   task solid_queue_full: :environment do
     run_suite(backend: "solid_queue", workloads: ALL_WORKLOADS, profile: :full)
   end
@@ -40,7 +40,7 @@ namespace :sweep do
     run_suite(backend: "async_job", workloads: HEADLINE_WORKLOADS, profile: :headline)
   end
 
-  desc "Run the Async::Job full suite including supplementary workloads and stress capacities"
+  desc "Run the Async::Job full suite including supplementary workloads and stress concurrencies"
   task async_job_full: :environment do
     run_suite(backend: "async_job", workloads: ALL_WORKLOADS, profile: :full)
   end
@@ -51,7 +51,7 @@ namespace :sweep do
     run_suite(backend: "async_job", workloads: HEADLINE_WORKLOADS, profile: :headline)
   end
 
-  desc "Run every benchmark family, including supplementary workloads and stress capacities"
+  desc "Run every benchmark family, including supplementary workloads and stress concurrencies"
   task full: :environment do
     run_suite(backend: "solid_queue", workloads: ALL_WORKLOADS, profile: :full)
     run_suite(backend: "async_job", workloads: ALL_WORKLOADS, profile: :full)
@@ -123,7 +123,7 @@ namespace :sweep do
   def run_workload(backend:, workload:, profile:)
     prepare_database!
     spec = workload_spec(workload, profile:)
-    capacities = capacities_for(backend:, profile:)
+    concurrencies = concurrencies_for(backend:, profile:)
 
     run_matrix(
       backend:,
@@ -131,7 +131,7 @@ namespace :sweep do
       jobs: spec.fetch(:jobs),
       timeout: spec.fetch(:timeout),
       extra: spec.fetch(:extra),
-      capacities:,
+      concurrencies:,
       processes: processes_for(backend, profile:),
       repeat: repeat_for(profile:),
       output_dir: tmp_output_dir_for(backend, profile:),
@@ -185,13 +185,13 @@ namespace :sweep do
     end
   end
 
-  def run_matrix(backend:, workload:, jobs:, timeout:, extra:, capacities:, processes:, repeat:, output_dir:, max_total_concurrency: nil)
+  def run_matrix(backend:, workload:, jobs:, timeout:, extra:, concurrencies:, processes:, repeat:, output_dir:, max_total_concurrency: nil)
     cmd = [
       "bin/matrix",
       "--backend", backend,
       "--workload", workload,
       "--jobs", jobs.to_s,
-      "--capacities", capacities,
+      "--concurrencies", concurrencies,
       "--processes", processes,
       "--modes", modes_for(backend),
       "--repeat", repeat,
@@ -268,19 +268,19 @@ namespace :sweep do
   end
 
   def modes_for(backend)
-    backend == "async_job" ? "async" : "thread,async"
+    backend == "async_job" ? "fiber" : "thread,fiber"
   end
 
-  def capacities_for(backend:, profile:)
+  def concurrencies_for(backend:, profile:)
     case profile
     when :headline
-      HEADLINE_CAPACITIES
+      HEADLINE_CONCURRENCIES
     when :full
-      [ HEADLINE_CAPACITIES, STRESS_CAPACITIES ].join(",")
+      [ HEADLINE_CONCURRENCIES, STRESS_CONCURRENCIES ].join(",")
     when :stress
       raise ArgumentError, "stress suite is only supported for solid_queue" unless backend == "solid_queue"
 
-      PRESSURE_CAPACITIES
+      PRESSURE_CONCURRENCIES
     else
       raise ArgumentError, "Unknown profile: #{profile}"
     end

@@ -14,15 +14,15 @@ BACKEND_LABELS = {
 }.freeze
 
 BACKEND_SUMMARIES = {
-  "solid-queue" => "Same backend, different execution mode. Shows whether `async` delivers good I/O performance without thread-sized DB pools.",
+  "solid-queue" => "Same backend, different concurrency model. Shows whether `fiber` delivers good I/O performance without thread-sized DB pools.",
   "async-job" => "Throughput ceiling reference. Different backend (Redis), so read as a separate claim from the Solid Queue comparison.",
-  "solid-queue-stress" => "Failure-envelope tests. Shows where `thread` stops completing tests under pressure while `async` keeps going."
+  "solid-queue-stress" => "Failure-envelope tests. Shows where `thread` stops completing tests under pressure while `fiber` keeps going."
 }.freeze
 
 BACKEND_TAKEAWAYS = {
-  "solid-queue" => "`async` wins the majority of headline tests. The clearest result is `ruby_llm_stream`. The practical gain is good I/O performance without thread-sized DB pools.",
-  "async-job" => "`Async::Job` is faster across the headline tests, but it answers a different question -- the backend changes along with the execution model.",
-  "solid-queue-stress" => "Thread mode falls out of the matrix past baseline capacity. `async` completes the full stress grid. This is about survivability, not per-test speedups."
+  "solid-queue" => "`fiber` wins the majority of headline tests. The clearest result is `ruby_llm_stream`. The practical gain is good I/O performance without thread-sized DB pools.",
+  "async-job" => "`Async::Job` is faster across the headline tests, but it answers a different question -- the backend changes along with the concurrency model.",
+  "solid-queue-stress" => "Thread mode falls out of the matrix past baseline concurrency. `fiber` completes the full stress grid. This is about survivability, not per-test speedups."
 }.freeze
 
 WORKLOAD_LABELS = {
@@ -72,7 +72,7 @@ def read_dataset(json_path)
     payload: data["payload"] || {},
     repeat: data["repeat"],
     generated_at: data["generated_at"],
-    capacities: data["capacities"] || [],
+    concurrencies: data["concurrencies"] || [],
     processes: data["processes"] || [],
     modes: data["modes"] || [],
     max_total_concurrency: data["max_total_concurrency"],
@@ -92,17 +92,17 @@ end
 def planned_cell_count(dataset)
   return dataset[:planned_cells] if dataset[:planned_cells]
 
-  capacities = Array(dataset[:capacities]).map(&:to_i)
+  concurrencies = Array(dataset[:concurrencies]).map(&:to_i)
   processes = Array(dataset[:processes]).map(&:to_i)
   modes = Array(dataset[:modes])
   max_total_concurrency = dataset[:max_total_concurrency]
 
   modes.sum do
     processes.sum do |procs|
-      capacities.count do |capacity|
+      concurrencies.count do |concurrency|
         next true unless max_total_concurrency
 
-        (capacity * procs) <= max_total_concurrency.to_i
+        (concurrency * procs) <= max_total_concurrency.to_i
       end
     end
   end
@@ -118,27 +118,27 @@ def best_row(rows, metric, direction: :max)
 end
 
 def paired_advantage(rows, metric, invert: false)
-  pairs = rows.group_by { |row| [ row["capacity"], row["processes"] ] }.filter_map do |(capacity, processes), grouped|
+  pairs = rows.group_by { |row| [ row["concurrency"], row["processes"] ] }.filter_map do |(concurrency, processes), grouped|
     thread = grouped.find { |row| row["mode"] == "thread" }
-    async = grouped.find { |row| row["mode"] == "async" }
-    next unless thread && async
+    fiber = grouped.find { |row| row["mode"] == "fiber" }
+    next unless thread && fiber
 
     thread_value = thread[metric]
-    async_value = async[metric]
-    next unless thread_value.is_a?(Numeric) && async_value.is_a?(Numeric) && thread_value.nonzero?
+    fiber_value = fiber[metric]
+    next unless thread_value.is_a?(Numeric) && fiber_value.is_a?(Numeric) && thread_value.nonzero?
 
     delta = if invert
-      ((thread_value - async_value) / thread_value) * 100.0
+      ((thread_value - fiber_value) / thread_value) * 100.0
     else
-      ((async_value - thread_value) / thread_value) * 100.0
+      ((fiber_value - thread_value) / thread_value) * 100.0
     end
 
     {
       delta: delta,
-      capacity: capacity,
+      concurrency: concurrency,
       processes: processes,
       thread: thread,
-      async: async
+      fiber: fiber
     }
   end
 
@@ -164,7 +164,7 @@ def fmt_cell(row, metric:, unit: nil, scale: 1.0)
   scaled = value.is_a?(Numeric) ? value * scale : value
   rendered = fmt_number(scaled)
   rendered = "#{rendered}#{unit}" if unit
-  [ row["mode"], "cap=#{row["capacity"]}", "proc=#{row["processes"]}", rendered ].join(", ")
+  [ row["mode"], "c=#{row["concurrency"]}", "proc=#{row["processes"]}", rendered ].join(", ")
 end
 
 def dataset_summary(dataset)
@@ -250,12 +250,12 @@ def write_family_readme(backend_dir, backend_slug, datasets)
   lines << ""
   lines << "Takeaway: #{backend_takeaway(backend_slug)}"
   lines << ""
-  lines << "| Workload | Tests | Best Throughput | Lowest RSS | Lowest p50 Latency | Best Async Delta | Files |"
+  lines << "| Workload | Tests | Best Throughput | Lowest RSS | Lowest p50 Latency | Best Fiber Delta | Files |"
   lines << "|---|---|---|---|---|---|---|"
 
   datasets.sort_by { |dataset| [ HEADLINE_WORKLOADS.include?(dataset[:workload]) ? 0 : 1, dataset[:workload] ] }.each do |dataset|
     summary = dataset_summary(dataset)
-    delta = summary[:throughput_advantage] ? "#{fmt_percent(summary[:throughput_advantage][:delta])} at cap=#{summary[:throughput_advantage][:capacity]}, proc=#{summary[:throughput_advantage][:processes]}" : "n/a"
+    delta = summary[:throughput_advantage] ? "#{fmt_percent(summary[:throughput_advantage][:delta])} at c=#{summary[:throughput_advantage][:concurrency]}, proc=#{summary[:throughput_advantage][:processes]}" : "n/a"
     tests = "#{summary[:completed_cells]}/#{summary[:planned_cells]}"
     files = [
       relative_link(backend_dir, dataset[:csv_path], "CSV"),
@@ -274,9 +274,9 @@ def write_family_readme(backend_dir, backend_slug, datasets)
   lines << ""
   lines << "## Notes"
   lines << ""
-  lines << "- `Best Async Delta` is the strongest paired `async` vs `thread` throughput improvement within the same `(capacity, processes)` test."
+  lines << "- `Best Fiber Delta` is the strongest paired `fiber` vs `thread` throughput improvement within the same `(concurrency, processes)` test."
   lines << "- `Tests` is `completed/planned`, so missing or timed-out tests remain visible in the summaries."
-  lines << "- Async::Job datasets are single-mode, so paired async/thread deltas are `n/a` there."
+  lines << "- Async::Job datasets are single-mode, so paired fiber/thread deltas are `n/a` there."
   lines << "- Headline workloads are `sleep`, `cpu`, `async_http`, and `ruby_llm_stream`."
 
   File.write(path, lines.join("\n") + "\n")

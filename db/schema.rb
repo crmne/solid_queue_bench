@@ -42,11 +42,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_04_123500) do
     t.float "avg_cpu_pct"
     t.integer "avg_rss_kb"
     t.string "backend", default: "solid_queue", null: false
-    t.integer "capacity", null: false
+    t.string "concurrency_model", null: false
+    t.integer "concurrency", null: false
     t.datetime "completed_at"
     t.datetime "created_at", null: false
     t.datetime "enqueued_at"
-    t.string "execution_mode", null: false
     t.integer "jobs_count", null: false
     t.float "jobs_per_second"
     t.string "name", null: false

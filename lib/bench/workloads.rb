@@ -44,7 +44,7 @@ module Bench
       port = payload.fetch(:port)
 
       # Thread-mode workers do not run inside an Async task by default, so use
-      # Sync to exercise the same client path in both execution modes.
+      # Sync to exercise the same client path in both concurrency models.
       Sync do
         internet = Async::HTTP::Internet.new
         response = internet.get("http://127.0.0.1:#{port}/delay?ms=#{duration_ms}")

@@ -23,7 +23,7 @@ WORKLOAD_LABELS = {
 
 SERIES_COLORS = {
     "sq_thread": "#2563eb",
-    "sq_async": "#ef4444",
+    "sq_fiber": "#ef4444",
     "async_job": "#10b981",
 }
 
@@ -63,8 +63,8 @@ def dataset_rows(results_root, backend_slug, workload_slug):
 
 
 def paired_rows(rows, left_mode, right_mode):
-    left = {(row["capacity"], row["processes"]): row for row in rows if row.get("mode") == left_mode}
-    right = {(row["capacity"], row["processes"]): row for row in rows if row.get("mode") == right_mode}
+    left = {(row["concurrency"], row["processes"]): row for row in rows if row.get("mode") == left_mode}
+    right = {(row["concurrency"], row["processes"]): row for row in rows if row.get("mode") == right_mode}
     shared = sorted(set(left) & set(right))
     return [(left[key], right[key]) for key in shared]
 
@@ -81,10 +81,10 @@ def throughput_deltas(pairs):
 
 
 def paired_backend_rows(sq_rows, aj_rows):
-    sq_async = {(row["capacity"], row["processes"]): row for row in sq_rows if row.get("mode") == "async"}
-    async_job = {(row["capacity"], row["processes"]): row for row in aj_rows}
-    shared = sorted(set(sq_async) & set(async_job))
-    return [(sq_async[key], async_job[key]) for key in shared]
+    sq_fiber = {(row["concurrency"], row["processes"]): row for row in sq_rows if row.get("mode") == "fiber"}
+    async_job = {(row["concurrency"], row["processes"]): row for row in aj_rows}
+    shared = sorted(set(sq_fiber) & set(async_job))
+    return [(sq_fiber[key], async_job[key]) for key in shared]
 
 
 def representative_value(rows, mode=None):
@@ -106,7 +106,7 @@ def plot_delta_ranges(results_root):
         sq_rows = dataset_rows(results_root, "solid-queue", workload)
         aj_rows = dataset_rows(results_root, "async-job", workload)
 
-        sq_deltas = throughput_deltas(paired_rows(sq_rows, "thread", "async"))
+        sq_deltas = throughput_deltas(paired_rows(sq_rows, "thread", "fiber"))
         aj_deltas = throughput_deltas(paired_backend_rows(sq_rows, aj_rows))
 
         sq_series[workload] = sq_deltas
@@ -118,8 +118,8 @@ def plot_delta_ranges(results_root):
     fig.suptitle("Headline Throughput Ranges Across Shared Cells", fontsize=15, fontweight="bold", y=0.98)
 
     panels = [
-        (axes[0], "Solid Queue async over thread", sq_series),
-        (axes[1], "Async::Job over Solid Queue async", backend_series),
+        (axes[0], "Solid Queue fiber over thread", sq_series),
+        (axes[1], "Async::Job over Solid Queue fiber", backend_series),
     ]
 
     min_x = min(all_values) - 10
@@ -166,14 +166,14 @@ def plot_delta_ranges(results_root):
 def plot_representative_cell(results_root):
     fig, axes = plt.subplots(2, 2, figsize=(12.5, 8.2))
     fig.suptitle(
-        f"Representative Headline Cell: capacity={REPRESENTATIVE_CELL[0]}, processes={REPRESENTATIVE_CELL[1]}",
+        f"Representative Headline Cell: concurrency={REPRESENTATIVE_CELL[0]}, processes={REPRESENTATIVE_CELL[1]}",
         fontsize=15,
         fontweight="bold",
         y=0.98,
     )
 
-    labels = ["SQ Thread", "SQ Async", "Async::Job"]
-    colors = [SERIES_COLORS["sq_thread"], SERIES_COLORS["sq_async"], SERIES_COLORS["async_job"]]
+    labels = ["SQ Thread", "SQ Fiber", "Async::Job"]
+    colors = [SERIES_COLORS["sq_thread"], SERIES_COLORS["sq_fiber"], SERIES_COLORS["async_job"]]
 
     for ax, workload in zip(axes.flatten(), WORKLOAD_ORDER):
         sq_rows = dataset_rows(results_root, "solid-queue", workload)
@@ -181,7 +181,7 @@ def plot_representative_cell(results_root):
 
         values = [
             representative_value(sq_rows, "thread"),
-            representative_value(sq_rows, "async"),
+            representative_value(sq_rows, "fiber"),
             representative_value(aj_rows),
         ]
 
@@ -211,7 +211,7 @@ def plot_representative_cell(results_root):
         ax.text(
             0.03,
             0.93,
-            f"SQ async vs thread: {sq_delta:+.1f}%\nAsync::Job vs SQ async: {aj_delta:+.1f}%",
+            f"SQ fiber vs thread: {sq_delta:+.1f}%\nAsync::Job vs SQ fiber: {aj_delta:+.1f}%",
             transform=ax.transAxes,
             ha="left",
             va="top",

@@ -6,9 +6,9 @@ module Bench
     DEFAULTS = {
       name: "solid-queue-bench",
       backend: "solid_queue",
-      modes: %w[thread async],
+      modes: %w[thread fiber],
       workload: "sleep",
-      capacity: 100,
+      concurrency: 100,
       processes: 1,
       jobs: 1000,
       timeout_s: 300,
@@ -37,9 +37,9 @@ module Bench
 
           parser.on("--name NAME", "Benchmark run name") { |value| options[:name] = value }
           parser.on("--backend NAME", "solid_queue or async_job (default: solid_queue)") { |value| options[:backend] = value }
-          parser.on("--modes MODES", "Comma-separated list, e.g. thread,async") { |value| options[:modes] = value.split(",") }
+          parser.on("--modes MODES", "Comma-separated list, e.g. thread,fiber") { |value| options[:modes] = value.split(",") }
           parser.on("--workload NAME", "sleep, cpu, http, async_http, llm_batch, llm_stream, or ruby_llm_stream") { |value| options[:workload] = value }
-          parser.on("--capacity N", Integer, "Worker capacity / threads") { |value| options[:capacity] = value }
+          parser.on("--concurrency N", Integer, "Concurrent jobs per worker process") { |value| options[:concurrency] = value }
           parser.on("--processes N", Integer, "Worker process count") { |value| options[:processes] = value }
           parser.on("--jobs N", Integer, "Number of jobs to enqueue") { |value| options[:jobs] = value }
           parser.on("--duration-ms N", Integer, "Sleep or HTTP delay in ms") { |value| options[:payload][:duration_ms] = value }
@@ -64,9 +64,9 @@ module Bench
         when "solid_queue"
           return
         when "async_job"
-          options[:modes] = %w[async] if options[:modes] == DEFAULTS[:modes]
-          invalid_modes = options[:modes] - %w[async]
-          raise ArgumentError, "Async::Job only supports mode=async" if invalid_modes.any?
+          options[:modes] = %w[fiber] if options[:modes] == DEFAULTS[:modes]
+          invalid_modes = options[:modes] - %w[fiber]
+          raise ArgumentError, "Async::Job only supports mode=fiber" if invalid_modes.any?
         else
           raise ArgumentError, "Unsupported backend: #{options[:backend]}"
         end

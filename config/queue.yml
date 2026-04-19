@@ -4,8 +4,7 @@ development:
 
   workers:
     - queues: "*"
-      execution_mode: <%= ENV.fetch("BENCH_EXECUTION_MODE", "thread") %>
-      capacity: <%= ENV.fetch("BENCH_CAPACITY", 20) %>
+      <%= ENV.fetch("BENCH_CONCURRENCY_MODEL", "threads") %>: <%= ENV.fetch("BENCH_CONCURRENCY", 20) %>
       processes: <%= ENV.fetch("BENCH_PROCESSES", 1) %>
       polling_interval: <%= ENV.fetch("BENCH_POLLING_INTERVAL", 0.01) %>
 
@@ -15,7 +14,6 @@ test:
 
   workers:
     - queues: "*"
-      execution_mode: thread
-      capacity: 2
+      threads: 2
       processes: 1
       polling_interval: 0.01

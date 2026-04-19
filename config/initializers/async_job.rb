@@ -13,13 +13,13 @@ Rails.application.configure do
     password: redis_config[:password]
   )
 
-  queue_capacity = Integer(ENV.fetch("BENCH_CAPACITY", "100"))
+  queue_concurrency = Integer(ENV.fetch("BENCH_CONCURRENCY", "100"))
   queue_prefix = redis_config.fetch(:prefix)
 
   %w[default solid_queue_recurring].each do |queue_name|
     config.async_job.define_queue queue_name do
       dequeue Async::Job::Processor::Redis, endpoint:, prefix: queue_prefix
-      dequeue Bench::AsyncJob::ConcurrencyLimiter, limit: queue_capacity
+      dequeue Bench::AsyncJob::ConcurrencyLimiter, limit: queue_concurrency
     end
   end
 end

@@ -2,10 +2,10 @@
 
 Benchmark harness for three questions:
 
-1. **Within Solid Queue:** how much do I/O-heavy workloads benefit from `async`
-   execution compared to `thread` mode?
+1. **Within Solid Queue:** how much do I/O-heavy workloads benefit from `fiber`
+   concurrency compared to `thread` mode?
 2. **DB pool ceiling:** at what concurrency does `thread` mode exhaust the
-   database connection pool, and how much further does `async` go?
+   database connection pool, and how much further does `fiber` go?
 3. **Across backends:** how does Solid Queue compare to Async::Job + Redis when
    both run through ActiveJob?
 
@@ -16,12 +16,12 @@ latency.
 
 ### Solid Queue
 
-Compares `thread` and `async` execution against the same backend and Rails app.
+Compares `thread` and `fiber` concurrency against the same backend and Rails app.
 
 ### Async::Job
 
 Uses the `:async_job` ActiveJob adapter with a Redis backend and fiber-based
-execution. A queue-side concurrency limiter makes the `capacity` dimension mean
+execution. A queue-side concurrency limiter makes the `concurrency` dimension mean
 "maximum concurrent jobs per worker process" for both families.
 
 ## Workloads
@@ -59,9 +59,9 @@ Full generated summaries:
 [async-job/](results/async-job/README.md) |
 [stress/](results/solid-queue-stress/README.md)
 
-### Solid Queue: async vs thread
+### Solid Queue: fiber vs thread
 
-`async` wins the majority of headline tests. Strongest gains:
+`fiber` wins the majority of headline tests. Strongest gains:
 
 | Workload | Best delta | Win rate |
 |----------|-----------|----------|
@@ -71,7 +71,7 @@ Full generated summaries:
 | `ruby_llm_stream` | +20.2% | 9/9 |
 
 `ruby_llm_stream` is the cleanest result: real RubyLLM streaming plus Turbo
-broadcasts, benefiting from `async` without any topology changes. `cpu` staying
+broadcasts, benefiting from `fiber` without any topology changes. `cpu` staying
 roughly neutral is the expected control, which makes the I/O gains credible.
 
 The win is not raw throughput -- it is good I/O performance without thread-sized
@@ -93,11 +93,11 @@ reference, not a same-backend comparison.
 
 ### Bottom line
 
-- Inside Solid Queue, `async` is a real win for I/O-heavy work
+- Inside Solid Queue, `fiber` is a real win for I/O-heavy work
 - Streaming workloads see the strongest gains
-- Under stress, `thread` hits the DB pool wall early; `async` keeps going
+- Under stress, `thread` hits the DB pool wall early; `fiber` keeps going
 - For maximum throughput, Async::Job is faster
-- For staying on Solid Queue, `async` trades some throughput ceiling for smaller
+- For staying on Solid Queue, `fiber` trades some throughput ceiling for smaller
   DB pools and the Rails-native / Mission Control story
 
 ![Throughput advantage ranges](results/headline-throughput-ranges.png)
@@ -108,7 +108,7 @@ reference, not a same-backend comparison.
 
 The headline suite caps total concurrency to keep the comparison fair. The stress
 suite removes that cap to answer the second question: where does `thread` mode
-hit the DB connection pool wall, and how much further can `async` push?
+hit the DB connection pool wall, and how much further can `fiber` push?
 
 ```bash
 bundle exec rake sweep:solid_queue_stress
@@ -116,16 +116,16 @@ bundle exec rake sweep:solid_queue_stress
 
 Configuration:
 
-- Capacities: `25,50,100,150,200`
+- Concurrencies: `25,50,100,150,200`
 - Processes: `2,6`
 - Workloads: `sleep`, `async_http`, `ruby_llm_stream`
 - Longer waits for `sleep` and `async_http` (`250 ms` default)
 - `ruby_llm_stream` keeps the same token count and token delay as the headline suite
 
 In the current run, `thread` mode hit the DB pool ceiling after the baseline
-`cap=25, proc=2` test and failed every higher-concurrency cell. `async`
+`c=25, proc=2` test and failed every higher-concurrency cell. `fiber`
 completed all 10/10 planned tests per workload. Thread mode needs one DB
-connection per concurrent job; `async` multiplexes fibers over a much smaller
+connection per concurrent job; `fiber` multiplexes fibers over a much smaller
 pool, so it survives where threads cannot.
 
 ![Stress cell status](results/solid-queue-stress/stress-cell-status.png)
@@ -179,16 +179,16 @@ schema exists, and loads the RubyLLM model catalog.
 
 ```bash
 # Solid Queue
-bin/benchmark --backend solid_queue --modes thread,async \
-  --workload async_http --duration-ms 50 --jobs 1000 --capacity 50 --processes 1
+bin/benchmark --backend solid_queue --modes thread,fiber \
+  --workload async_http --duration-ms 50 --jobs 1000 --concurrency 50 --processes 1
 
 # Async::Job
-bin/benchmark --backend async_job --modes async \
-  --workload async_http --duration-ms 50 --jobs 1000 --capacity 50 --processes 1
+bin/benchmark --backend async_job --modes fiber \
+  --workload async_http --duration-ms 50 --jobs 1000 --concurrency 50 --processes 1
 
 # RubyLLM streaming
-bin/benchmark --backend solid_queue --modes thread,async \
-  --workload ruby_llm_stream --jobs 20 --capacity 25 --processes 1 \
+bin/benchmark --backend solid_queue --modes thread,fiber \
+  --workload ruby_llm_stream --jobs 20 --concurrency 25 --processes 1 \
   --token-count 40 --token-delay-ms 20 --llm-model gpt-4.1-mini
 ```
 
@@ -196,7 +196,7 @@ bin/benchmark --backend solid_queue --modes thread,async \
 
 ```bash
 bin/matrix --backend solid_queue --workload async_http --jobs 1000 \
-  --capacities 5,10,25,50,100 --processes 1,2,6 --modes thread,async \
+  --concurrencies 5,10,25,50,100 --processes 1,2,6 --modes thread,fiber \
   --repeat 3 --max-total-concurrency 60
 ```
 
@@ -232,7 +232,7 @@ bin/plot results/solid-queue/sleep-data.csv
 
 | Parameter | Headline | Stress |
 |-----------|----------|--------|
-| Capacities | `5,10,25,50,100` | `25,50,100,150,200` |
+| Concurrencies | `5,10,25,50,100` | `25,50,100,150,200` |
 | Processes | `1,2,6` | `2,6` |
 | Repeats | `3` | `3` |
 | Max total concurrency | `60` | none |
@@ -240,9 +240,9 @@ bin/plot results/solid-queue/sleep-data.csv
 Override with environment variables:
 
 ```bash
-CAPACITIES=5,10,25,50,100
-PRESSURE_CAPACITIES=25,50,100,150,200
-STRESS_CAPACITIES=150,200   # appended only by sweep:full
+CONCURRENCIES=5,10,25,50,100
+PRESSURE_CONCURRENCIES=25,50,100,150,200
+STRESS_CONCURRENCIES=150,200   # appended only by sweep:full
 HEADLINE_MAX_TOTAL_CONCURRENCY=60
 SOLID_QUEUE_PROCESSES=1,2,6
 ASYNC_JOB_PROCESSES=1,2,6

@@ -53,9 +53,9 @@ module Bench
       run = BenchmarkRun.create!(
         name: options.fetch(:name),
         backend: options.fetch(:backend, "solid_queue"),
-        execution_mode: mode,
+        concurrency_model: mode,
         workload: options.fetch(:workload),
-        capacity: options.fetch(:capacity),
+        concurrency: options.fetch(:concurrency),
         processes: options.fetch(:processes),
         jobs_count: options.fetch(:jobs),
         payload: options.fetch(:payload)
@@ -244,12 +244,12 @@ module Bench
 
       {
         backend: run.backend,
-        mode: run.execution_mode,
+        mode: run.concurrency_model,
         workload: run.workload,
         jobs: run.jobs_count,
-        capacity: run.capacity,
+        concurrency: run.concurrency,
         processes: run.processes,
-        db_pool: db_pool_for(run.execution_mode),
+        db_pool: db_pool_for(run.concurrency_model),
         completed_jobs: successful_jobs,
         successful_jobs: successful_jobs,
         finished_jobs: finished_jobs,
@@ -313,8 +313,8 @@ module Bench
       env = {
         "RAILS_ENV" => "development",
         "BENCH_ACTIVE_JOB_ADAPTER" => "solid_queue",
-        "BENCH_EXECUTION_MODE" => mode,
-        "BENCH_CAPACITY" => options.fetch(:capacity).to_s,
+        "BENCH_CONCURRENCY_MODEL" => "#{mode}s",
+        "BENCH_CONCURRENCY" => options.fetch(:concurrency).to_s,
         "BENCH_PROCESSES" => options.fetch(:processes).to_s,
         "DB_POOL" => db_pool_for(mode).to_s,
         "SOLID_QUEUE_SKIP_RECURRING" => "1"
@@ -341,8 +341,8 @@ module Bench
         env = {
           "RAILS_ENV" => "development",
           "BENCH_ACTIVE_JOB_ADAPTER" => "async_job",
-          "BENCH_CAPACITY" => options.fetch(:capacity).to_s,
-          "DB_POOL" => db_pool_for("async").to_s,
+          "BENCH_CONCURRENCY" => options.fetch(:concurrency).to_s,
+          "DB_POOL" => db_pool_for("fiber").to_s,
           "BENCH_ASYNC_JOB_READY_FILE" => ready_file,
           "ASYNC_JOB_ADAPTER_ACTIVE_JOB_QUEUE_NAMES" => "default"
         }.merge(database_env).merge(redis_env)
@@ -394,7 +394,7 @@ module Bench
       end
 
       if mode == "thread"
-        options.fetch(:capacity) + 5
+        options.fetch(:concurrency) + 5
       else
         [ 5, options.fetch(:processes) + 4 ].max
       end
@@ -701,9 +701,9 @@ module Bench
     end
 
     def validate_backend_mode!(mode)
-      return unless backend == "async_job" && mode != "async"
+      return unless backend == "async_job" && mode != "fiber"
 
-      raise ArgumentError, "Async::Job only supports mode=async in this benchmark family"
+      raise ArgumentError, "Async::Job only supports mode=fiber in this benchmark family"
     end
 
     def redis_service
