@@ -163,6 +163,72 @@ def plot_delta_ranges(results_root):
     plt.close(fig)
 
 
+def plot_standalone_panel(title, series, all_values, out_path):
+    """Render a single throughput-range panel as its own figure (blog-ready)."""
+    min_x = min(all_values) - 10
+    max_x = max(all_values) + 15
+    y_positions = np.arange(len(WORKLOAD_ORDER))[::-1]
+
+    fig, ax = plt.subplots(figsize=(7.5, 5.2))
+    ax.set_title(title, fontsize=14, fontweight="bold", pad=12)
+    ax.axvline(0, color="#6b7280", linewidth=1.0)
+    ax.grid(True, axis="x", alpha=0.2, linewidth=0.5)
+    ax.set_xlim(min_x, max_x)
+    ax.set_xlabel("Throughput advantage (%)", fontsize=10)
+    ax.set_yticks(y_positions)
+    ax.set_yticklabels([WORKLOAD_LABELS[w] for w in WORKLOAD_ORDER], fontsize=11)
+
+    for index, workload in enumerate(WORKLOAD_ORDER):
+        values = series.get(workload, [])
+        color = WORKLOAD_COLORS[workload]
+        if not values:
+            continue
+        y = y_positions[index]
+        ax.hlines(y, min(values), max(values), color=color, linewidth=3, alpha=0.85)
+        ax.scatter(values, [y] * len(values), color=color, s=35, alpha=0.8, edgecolors="white", linewidths=0.7, zorder=3)
+        median = float(np.median(values))
+        ax.scatter([median], [y], color="#111827", s=30, zorder=4)
+        ax.text(max(values) + 2, y, f"{min(values):+.1f}% to {max(values):+.1f}%", va="center", fontsize=9, color="#374151")
+
+    plt.tight_layout()
+    for suffix in ("png", "svg"):
+        fig.savefig(f"{out_path}.{suffix}", dpi=160, bbox_inches="tight")
+    plt.close(fig)
+    print(f"  Blog:  {out_path}.png")
+
+
+def plot_blog_charts(results_root):
+    """Generate standalone single-panel charts for the blog post."""
+    sq_series = {}
+    backend_series = {}
+    all_values = []
+
+    for workload in WORKLOAD_ORDER:
+        sq_rows = dataset_rows(results_root, "solid-queue", workload)
+        aj_rows = dataset_rows(results_root, "async-job", workload)
+
+        sq_deltas = throughput_deltas(paired_rows(sq_rows, "thread", "fiber"))
+        aj_deltas = throughput_deltas(paired_backend_rows(sq_rows, aj_rows))
+
+        sq_series[workload] = sq_deltas
+        backend_series[workload] = aj_deltas
+        all_values.extend(sq_deltas)
+        all_values.extend(aj_deltas)
+
+    plot_standalone_panel(
+        "Solid Queue fiber over thread",
+        sq_series,
+        all_values,
+        results_root / "blog-sq-fiber-vs-thread",
+    )
+    plot_standalone_panel(
+        "Async::Job over Solid Queue fiber",
+        backend_series,
+        all_values,
+        results_root / "blog-asyncjob-vs-sq-fiber",
+    )
+
+
 def plot_representative_cell(results_root):
     fig, axes = plt.subplots(2, 2, figsize=(12.5, 8.2))
     fig.suptitle(
@@ -238,6 +304,7 @@ def main():
         return 1
 
     plot_delta_ranges(RESULTS_ROOT)
+    plot_blog_charts(RESULTS_ROOT)
     plot_representative_cell(RESULTS_ROOT)
     return 0
 
