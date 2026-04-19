@@ -8,7 +8,7 @@ gem "propshaft"
 gem "pg", "~> 1.1"
 # Use the Puma web server [https://github.com/puma/puma]
 gem "puma", ">= 5.0"
-gem "solid_queue", path: "../solid_queue"
+gem "solid_queue", git: "https://github.com/crmne/solid_queue.git", branch: "async-worker-execution-mode"
 gem "async"
 gem "async-http"
 gem "async-job-adapter-active_job", git: "https://github.com/crmne/async-job-adapter-active_job.git", branch: "fix-threaded-health-signals"
