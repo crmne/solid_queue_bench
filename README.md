@@ -46,6 +46,15 @@ Useful controls, not the main story:
 | `http` | Local `Net::HTTP` call (blocking HTTP control) |
 | `llm_batch` | Long synthetic external wait |
 | `llm_stream` | Synthetic parent job + child broadcast jobs |
+| `db_queries` | Sequential DB reads plus writes |
+| `db_transaction` | Same DB reads and writes in one transaction |
+| `db_mixed` | DB reads, delayed HTTP call, then DB writes |
+
+DB-heavy workloads use seeded benchmark tables. `--reads` controls the number of
+sequential `SELECT` queries per job and `--writes` controls the number of write
+queries. For `db_queries` and `db_transaction`, `--duration-ms` injects a
+`pg_sleep` into each read query to model slower queries. For `db_mixed`,
+`--duration-ms` remains the delay-server HTTP wait.
 
 ## Current Results
 
@@ -190,6 +199,11 @@ bin/benchmark --backend async_job --modes fiber \
 bin/benchmark --backend solid_queue --modes thread,fiber \
   --workload ruby_llm_stream --jobs 20 --concurrency 25 --processes 1 \
   --token-count 40 --token-delay-ms 20 --llm-model gpt-4.1-mini
+
+# DB-heavy transaction with slower queries
+bin/benchmark --backend solid_queue --modes thread,fiber \
+  --workload db_transaction --jobs 500 --concurrency 50 --processes 1 \
+  --reads 10 --writes 2 --duration-ms 20
 ```
 
 ### Matrix
@@ -198,6 +212,10 @@ bin/benchmark --backend solid_queue --modes thread,fiber \
 bin/matrix --backend solid_queue --workload async_http --jobs 1000 \
   --concurrencies 5,10,25,50,100 --processes 1,2,6 --modes thread,fiber \
   --repeat 3 --max-total-concurrency 60
+
+bin/matrix --backend solid_queue --workload db_mixed --jobs 500 \
+  --concurrencies 5,10,25,50,100 --processes 1,2,6 --modes thread,fiber \
+  --reads 10 --writes 2 --duration-ms 50 --repeat 3 --max-total-concurrency 60
 ```
 
 ### Sweep tasks
@@ -211,6 +229,7 @@ bundle exec rake sweep:full                    # Everything
 ```
 
 Single-workload sweeps are also available (`sweep:sleep`,
+`sweep:db_queries`, `sweep:db_transaction`, `sweep:db_mixed`,
 `sweep:ruby_llm_stream`, `sweep:async_job_sleep`, etc.).
 
 ### Charts and reports

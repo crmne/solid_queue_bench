@@ -1,0 +1,2 @@
+class BenchmarkDataPoint < ApplicationRecord
+end

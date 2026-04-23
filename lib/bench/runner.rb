@@ -47,6 +47,7 @@ module Bench
       stop_registered_processes
       ensure_backend_dependencies!
       cleanup_benchmark_tables
+      prepare_workload_data!
       support_server_pid = start_support_server_if_needed
       set_active_job_queue_adapter!
 
@@ -546,13 +547,13 @@ module Bench
       tables = ActiveRecord::Base.connection.tables
       truncate_tables!(
         tables.grep(/\Asolid_queue_/) +
-        tables.grep(/\A(chats|messages|tool_calls)\z/)
+        tables.grep(/\A(chats|messages|tool_calls|benchmark_write_events)\z/)
       )
       cleanup_async_job_state
     end
 
     def support_server_needed?
-      %w[http async_http ruby_llm_stream].include?(options[:workload])
+      %w[http async_http ruby_llm_stream db_mixed].include?(options[:workload])
     end
 
     def workload_has_child_jobs?(workload)
@@ -656,6 +657,7 @@ module Bench
       tables = %w[benchmark_runs benchmark_executions]
       tables += %w[solid_queue_processes solid_queue_jobs] if backend == "solid_queue"
       tables += %w[chats messages models tool_calls] if options[:workload] == "ruby_llm_stream"
+      tables += %w[benchmark_data_points benchmark_write_events] if db_workload?
       tables
     end
 
@@ -687,6 +689,12 @@ module Bench
     def stop_backend_processes(supervisor_pids)
       Array(supervisor_pids).each { |pid| stop_process(pid) }
       FileUtils.rm_rf(async_job_ready_dir) if backend == "async_job"
+    end
+
+    def prepare_workload_data!
+      return unless db_workload?
+
+      Bench::DatabaseWorkload.prepare_data!
     end
 
     def process_alive?(pid)
@@ -729,6 +737,10 @@ module Bench
 
     def backend
       options.fetch(:backend, "solid_queue")
+    end
+
+    def db_workload?
+      %w[db_queries db_transaction db_mixed].include?(options[:workload])
     end
   end
 end

@@ -5,6 +5,7 @@ require "net/http"
 require "uri"
 require "async"
 require "async/http/internet"
+require "bench/database_workload"
 
 module Bench
   module Workloads
@@ -18,13 +19,7 @@ module Bench
         cpu_iterations = payload.fetch(:iterations)
         cpu_iterations.times { |i| Digest::SHA256.hexdigest("#{i}-#{cpu_iterations}") }
       when "http"
-        duration_ms = payload.fetch(:duration_ms)
-        port = payload.fetch(:port)
-        uri = URI("http://127.0.0.1:#{port}/delay?ms=#{duration_ms}")
-        response = Net::HTTP.get_response(uri)
-        raise "Unexpected response: #{response.code}" unless response.is_a?(Net::HTTPSuccess)
-
-        JSON.parse(response.body)
+        http_request(payload)
       when "async_http"
         async_http_request(payload)
       when "llm_batch"
@@ -34,9 +29,25 @@ module Bench
         llm_stream_request(payload)
       when "ruby_llm_stream"
         ruby_llm_stream_request(payload)
+      when "db_queries"
+        Bench::DatabaseWorkload.db_queries(payload)
+      when "db_transaction"
+        Bench::DatabaseWorkload.db_transaction(payload)
+      when "db_mixed"
+        Bench::DatabaseWorkload.db_mixed(payload)
       else
         raise ArgumentError, "Unknown workload: #{name}"
       end
+    end
+
+    def http_request(payload)
+      duration_ms = payload.fetch(:duration_ms)
+      port = payload.fetch(:port)
+      uri = URI("http://127.0.0.1:#{port}/delay?ms=#{duration_ms}")
+      response = Net::HTTP.get_response(uri)
+      raise "Unexpected response: #{response.code}" unless response.is_a?(Net::HTTPSuccess)
+
+      JSON.parse(response.body)
     end
 
     def async_http_request(payload)

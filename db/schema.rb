@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_19_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_23_183000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -38,6 +38,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_19_000000) do
     t.index ["benchmark_run_id"], name: "index_benchmark_executions_on_benchmark_run_id"
   end
 
+  create_table "benchmark_data_points", force: :cascade do |t|
+    t.integer "account_key", null: false
+    t.integer "bucket", null: false
+    t.string "category", null: false
+    t.datetime "created_at", null: false
+    t.boolean "flagged", default: false, null: false
+    t.integer "quantity", null: false
+    t.integer "sequence", null: false
+    t.integer "amount_cents", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_key", "bucket", "sequence"], name: "index_benchmark_data_points_on_account_bucket_sequence"
+    t.index ["bucket", "category"], name: "index_benchmark_data_points_on_bucket_and_category"
+  end
+
   create_table "benchmark_runs", force: :cascade do |t|
     t.float "avg_cpu_pct"
     t.integer "avg_rss_kb"
@@ -59,6 +73,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_19_000000) do
     t.datetime "updated_at", null: false
     t.float "wall_time_s"
     t.string "workload", null: false
+  end
+
+  create_table "benchmark_write_events", force: :cascade do |t|
+    t.integer "account_key", null: false
+    t.bigint "benchmark_execution_id", null: false
+    t.integer "bucket", null: false
+    t.datetime "created_at", null: false
+    t.integer "http_delay_ms"
+    t.integer "matched_rows", default: 0, null: false
+    t.bigint "total_amount_cents", default: 0, null: false
+    t.integer "total_quantity", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.integer "write_index", null: false
+    t.index ["benchmark_execution_id", "write_index"], name: "index_benchmark_write_events_on_benchmark_execution_id_and_write_index", unique: true
+    t.index ["benchmark_execution_id"], name: "index_benchmark_write_events_on_benchmark_execution_id"
   end
 
   create_table "chats", force: :cascade do |t|
@@ -249,6 +278,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_19_000000) do
   end
 
   add_foreign_key "benchmark_executions", "benchmark_runs"
+  add_foreign_key "benchmark_write_events", "benchmark_executions"
   add_foreign_key "chats", "benchmark_executions"
   add_foreign_key "chats", "models"
   add_foreign_key "messages", "chats"

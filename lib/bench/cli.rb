@@ -14,7 +14,7 @@ module Bench
       timeout_s: 300,
       process_ready_timeout_s: 30,
       output_dir: File.expand_path("../../tmp/benchmarks", __dir__),
-      payload: { duration_ms: 50 },
+      payload: {},
       http_port: 9393
     }.freeze
 
@@ -38,13 +38,15 @@ module Bench
           parser.on("--name NAME", "Benchmark run name") { |value| options[:name] = value }
           parser.on("--backend NAME", "solid_queue or async_job (default: solid_queue)") { |value| options[:backend] = value }
           parser.on("--modes MODES", "Comma-separated list, e.g. thread,fiber") { |value| options[:modes] = value.split(",") }
-          parser.on("--workload NAME", "sleep, cpu, http, async_http, llm_batch, llm_stream, or ruby_llm_stream") { |value| options[:workload] = value }
+          parser.on("--workload NAME", "sleep, cpu, http, async_http, llm_batch, llm_stream, ruby_llm_stream, db_queries, db_transaction, or db_mixed") { |value| options[:workload] = value }
           parser.on("--concurrency N", Integer, "Concurrent jobs per worker process") { |value| options[:concurrency] = value }
           parser.on("--processes N", Integer, "Worker process count") { |value| options[:processes] = value }
           parser.on("--jobs N", Integer, "Number of jobs to enqueue") { |value| options[:jobs] = value }
-          parser.on("--duration-ms N", Integer, "Sleep or HTTP delay in ms") { |value| options[:payload][:duration_ms] = value }
+          parser.on("--duration-ms N", Integer, "Sleep, HTTP, mixed HTTP, or DB slow-query delay in ms") { |value| options[:payload][:duration_ms] = value }
           parser.on("--duration-s N", Integer, "Long wait duration in seconds") { |value| options[:payload][:duration_s] = value }
           parser.on("--iterations N", Integer, "CPU workload iterations per job") { |value| options[:payload][:iterations] = value }
+          parser.on("--reads N", Integer, "Sequential SELECT queries per DB-heavy job") { |value| options[:payload][:reads] = value }
+          parser.on("--writes N", Integer, "Write queries per DB-heavy job") { |value| options[:payload][:writes] = value }
           parser.on("--token-count N", Integer, "Streaming token count") { |value| options[:payload][:token_count] = value }
           parser.on("--token-delay-ms N", Integer, "Streaming token delay in ms") { |value| options[:payload][:token_delay_ms] = value }
           parser.on("--llm-model MODEL", "RubyLLM model id (default: gpt-4.1-mini)") { |value| options[:payload][:model_id] = value }
@@ -91,6 +93,18 @@ module Bench
             token_delay_ms: options[:payload][:token_delay_ms] || 20,
             model_id: options[:payload][:model_id] || "gpt-4.1-mini",
             prompt: options[:payload][:prompt] || "Respond with a concise sentence."
+          }
+        when "db_queries", "db_transaction"
+          options[:payload] = {
+            reads: options[:payload][:reads] || 10,
+            writes: options[:payload][:writes] || 2,
+            duration_ms: options[:payload][:duration_ms] || 0
+          }
+        when "db_mixed"
+          options[:payload] = {
+            reads: options[:payload][:reads] || 10,
+            writes: options[:payload][:writes] || 2,
+            duration_ms: options[:payload][:duration_ms] || 50
           }
         else
           raise ArgumentError, "Unsupported workload: #{options[:workload]}"

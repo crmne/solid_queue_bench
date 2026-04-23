@@ -11,7 +11,7 @@ namespace :sweep do
 
   HEADLINE_WORKLOADS = %w[sleep cpu async_http ruby_llm_stream]
   STRESS_WORKLOADS = %w[sleep async_http ruby_llm_stream]
-  SUPPLEMENTARY_WORKLOADS = %w[http llm_batch llm_stream]
+  SUPPLEMENTARY_WORKLOADS = %w[http llm_batch llm_stream db_queries db_transaction db_mixed]
   ALL_WORKLOADS = HEADLINE_WORKLOADS + SUPPLEMENTARY_WORKLOADS
 
   BACKEND_LABELS = {
@@ -89,6 +89,24 @@ namespace :sweep do
   task ruby_llm_stream: :environment do
     run_workload(backend: "solid_queue", workload: "ruby_llm_stream", profile: :headline)
     finalize(backend: "solid_queue", workloads: [ "ruby_llm_stream" ], prune_stale: false, profile: :headline)
+  end
+
+  desc "Run only the Solid Queue db_queries sweep"
+  task db_queries: :environment do
+    run_workload(backend: "solid_queue", workload: "db_queries", profile: :headline)
+    finalize(backend: "solid_queue", workloads: [ "db_queries" ], prune_stale: false, profile: :headline)
+  end
+
+  desc "Run only the Solid Queue db_transaction sweep"
+  task db_transaction: :environment do
+    run_workload(backend: "solid_queue", workload: "db_transaction", profile: :headline)
+    finalize(backend: "solid_queue", workloads: [ "db_transaction" ], prune_stale: false, profile: :headline)
+  end
+
+  desc "Run only the Solid Queue db_mixed sweep"
+  task db_mixed: :environment do
+    run_workload(backend: "solid_queue", workload: "db_mixed", profile: :headline)
+    finalize(backend: "solid_queue", workloads: [ "db_mixed" ], prune_stale: false, profile: :headline)
   end
 
   desc "Run only the Async::Job sleep sweep"
@@ -180,6 +198,24 @@ namespace :sweep do
       { jobs: 20, timeout: 240, extra: "--token-count 40 --token-delay-ms 20" }
     when "ruby_llm_stream"
       { jobs: 20, timeout: 240, extra: "--token-count 40 --token-delay-ms 20 --llm-model gpt-4.1-mini" }
+    when "db_queries"
+      {
+        jobs: Integer(ENV.fetch("DB_QUERIES_JOBS", "500")),
+        timeout: Integer(ENV.fetch("DB_QUERIES_TIMEOUT_S", "180")),
+        extra: "--reads #{ENV.fetch("DB_QUERIES_READS", "10")} --writes #{ENV.fetch("DB_QUERIES_WRITES", "2")} --duration-ms #{ENV.fetch("DB_QUERIES_DURATION_MS", "0")}"
+      }
+    when "db_transaction"
+      {
+        jobs: Integer(ENV.fetch("DB_TRANSACTION_JOBS", "500")),
+        timeout: Integer(ENV.fetch("DB_TRANSACTION_TIMEOUT_S", "240")),
+        extra: "--reads #{ENV.fetch("DB_TRANSACTION_READS", "10")} --writes #{ENV.fetch("DB_TRANSACTION_WRITES", "2")} --duration-ms #{ENV.fetch("DB_TRANSACTION_DURATION_MS", "20")}"
+      }
+    when "db_mixed"
+      {
+        jobs: Integer(ENV.fetch("DB_MIXED_JOBS", "500")),
+        timeout: Integer(ENV.fetch("DB_MIXED_TIMEOUT_S", "180")),
+        extra: "--reads #{ENV.fetch("DB_MIXED_READS", "10")} --writes #{ENV.fetch("DB_MIXED_WRITES", "2")} --duration-ms #{ENV.fetch("DB_MIXED_DURATION_MS", "50")}"
+      }
     else
       raise ArgumentError, "Unknown workload: #{workload}"
     end
