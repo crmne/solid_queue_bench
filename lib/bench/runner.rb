@@ -386,6 +386,11 @@ module Bench
     end
 
     def db_pool_for(mode)
+      if (override = options[:db_pool])
+        return matched_db_pool if override == :matched
+        return override
+      end
+
       if backend == "async_job"
         return Integer(ENV["ASYNC_JOB_DB_POOL"]) if ENV["ASYNC_JOB_DB_POOL"]
 
@@ -399,6 +404,10 @@ module Bench
       else
         [ 5, options.fetch(:processes) + 4 ].max
       end
+    end
+
+    def matched_db_pool
+      options.fetch(:concurrency) + 5
     end
 
     def database_env

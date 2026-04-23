@@ -15,6 +15,7 @@ module Bench
       timeout_s: 300,
       process_ready_timeout_s: 30,
       output_dir: File.expand_path("../../tmp/benchmarks", __dir__),
+      db_pool: nil,
       payload: {},
       http_port: 9393,
       name: nil,
@@ -49,6 +50,7 @@ module Bench
           parser.on("--modes LIST", "Comma-separated modes (default: thread,fiber)") { |v| options[:modes] = v.split(",") }
           parser.on("--duration-ms N", Integer, "Sleep, HTTP, mixed HTTP, or DB slow-query delay in ms") { |v| options[:payload][:duration_ms] = v }
           parser.on("--duration-s N", Integer, "Long wait duration in seconds") { |v| options[:payload][:duration_s] = v }
+          parser.on("--db-pool VALUE", "Override per-process DB pool for all modes. Use an integer or 'matched' for concurrency + 5") { |v| options[:db_pool] = v }
           parser.on("--iterations N", Integer, "CPU workload iterations") { |v| options[:payload][:iterations] = v }
           parser.on("--reads N", Integer, "Sequential SELECT queries per DB-heavy job") { |v| options[:payload][:reads] = v }
           parser.on("--writes N", Integer, "Write queries per DB-heavy job") { |v| options[:payload][:writes] = v }
@@ -66,6 +68,7 @@ module Bench
         end.parse!(argv)
 
         normalize_backend_modes!
+        normalize_db_pool!
         normalize_payload!
       end
 
@@ -108,6 +111,7 @@ module Bench
             writes: options[:payload][:writes] || 2,
             duration_ms: options[:payload][:duration_ms] || 0
           }
+          options[:db_pool] ||= :matched if options[:workload] == "db_transaction"
         when "db_mixed"
           options[:payload] = {
             reads: options[:payload][:reads] || 10,
@@ -119,6 +123,19 @@ module Bench
         end
       end
 
+      def normalize_db_pool!
+        return if options[:db_pool].nil?
+
+        value = options[:db_pool].to_s.strip.downcase
+        options[:db_pool] = if value == "matched"
+          :matched
+        elsif value.match?(/\A\d+\z/) && Integer(value).positive?
+          Integer(value)
+        else
+          raise ArgumentError, "--db-pool must be a positive integer or 'matched'"
+        end
+      end
+
       def sweep(cells = build_cells)
         total = cells.size
 
@@ -127,6 +144,7 @@ module Bench
         puts "  Modes:      #{options[:modes].join(", ")}"
         puts "  Concurrencies: #{options[:concurrencies].join(", ")}"
         puts "  Processes:  #{options[:processes].join(", ")}"
+        puts "  DB Pool:    #{serialize_db_pool_option(options[:db_pool])}" if options[:db_pool]
         if options[:max_total_concurrency]
           puts "  Max Slots:  #{options[:max_total_concurrency]} (concurrency * processes)"
         end
@@ -150,6 +168,7 @@ module Bench
             jobs: options[:jobs],
             timeout_s: options[:timeout_s],
             process_ready_timeout_s: options[:process_ready_timeout_s],
+            db_pool: options[:db_pool],
             payload: options[:payload],
             http_port: options[:http_port],
             output_dir: options[:output_dir]
@@ -233,6 +252,7 @@ module Bench
           processes: options[:processes],
           modes: options[:modes],
           repeat: options[:repeat],
+          db_pool: serialize_db_pool_option(options[:db_pool]),
           max_total_concurrency: options[:max_total_concurrency],
           planned_cells: planned_cells,
           successful_cells: results.size,
@@ -301,6 +321,10 @@ module Bench
       def pct_values(hash)
         return [ nil, nil, nil, nil ] if hash.nil? || hash.empty?
         [ hash[:p50], hash[:p95], hash[:p99], hash[:max] ]
+      end
+
+      def serialize_db_pool_option(value)
+        value == :matched ? "matched" : value
       end
   end
 end

@@ -1,12 +1,14 @@
 # Solid Queue Bench
 
-Benchmark harness for three questions:
+Benchmark harness for four questions:
 
 1. **Within Solid Queue:** how much do I/O-heavy workloads benefit from `fiber`
    concurrency compared to `thread` mode?
 2. **DB pool ceiling:** at what concurrency does `thread` mode exhaust the
    database connection pool, and how much further does `fiber` go?
-3. **Across backends:** how does Solid Queue compare to Async::Job + Redis when
+3. **DB-heavy workloads:** what changes when jobs spend most of their time in
+   Postgres, hold long transactions, or alternate between DB and external I/O?
+4. **Across backends:** how does Solid Queue compare to Async::Job + Redis when
    both run through ActiveJob?
 
 Measures throughput, memory, CPU, queue delay, service time, and end-to-end
@@ -56,11 +58,16 @@ queries. For `db_queries` and `db_transaction`, `--duration-ms` injects a
 `pg_sleep` into each read query to model slower queries. For `db_mixed`,
 `--duration-ms` remains the delay-server HTTP wait.
 
+`--db-pool` overrides the per-process Active Record pool for a benchmark run.
+Use an integer to force a specific pool size, or `matched` to use
+`concurrency + 5` for every mode. `db_transaction` defaults to `matched` so
+thread and fiber compare with the same pool size unless you override it.
+
 ## Current Results
 
-Latest headline sweep: **April 5, 2026**.
-Solid Queue commit under test: [305bf4018352e099019f9f24502a18ee4794e64e](https://github.com/crmne/solid_queue/commit/305bf4018352e099019f9f24502a18ee4794e64e)
-(`305bf40`, `Relax async lifecycle start wait`).
+Latest checked-in results: **April 23, 2026**.
+Solid Queue commit under test: [2f845aaf82084f6391d3bac2cebc8726e9366f20](https://github.com/crmne/solid_queue/commit/2f845aaf82084f6391d3bac2cebc8726e9366f20)
+(`2f845aa`).
 
 Full generated summaries:
 [results/](results/README.md) |
@@ -203,7 +210,7 @@ bin/benchmark --backend solid_queue --modes thread,fiber \
 # DB-heavy transaction with slower queries
 bin/benchmark --backend solid_queue --modes thread,fiber \
   --workload db_transaction --jobs 500 --concurrency 50 --processes 1 \
-  --reads 10 --writes 2 --duration-ms 20
+  --reads 10 --writes 2 --duration-ms 20 --db-pool matched
 ```
 
 ### Matrix
@@ -216,6 +223,11 @@ bin/matrix --backend solid_queue --workload async_http --jobs 1000 \
 bin/matrix --backend solid_queue --workload db_mixed --jobs 500 \
   --concurrencies 5,10,25,50,100 --processes 1,2,6 --modes thread,fiber \
   --reads 10 --writes 2 --duration-ms 50 --repeat 3 --max-total-concurrency 60
+
+bin/matrix --backend solid_queue --workload db_transaction --jobs 500 \
+  --concurrencies 5,10,25,50,100 --processes 1,2,6 --modes thread,fiber \
+  --reads 10 --writes 2 --duration-ms 20 --db-pool matched \
+  --repeat 3 --max-total-concurrency 60
 ```
 
 ### Sweep tasks

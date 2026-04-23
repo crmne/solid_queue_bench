@@ -14,6 +14,7 @@ module Bench
       timeout_s: 300,
       process_ready_timeout_s: 30,
       output_dir: File.expand_path("../../tmp/benchmarks", __dir__),
+      db_pool: nil,
       payload: {},
       http_port: 9393
     }.freeze
@@ -44,6 +45,7 @@ module Bench
           parser.on("--jobs N", Integer, "Number of jobs to enqueue") { |value| options[:jobs] = value }
           parser.on("--duration-ms N", Integer, "Sleep, HTTP, mixed HTTP, or DB slow-query delay in ms") { |value| options[:payload][:duration_ms] = value }
           parser.on("--duration-s N", Integer, "Long wait duration in seconds") { |value| options[:payload][:duration_s] = value }
+          parser.on("--db-pool VALUE", "Override per-process DB pool for all modes. Use an integer or 'matched' for concurrency + 5") { |value| options[:db_pool] = value }
           parser.on("--iterations N", Integer, "CPU workload iterations per job") { |value| options[:payload][:iterations] = value }
           parser.on("--reads N", Integer, "Sequential SELECT queries per DB-heavy job") { |value| options[:payload][:reads] = value }
           parser.on("--writes N", Integer, "Write queries per DB-heavy job") { |value| options[:payload][:writes] = value }
@@ -58,6 +60,7 @@ module Bench
         end.parse!(argv)
 
         normalize_backend_modes!
+        normalize_db_pool!
         normalize_payload!
       end
 
@@ -100,14 +103,28 @@ module Bench
             writes: options[:payload][:writes] || 2,
             duration_ms: options[:payload][:duration_ms] || 0
           }
+          options[:db_pool] ||= :matched if options[:workload] == "db_transaction"
         when "db_mixed"
           options[:payload] = {
             reads: options[:payload][:reads] || 10,
             writes: options[:payload][:writes] || 2,
             duration_ms: options[:payload][:duration_ms] || 50
           }
-        else
+      else
           raise ArgumentError, "Unsupported workload: #{options[:workload]}"
+        end
+      end
+
+      def normalize_db_pool!
+        return if options[:db_pool].nil?
+
+        value = options[:db_pool].to_s.strip.downcase
+        options[:db_pool] = if value == "matched"
+          :matched
+        elsif value.match?(/\A\d+\z/) && Integer(value).positive?
+          Integer(value)
+        else
+          raise ArgumentError, "--db-pool must be a positive integer or 'matched'"
         end
       end
   end

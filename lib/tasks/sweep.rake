@@ -208,7 +208,7 @@ namespace :sweep do
       {
         jobs: Integer(ENV.fetch("DB_TRANSACTION_JOBS", "500")),
         timeout: Integer(ENV.fetch("DB_TRANSACTION_TIMEOUT_S", "240")),
-        extra: "--reads #{ENV.fetch("DB_TRANSACTION_READS", "10")} --writes #{ENV.fetch("DB_TRANSACTION_WRITES", "2")} --duration-ms #{ENV.fetch("DB_TRANSACTION_DURATION_MS", "20")}"
+        extra: "--reads #{ENV.fetch("DB_TRANSACTION_READS", "10")} --writes #{ENV.fetch("DB_TRANSACTION_WRITES", "2")} --duration-ms #{ENV.fetch("DB_TRANSACTION_DURATION_MS", "20")} --db-pool #{ENV.fetch("DB_TRANSACTION_DB_POOL", "matched")}"
       }
     when "db_mixed"
       {
