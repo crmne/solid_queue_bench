@@ -3,7 +3,7 @@
 Auto-generated from the benchmark artifacts in this directory.
 
 Latest dataset timestamp: `2026-04-05T12:59:02Z`
-Solid Queue commit under test: `2f845aaf82084f6391d3bac2cebc8726e9366f20`
+Solid Queue commit under test: `305bf4018352e099019f9f24502a18ee4794e64e`
 
 Takeaway: Thread mode falls out of the matrix past baseline concurrency. `fiber` completes the full stress grid. This is about survivability, not per-test speedups.
 

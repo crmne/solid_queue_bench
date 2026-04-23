@@ -14,6 +14,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_23_183000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
+  create_table "benchmark_data_points", force: :cascade do |t|
+    t.integer "account_key", null: false
+    t.integer "amount_cents", null: false
+    t.integer "bucket", null: false
+    t.string "category", null: false
+    t.datetime "created_at", null: false
+    t.boolean "flagged", default: false, null: false
+    t.integer "quantity", null: false
+    t.integer "sequence", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_key", "bucket", "sequence"], name: "index_benchmark_data_points_on_account_bucket_sequence"
+    t.index ["bucket", "category"], name: "index_benchmark_data_points_on_bucket_and_category"
+  end
+
   create_table "benchmark_executions", force: :cascade do |t|
     t.string "active_job_id"
     t.bigint "benchmark_run_id", null: false
@@ -36,20 +50,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_23_183000) do
     t.index ["active_job_id"], name: "index_benchmark_executions_on_active_job_id"
     t.index ["benchmark_run_id", "job_index"], name: "index_benchmark_executions_on_benchmark_run_id_and_job_index", unique: true
     t.index ["benchmark_run_id"], name: "index_benchmark_executions_on_benchmark_run_id"
-  end
-
-  create_table "benchmark_data_points", force: :cascade do |t|
-    t.integer "account_key", null: false
-    t.integer "bucket", null: false
-    t.string "category", null: false
-    t.datetime "created_at", null: false
-    t.boolean "flagged", default: false, null: false
-    t.integer "quantity", null: false
-    t.integer "sequence", null: false
-    t.integer "amount_cents", null: false
-    t.datetime "updated_at", null: false
-    t.index ["account_key", "bucket", "sequence"], name: "index_benchmark_data_points_on_account_bucket_sequence"
-    t.index ["bucket", "category"], name: "index_benchmark_data_points_on_bucket_and_category"
   end
 
   create_table "benchmark_runs", force: :cascade do |t|
@@ -86,7 +86,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_23_183000) do
     t.integer "total_quantity", default: 0, null: false
     t.datetime "updated_at", null: false
     t.integer "write_index", null: false
-    t.index ["benchmark_execution_id", "write_index"], name: "index_benchmark_write_events_on_benchmark_execution_id_and_write_index", unique: true
+    t.index ["benchmark_execution_id", "write_index"], name: "idx_on_benchmark_execution_id_write_index_c4e0180f6c", unique: true
     t.index ["benchmark_execution_id"], name: "index_benchmark_write_events_on_benchmark_execution_id"
   end
 
