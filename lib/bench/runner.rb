@@ -387,10 +387,15 @@ module Bench
 
     def db_pool_for(mode)
       if (override = options[:db_pool])
+        return default_db_pool_for(mode) if override == :default
         return matched_db_pool if override == :matched
         return override
       end
 
+      default_db_pool_for(mode)
+    end
+
+    def default_db_pool_for(mode)
       if backend == "async_job"
         return Integer(ENV["ASYNC_JOB_DB_POOL"]) if ENV["ASYNC_JOB_DB_POOL"]
 
@@ -749,7 +754,7 @@ module Bench
     end
 
     def db_workload?
-      %w[db_queries db_transaction db_mixed].include?(options[:workload])
+      %w[db_queries db_transaction db_transaction_pool_pressure db_mixed].include?(options[:workload])
     end
   end
 end

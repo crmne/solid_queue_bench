@@ -31,7 +31,7 @@ module Bench
         ruby_llm_stream_request(payload)
       when "db_queries"
         Bench::DatabaseWorkload.db_queries(payload)
-      when "db_transaction"
+      when "db_transaction", "db_transaction_pool_pressure"
         Bench::DatabaseWorkload.db_transaction(payload)
       when "db_mixed"
         Bench::DatabaseWorkload.db_mixed(payload)

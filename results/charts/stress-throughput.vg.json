@@ -1,0 +1,314 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "title": "Solid Queue Stress Throughput (jobs/s)",
+  "data": {
+    "values": [
+      {
+        "workload": "Async::HTTP",
+        "mode": "thread",
+        "concurrency": 25,
+        "processes": "2 proc",
+        "value": 133.84
+      },
+      {
+        "workload": "Async::HTTP",
+        "mode": "fiber",
+        "concurrency": 25,
+        "processes": "2 proc",
+        "value": 141.38
+      },
+      {
+        "workload": "Async::HTTP",
+        "mode": "fiber",
+        "concurrency": 50,
+        "processes": "2 proc",
+        "value": 222.33
+      },
+      {
+        "workload": "Async::HTTP",
+        "mode": "fiber",
+        "concurrency": 100,
+        "processes": "2 proc",
+        "value": 279.35
+      },
+      {
+        "workload": "Async::HTTP",
+        "mode": "fiber",
+        "concurrency": 150,
+        "processes": "2 proc",
+        "value": 332.89
+      },
+      {
+        "workload": "Async::HTTP",
+        "mode": "fiber",
+        "concurrency": 200,
+        "processes": "2 proc",
+        "value": 328.48
+      },
+      {
+        "workload": "Async::HTTP",
+        "mode": "fiber",
+        "concurrency": 25,
+        "processes": "6 proc",
+        "value": 324.01
+      },
+      {
+        "workload": "Async::HTTP",
+        "mode": "fiber",
+        "concurrency": 50,
+        "processes": "6 proc",
+        "value": 488.27
+      },
+      {
+        "workload": "Async::HTTP",
+        "mode": "fiber",
+        "concurrency": 100,
+        "processes": "6 proc",
+        "value": 726.78
+      },
+      {
+        "workload": "Async::HTTP",
+        "mode": "fiber",
+        "concurrency": 150,
+        "processes": "6 proc",
+        "value": 618.33
+      },
+      {
+        "workload": "Async::HTTP",
+        "mode": "fiber",
+        "concurrency": 200,
+        "processes": "6 proc",
+        "value": 542.16
+      },
+      {
+        "workload": "RubyLLM Stream",
+        "mode": "thread",
+        "concurrency": 25,
+        "processes": "2 proc",
+        "value": 2.99
+      },
+      {
+        "workload": "RubyLLM Stream",
+        "mode": "fiber",
+        "concurrency": 25,
+        "processes": "2 proc",
+        "value": 3.21
+      },
+      {
+        "workload": "RubyLLM Stream",
+        "mode": "fiber",
+        "concurrency": 50,
+        "processes": "2 proc",
+        "value": 3.26
+      },
+      {
+        "workload": "RubyLLM Stream",
+        "mode": "fiber",
+        "concurrency": 100,
+        "processes": "2 proc",
+        "value": 3.16
+      },
+      {
+        "workload": "RubyLLM Stream",
+        "mode": "fiber",
+        "concurrency": 150,
+        "processes": "2 proc",
+        "value": 3.02
+      },
+      {
+        "workload": "RubyLLM Stream",
+        "mode": "fiber",
+        "concurrency": 200,
+        "processes": "2 proc",
+        "value": 3.13
+      },
+      {
+        "workload": "RubyLLM Stream",
+        "mode": "fiber",
+        "concurrency": 25,
+        "processes": "6 proc",
+        "value": 8.54
+      },
+      {
+        "workload": "RubyLLM Stream",
+        "mode": "fiber",
+        "concurrency": 50,
+        "processes": "6 proc",
+        "value": 8.72
+      },
+      {
+        "workload": "RubyLLM Stream",
+        "mode": "fiber",
+        "concurrency": 100,
+        "processes": "6 proc",
+        "value": 6.57
+      },
+      {
+        "workload": "RubyLLM Stream",
+        "mode": "fiber",
+        "concurrency": 150,
+        "processes": "6 proc",
+        "value": 4.53
+      },
+      {
+        "workload": "RubyLLM Stream",
+        "mode": "fiber",
+        "concurrency": 200,
+        "processes": "6 proc",
+        "value": 3.44
+      },
+      {
+        "workload": "Sleep",
+        "mode": "thread",
+        "concurrency": 25,
+        "processes": "2 proc",
+        "value": 131.18
+      },
+      {
+        "workload": "Sleep",
+        "mode": "fiber",
+        "concurrency": 25,
+        "processes": "2 proc",
+        "value": 143.51
+      },
+      {
+        "workload": "Sleep",
+        "mode": "fiber",
+        "concurrency": 50,
+        "processes": "2 proc",
+        "value": 228.97
+      },
+      {
+        "workload": "Sleep",
+        "mode": "fiber",
+        "concurrency": 100,
+        "processes": "2 proc",
+        "value": 300.31
+      },
+      {
+        "workload": "Sleep",
+        "mode": "fiber",
+        "concurrency": 150,
+        "processes": "2 proc",
+        "value": 351.09
+      },
+      {
+        "workload": "Sleep",
+        "mode": "fiber",
+        "concurrency": 200,
+        "processes": "2 proc",
+        "value": 345.77
+      },
+      {
+        "workload": "Sleep",
+        "mode": "fiber",
+        "concurrency": 25,
+        "processes": "6 proc",
+        "value": 321.46
+      },
+      {
+        "workload": "Sleep",
+        "mode": "fiber",
+        "concurrency": 50,
+        "processes": "6 proc",
+        "value": 491.67
+      },
+      {
+        "workload": "Sleep",
+        "mode": "fiber",
+        "concurrency": 100,
+        "processes": "6 proc",
+        "value": 779.32
+      },
+      {
+        "workload": "Sleep",
+        "mode": "fiber",
+        "concurrency": 150,
+        "processes": "6 proc",
+        "value": 706.77
+      },
+      {
+        "workload": "Sleep",
+        "mode": "fiber",
+        "concurrency": 200,
+        "processes": "6 proc",
+        "value": 616.93
+      }
+    ]
+  },
+  "mark": {
+    "type": "line",
+    "point": true,
+    "tooltip": true
+  },
+  "encoding": {
+    "x": {
+      "field": "concurrency",
+      "type": "quantitative",
+      "title": "Concurrency"
+    },
+    "y": {
+      "field": "value",
+      "type": "quantitative",
+      "title": "Throughput (jobs/s)"
+    },
+    "color": {
+      "field": "mode",
+      "type": "nominal"
+    },
+    "tooltip": [
+      {
+        "field": "mode",
+        "type": "nominal"
+      },
+      {
+        "field": "concurrency",
+        "type": "nominal"
+      },
+      {
+        "field": "processes",
+        "type": "nominal"
+      },
+      {
+        "field": "metric",
+        "type": "nominal"
+      },
+      {
+        "field": "percentile",
+        "type": "nominal"
+      },
+      {
+        "field": "value",
+        "type": "quantitative"
+      }
+    ],
+    "row": {
+      "field": "workload",
+      "type": "nominal"
+    },
+    "column": {
+      "field": "processes",
+      "type": "nominal"
+    }
+  },
+  "config": {
+    "background": "white",
+    "axis": {
+      "labelFont": "Arial",
+      "titleFont": "Arial",
+      "grid": true
+    },
+    "legend": {
+      "labelFont": "Arial",
+      "titleFont": "Arial"
+    },
+    "title": {
+      "font": "Arial",
+      "fontSize": 16,
+      "anchor": "start"
+    },
+    "view": {
+      "stroke": null
+    }
+  }
+}

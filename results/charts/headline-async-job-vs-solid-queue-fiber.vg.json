@@ -1,0 +1,285 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "title": "Async::Job over Solid Queue fiber",
+  "data": {
+    "values": [
+      {
+        "workload": "Sleep",
+        "concurrency": 5,
+        "processes": "1 proc",
+        "value": 74.2069785884219
+      },
+      {
+        "workload": "Sleep",
+        "concurrency": 10,
+        "processes": "1 proc",
+        "value": 99.88269794721408
+      },
+      {
+        "workload": "Sleep",
+        "concurrency": 25,
+        "processes": "1 proc",
+        "value": 115.20804277080425
+      },
+      {
+        "workload": "Sleep",
+        "concurrency": 50,
+        "processes": "1 proc",
+        "value": 159.934262166405
+      },
+      {
+        "workload": "Sleep",
+        "concurrency": 5,
+        "processes": "2 proc",
+        "value": 50.611719253058595
+      },
+      {
+        "workload": "Sleep",
+        "concurrency": 10,
+        "processes": "2 proc",
+        "value": 56.131741374076704
+      },
+      {
+        "workload": "Sleep",
+        "concurrency": 25,
+        "processes": "2 proc",
+        "value": 119.80775952464171
+      },
+      {
+        "workload": "Sleep",
+        "concurrency": 5,
+        "processes": "6 proc",
+        "value": 11.842268938922746
+      },
+      {
+        "workload": "Sleep",
+        "concurrency": 10,
+        "processes": "6 proc",
+        "value": 26.855813403261102
+      },
+      {
+        "workload": "Async::HTTP",
+        "concurrency": 5,
+        "processes": "1 proc",
+        "value": 70.21688613477926
+      },
+      {
+        "workload": "Async::HTTP",
+        "concurrency": 10,
+        "processes": "1 proc",
+        "value": 112.16739537788882
+      },
+      {
+        "workload": "Async::HTTP",
+        "concurrency": 25,
+        "processes": "1 proc",
+        "value": 157.8493870402802
+      },
+      {
+        "workload": "Async::HTTP",
+        "concurrency": 50,
+        "processes": "1 proc",
+        "value": 144.91242280044548
+      },
+      {
+        "workload": "Async::HTTP",
+        "concurrency": 5,
+        "processes": "2 proc",
+        "value": 31.06518282988871
+      },
+      {
+        "workload": "Async::HTTP",
+        "concurrency": 10,
+        "processes": "2 proc",
+        "value": 43.57527955271567
+      },
+      {
+        "workload": "Async::HTTP",
+        "concurrency": 25,
+        "processes": "2 proc",
+        "value": 54.91310058340208
+      },
+      {
+        "workload": "Async::HTTP",
+        "concurrency": 5,
+        "processes": "6 proc",
+        "value": 16.631439096563795
+      },
+      {
+        "workload": "Async::HTTP",
+        "concurrency": 10,
+        "processes": "6 proc",
+        "value": 23.289409468033178
+      },
+      {
+        "workload": "RubyLLM Stream",
+        "concurrency": 5,
+        "processes": "1 proc",
+        "value": 117.2185430463576
+      },
+      {
+        "workload": "RubyLLM Stream",
+        "concurrency": 10,
+        "processes": "1 proc",
+        "value": 199.99999999999997
+      },
+      {
+        "workload": "RubyLLM Stream",
+        "concurrency": 25,
+        "processes": "1 proc",
+        "value": 189.57055214723925
+      },
+      {
+        "workload": "RubyLLM Stream",
+        "concurrency": 50,
+        "processes": "1 proc",
+        "value": 213.12499999999997
+      },
+      {
+        "workload": "RubyLLM Stream",
+        "concurrency": 5,
+        "processes": "2 proc",
+        "value": 96.86411149825784
+      },
+      {
+        "workload": "RubyLLM Stream",
+        "concurrency": 10,
+        "processes": "2 proc",
+        "value": 126.60550458715598
+      },
+      {
+        "workload": "RubyLLM Stream",
+        "concurrency": 25,
+        "processes": "2 proc",
+        "value": 205.1369863013699
+      },
+      {
+        "workload": "RubyLLM Stream",
+        "concurrency": 5,
+        "processes": "6 proc",
+        "value": 93.26347305389223
+      },
+      {
+        "workload": "RubyLLM Stream",
+        "concurrency": 10,
+        "processes": "6 proc",
+        "value": 151.98555956678703
+      },
+      {
+        "workload": "CPU",
+        "concurrency": 5,
+        "processes": "1 proc",
+        "value": 13.932680017043033
+      },
+      {
+        "workload": "CPU",
+        "concurrency": 10,
+        "processes": "1 proc",
+        "value": 10.591642532064537
+      },
+      {
+        "workload": "CPU",
+        "concurrency": 25,
+        "processes": "1 proc",
+        "value": 8.02594244021077
+      },
+      {
+        "workload": "CPU",
+        "concurrency": 50,
+        "processes": "1 proc",
+        "value": 7.209396516808414
+      },
+      {
+        "workload": "CPU",
+        "concurrency": 5,
+        "processes": "2 proc",
+        "value": 12.936112369732673
+      },
+      {
+        "workload": "CPU",
+        "concurrency": 10,
+        "processes": "2 proc",
+        "value": 10.576708973502562
+      },
+      {
+        "workload": "CPU",
+        "concurrency": 25,
+        "processes": "2 proc",
+        "value": 7.935135135135139
+      },
+      {
+        "workload": "CPU",
+        "concurrency": 5,
+        "processes": "6 proc",
+        "value": 10.998339176969923
+      },
+      {
+        "workload": "CPU",
+        "concurrency": 10,
+        "processes": "6 proc",
+        "value": 10.153818796123412
+      }
+    ]
+  },
+  "mark": {
+    "type": "tick",
+    "thickness": 2,
+    "size": 22,
+    "tooltip": true
+  },
+  "encoding": {
+    "x": {
+      "field": "value",
+      "type": "quantitative",
+      "title": "Throughput advantage (%)"
+    },
+    "y": {
+      "field": "workload",
+      "type": "nominal",
+      "title": null
+    },
+    "color": {
+      "field": "workload",
+      "type": "nominal",
+      "legend": null
+    },
+    "tooltip": [
+      {
+        "field": "workload",
+        "type": "nominal"
+      },
+      {
+        "field": "concurrency",
+        "type": "nominal"
+      },
+      {
+        "field": "processes",
+        "type": "nominal"
+      },
+      {
+        "field": "value",
+        "type": "quantitative"
+      }
+    ]
+  },
+  "config": {
+    "background": "white",
+    "axis": {
+      "labelFont": "Arial",
+      "titleFont": "Arial",
+      "grid": true
+    },
+    "legend": {
+      "labelFont": "Arial",
+      "titleFont": "Arial"
+    },
+    "title": {
+      "font": "Arial",
+      "fontSize": 16,
+      "anchor": "start"
+    },
+    "view": {
+      "stroke": null
+    }
+  }
+}

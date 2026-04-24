@@ -14,6 +14,7 @@ gem "async-http"
 gem "async-job-adapter-active_job", git: "https://github.com/crmne/async-job-adapter-active_job.git", branch: "fix-threaded-health-signals"
 gem "async-job-processor-redis", git: "https://github.com/crmne/async-job-processor-redis.git", branch: "fix-threaded-heartbeats"
 gem "csv"
+gem "vega"
 
 # Windows does not include zoneinfo files, so bundle the tzinfo-data gem
 gem "tzinfo-data", platforms: %i[ windows jruby ]

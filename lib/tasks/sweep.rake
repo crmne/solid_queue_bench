@@ -1,6 +1,5 @@
 namespace :sweep do
   HEADLINE_CONCURRENCIES = ENV.fetch("CONCURRENCIES", "5,10,25,50,100")
-  STRESS_CONCURRENCIES = ENV.fetch("STRESS_CONCURRENCIES", "150,200")
   PRESSURE_CONCURRENCIES = ENV.fetch("PRESSURE_CONCURRENCIES", "25,50,100,150,200")
   HEADLINE_MAX_TOTAL_CONCURRENCY = ENV.fetch("HEADLINE_MAX_TOTAL_CONCURRENCY", "60")
   SOLID_QUEUE_PROCESSES = ENV.fetch("SOLID_QUEUE_PROCESSES", "1,2,6")
@@ -9,10 +8,15 @@ namespace :sweep do
   REPEAT = ENV.fetch("REPEAT", "3")
   STRESS_REPEAT = ENV.fetch("STRESS_REPEAT", REPEAT)
 
-  HEADLINE_WORKLOADS = %w[sleep cpu async_http ruby_llm_stream]
+  HEADLINE_WORKLOADS = %w[sleep async_http ruby_llm_stream cpu]
+  DB_WORKLOADS = %w[db_queries db_mixed db_transaction]
+  DB_PRESSURE_WORKLOADS = %w[db_transaction_pool_pressure]
+  CONTROL_WORKLOADS = %w[http]
+  SYNTHETIC_WORKLOADS = %w[llm_batch llm_stream]
   STRESS_WORKLOADS = %w[sleep async_http ruby_llm_stream]
-  SUPPLEMENTARY_WORKLOADS = %w[http llm_batch llm_stream db_queries db_transaction db_mixed]
+  SUPPLEMENTARY_WORKLOADS = CONTROL_WORKLOADS + DB_WORKLOADS
   ALL_WORKLOADS = HEADLINE_WORKLOADS + SUPPLEMENTARY_WORKLOADS
+  PUBLISH_WORKLOADS = ALL_WORKLOADS + DB_PRESSURE_WORKLOADS
 
   BACKEND_LABELS = {
     "solid_queue" => "solid-queue",
@@ -30,7 +34,7 @@ namespace :sweep do
     run_suite(backend: "solid_queue", workloads: HEADLINE_WORKLOADS, profile: :headline)
   end
 
-  desc "Run the Solid Queue full suite including supplementary workloads and stress concurrencies"
+  desc "Run the Solid Queue full suite including supplementary workloads"
   task solid_queue_full: :environment do
     run_suite(backend: "solid_queue", workloads: ALL_WORKLOADS, profile: :full)
   end
@@ -40,7 +44,7 @@ namespace :sweep do
     run_suite(backend: "async_job", workloads: HEADLINE_WORKLOADS, profile: :headline)
   end
 
-  desc "Run the Async::Job full suite including supplementary workloads and stress concurrencies"
+  desc "Run the Async::Job full suite including supplementary workloads"
   task async_job_full: :environment do
     run_suite(backend: "async_job", workloads: ALL_WORKLOADS, profile: :full)
   end
@@ -51,15 +55,27 @@ namespace :sweep do
     run_suite(backend: "async_job", workloads: HEADLINE_WORKLOADS, profile: :headline)
   end
 
-  desc "Run every benchmark family, including supplementary workloads and stress concurrencies"
+  desc "Run every benchmark family, including supplementary workloads"
   task full: :environment do
     run_suite(backend: "solid_queue", workloads: ALL_WORKLOADS, profile: :full)
     run_suite(backend: "async_job", workloads: ALL_WORKLOADS, profile: :full)
   end
 
+  desc "Run the full publishable suite: Solid Queue, Async::Job headline, pool pressure, and stress"
+  task publish: :environment do
+    run_suite(backend: "solid_queue", workloads: PUBLISH_WORKLOADS, profile: :full)
+    run_suite(backend: "async_job", workloads: HEADLINE_WORKLOADS, profile: :headline)
+    run_suite(backend: "solid_queue", workloads: STRESS_WORKLOADS, profile: :stress)
+  end
+
   desc "Run the Solid Queue supplementary synthetic/control suite"
   task supplementary: :environment do
     run_suite(backend: "solid_queue", workloads: SUPPLEMENTARY_WORKLOADS, profile: :headline)
+  end
+
+  desc "Run the old synthetic LLM control workloads"
+  task synthetic: :environment do
+    run_suite(backend: "solid_queue", workloads: SYNTHETIC_WORKLOADS, profile: :headline)
   end
 
   desc "Run the Solid Queue stress suite focused on high-concurrency I/O and failure envelope"
@@ -101,6 +117,12 @@ namespace :sweep do
   task db_transaction: :environment do
     run_workload(backend: "solid_queue", workload: "db_transaction", profile: :headline)
     finalize(backend: "solid_queue", workloads: [ "db_transaction" ], prune_stale: false, profile: :headline)
+  end
+
+  desc "Run db_transaction with normal mode-specific DB pools"
+  task db_transaction_pool_pressure: :environment do
+    run_workload(backend: "solid_queue", workload: "db_transaction_pool_pressure", profile: :headline)
+    finalize(backend: "solid_queue", workloads: [ "db_transaction_pool_pressure" ], prune_stale: false, profile: :headline)
   end
 
   desc "Run only the Solid Queue db_mixed sweep"
@@ -210,6 +232,12 @@ namespace :sweep do
         timeout: Integer(ENV.fetch("DB_TRANSACTION_TIMEOUT_S", "240")),
         extra: "--reads #{ENV.fetch("DB_TRANSACTION_READS", "10")} --writes #{ENV.fetch("DB_TRANSACTION_WRITES", "2")} --duration-ms #{ENV.fetch("DB_TRANSACTION_DURATION_MS", "20")} --db-pool #{ENV.fetch("DB_TRANSACTION_DB_POOL", "matched")}"
       }
+    when "db_transaction_pool_pressure"
+      {
+        jobs: Integer(ENV.fetch("DB_TRANSACTION_POOL_PRESSURE_JOBS", ENV.fetch("DB_TRANSACTION_JOBS", "500"))),
+        timeout: Integer(ENV.fetch("DB_TRANSACTION_POOL_PRESSURE_TIMEOUT_S", ENV.fetch("DB_TRANSACTION_TIMEOUT_S", "240"))),
+        extra: "--reads #{ENV.fetch("DB_TRANSACTION_POOL_PRESSURE_READS", ENV.fetch("DB_TRANSACTION_READS", "10"))} --writes #{ENV.fetch("DB_TRANSACTION_POOL_PRESSURE_WRITES", ENV.fetch("DB_TRANSACTION_WRITES", "2"))} --duration-ms #{ENV.fetch("DB_TRANSACTION_POOL_PRESSURE_DURATION_MS", ENV.fetch("DB_TRANSACTION_DURATION_MS", "20"))} --db-pool default"
+      }
     when "db_mixed"
       {
         jobs: Integer(ENV.fetch("DB_MIXED_JOBS", "500")),
@@ -264,16 +292,7 @@ namespace :sweep do
       FileUtils.cp(json, File.join(destination_dir, "#{base}-data.json")) if File.exist?(json)
 
       puts "\nGenerating charts for #{backend} #{workload}..."
-      system("python3", "bin/plot", File.join(destination_dir, "#{base}-data.csv"), "--output-dir", destination_dir)
-
-      %w[grid delta latency].each do |chart|
-        src = File.join(destination_dir, "#{base}-data-#{chart}.png")
-        dest_name = chart == "delta" ? "advantage" : chart
-        dest = File.join(destination_dir, "#{base}-#{dest_name}.png")
-        FileUtils.mv(src, dest) if File.exist?(src)
-      end
-
-      Dir.glob(File.join(destination_dir, "#{base}-data-*.svg")).each { |file| File.delete(file) }
+      system("ruby", "bin/plot", File.join(destination_dir, "#{base}-data.csv"), "--output-dir", destination_dir)
     end
 
     system("ruby", "bin/report")
@@ -319,28 +338,19 @@ namespace :sweep do
       Dir.glob(File.join(dir, "*-data.csv")).each do |csv|
         base = File.basename(csv, "-data.csv")
         puts "\nRegenerating charts for #{csv}..."
-        system("python3", "bin/plot", csv, "--output-dir", dir)
-
-        %w[grid delta latency].each do |chart|
-          src = File.join(dir, "#{base}-data-#{chart}.png")
-          dest_name = chart == "delta" ? "advantage" : chart
-          dest = File.join(dir, "#{base}-#{dest_name}.png")
-          FileUtils.mv(src, dest) if File.exist?(src)
-        end
-
-        Dir.glob(File.join(dir, "#{base}-data-*.svg")).each { |file| File.delete(file) }
+        system("ruby", "bin/plot", csv, "--output-dir", dir)
       end
     end
   end
 
   def replot_headline
     puts "\nRegenerating headline plots..."
-    system("python3", "bin/headline_plot") || warn("WARNING: headline_plot failed")
+    system("ruby", "bin/headline_plot") || warn("WARNING: headline_plot failed")
   end
 
   def replot_stress
     puts "\nRegenerating stress plots..."
-    system("python3", "bin/stress_plot") || warn("WARNING: stress_plot failed")
+    system("ruby", "bin/stress_plot") || warn("WARNING: stress_plot failed")
   end
 
   def replot_report
@@ -350,7 +360,7 @@ namespace :sweep do
 
   def prune_stale_family_results!(destination_dir, keep_workloads:)
     keep_slugs = keep_workloads.map { |workload| workload.tr("_", "-") }
-    stale_slugs = ALL_WORKLOADS.map { |workload| workload.tr("_", "-") } - keep_slugs
+    stale_slugs = (PUBLISH_WORKLOADS + SYNTHETIC_WORKLOADS).map { |workload| workload.tr("_", "-") } - keep_slugs
 
     stale_slugs.each do |slug|
       Dir.glob(File.join(destination_dir, "#{slug}-*")).each do |path|
@@ -375,10 +385,8 @@ namespace :sweep do
 
   def concurrencies_for(backend:, profile:)
     case profile
-    when :headline
+    when :headline, :full
       HEADLINE_CONCURRENCIES
-    when :full
-      [ HEADLINE_CONCURRENCIES, STRESS_CONCURRENCIES ].join(",")
     when :stress
       raise ArgumentError, "stress suite is only supported for solid_queue" unless backend == "solid_queue"
 
@@ -393,7 +401,7 @@ namespace :sweep do
   end
 
   def max_total_concurrency_for(profile:)
-    return if profile != :headline
+    return if profile == :stress
     return if HEADLINE_MAX_TOTAL_CONCURRENCY.to_s.empty?
 
     HEADLINE_MAX_TOTAL_CONCURRENCY

@@ -1,0 +1,391 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "title": "Solid Queue Stress Async::HTTP Latency",
+  "data": {
+    "values": [
+      {
+        "mode": "thread",
+        "concurrency": 25,
+        "processes": "2 proc",
+        "percentile": "p50",
+        "value": 2103.97
+      },
+      {
+        "mode": "thread",
+        "concurrency": 25,
+        "processes": "2 proc",
+        "percentile": "p95",
+        "value": 3593.66
+      },
+      {
+        "mode": "thread",
+        "concurrency": 25,
+        "processes": "2 proc",
+        "percentile": "p99",
+        "value": 3727.98
+      },
+      {
+        "mode": "thread",
+        "concurrency": 25,
+        "processes": "2 proc",
+        "percentile": "max",
+        "value": 3731.2
+      },
+      {
+        "mode": "fiber",
+        "concurrency": 25,
+        "processes": "2 proc",
+        "percentile": "p50",
+        "value": 1904.64
+      },
+      {
+        "mode": "fiber",
+        "concurrency": 25,
+        "processes": "2 proc",
+        "percentile": "p95",
+        "value": 3409.26
+      },
+      {
+        "mode": "fiber",
+        "concurrency": 25,
+        "processes": "2 proc",
+        "percentile": "p99",
+        "value": 3522.56
+      },
+      {
+        "mode": "fiber",
+        "concurrency": 25,
+        "processes": "2 proc",
+        "percentile": "max",
+        "value": 3531.34
+      },
+      {
+        "mode": "fiber",
+        "concurrency": 50,
+        "processes": "2 proc",
+        "percentile": "p50",
+        "value": 1364.14
+      },
+      {
+        "mode": "fiber",
+        "concurrency": 50,
+        "processes": "2 proc",
+        "percentile": "p95",
+        "value": 2224.38
+      },
+      {
+        "mode": "fiber",
+        "concurrency": 50,
+        "processes": "2 proc",
+        "percentile": "p99",
+        "value": 2239.45
+      },
+      {
+        "mode": "fiber",
+        "concurrency": 50,
+        "processes": "2 proc",
+        "percentile": "max",
+        "value": 2243.07
+      },
+      {
+        "mode": "fiber",
+        "concurrency": 100,
+        "processes": "2 proc",
+        "percentile": "p50",
+        "value": 1197.81
+      },
+      {
+        "mode": "fiber",
+        "concurrency": 100,
+        "processes": "2 proc",
+        "percentile": "p95",
+        "value": 1764.46
+      },
+      {
+        "mode": "fiber",
+        "concurrency": 100,
+        "processes": "2 proc",
+        "percentile": "p99",
+        "value": 1779.5
+      },
+      {
+        "mode": "fiber",
+        "concurrency": 100,
+        "processes": "2 proc",
+        "percentile": "max",
+        "value": 1784.2
+      },
+      {
+        "mode": "fiber",
+        "concurrency": 150,
+        "processes": "2 proc",
+        "percentile": "p50",
+        "value": 702.52
+      },
+      {
+        "mode": "fiber",
+        "concurrency": 150,
+        "processes": "2 proc",
+        "percentile": "p95",
+        "value": 1481.36
+      },
+      {
+        "mode": "fiber",
+        "concurrency": 150,
+        "processes": "2 proc",
+        "percentile": "p99",
+        "value": 1492.71
+      },
+      {
+        "mode": "fiber",
+        "concurrency": 150,
+        "processes": "2 proc",
+        "percentile": "max",
+        "value": 1496.0
+      },
+      {
+        "mode": "fiber",
+        "concurrency": 200,
+        "processes": "2 proc",
+        "percentile": "p50",
+        "value": 742.1
+      },
+      {
+        "mode": "fiber",
+        "concurrency": 200,
+        "processes": "2 proc",
+        "percentile": "p95",
+        "value": 1501.7
+      },
+      {
+        "mode": "fiber",
+        "concurrency": 200,
+        "processes": "2 proc",
+        "percentile": "p99",
+        "value": 1512.7
+      },
+      {
+        "mode": "fiber",
+        "concurrency": 200,
+        "processes": "2 proc",
+        "percentile": "max",
+        "value": 1516.39
+      },
+      {
+        "mode": "fiber",
+        "concurrency": 25,
+        "processes": "6 proc",
+        "percentile": "p50",
+        "value": 866.52
+      },
+      {
+        "mode": "fiber",
+        "concurrency": 25,
+        "processes": "6 proc",
+        "percentile": "p95",
+        "value": 1428.19
+      },
+      {
+        "mode": "fiber",
+        "concurrency": 25,
+        "processes": "6 proc",
+        "percentile": "p99",
+        "value": 1507.16
+      },
+      {
+        "mode": "fiber",
+        "concurrency": 25,
+        "processes": "6 proc",
+        "percentile": "max",
+        "value": 1537.72
+      },
+      {
+        "mode": "fiber",
+        "concurrency": 50,
+        "processes": "6 proc",
+        "percentile": "p50",
+        "value": 586.06
+      },
+      {
+        "mode": "fiber",
+        "concurrency": 50,
+        "processes": "6 proc",
+        "percentile": "p95",
+        "value": 1001.58
+      },
+      {
+        "mode": "fiber",
+        "concurrency": 50,
+        "processes": "6 proc",
+        "percentile": "p99",
+        "value": 1015.31
+      },
+      {
+        "mode": "fiber",
+        "concurrency": 50,
+        "processes": "6 proc",
+        "percentile": "max",
+        "value": 1018.5
+      },
+      {
+        "mode": "fiber",
+        "concurrency": 100,
+        "processes": "6 proc",
+        "percentile": "p50",
+        "value": 606.52
+      },
+      {
+        "mode": "fiber",
+        "concurrency": 100,
+        "processes": "6 proc",
+        "percentile": "p95",
+        "value": 667.75
+      },
+      {
+        "mode": "fiber",
+        "concurrency": 100,
+        "processes": "6 proc",
+        "percentile": "p99",
+        "value": 673.88
+      },
+      {
+        "mode": "fiber",
+        "concurrency": 100,
+        "processes": "6 proc",
+        "percentile": "max",
+        "value": 682.36
+      },
+      {
+        "mode": "fiber",
+        "concurrency": 150,
+        "processes": "6 proc",
+        "percentile": "p50",
+        "value": 692.17
+      },
+      {
+        "mode": "fiber",
+        "concurrency": 150,
+        "processes": "6 proc",
+        "percentile": "p95",
+        "value": 779.26
+      },
+      {
+        "mode": "fiber",
+        "concurrency": 150,
+        "processes": "6 proc",
+        "percentile": "p99",
+        "value": 792.06
+      },
+      {
+        "mode": "fiber",
+        "concurrency": 150,
+        "processes": "6 proc",
+        "percentile": "max",
+        "value": 803.32
+      },
+      {
+        "mode": "fiber",
+        "concurrency": 200,
+        "processes": "6 proc",
+        "percentile": "p50",
+        "value": 717.83
+      },
+      {
+        "mode": "fiber",
+        "concurrency": 200,
+        "processes": "6 proc",
+        "percentile": "p95",
+        "value": 891.08
+      },
+      {
+        "mode": "fiber",
+        "concurrency": 200,
+        "processes": "6 proc",
+        "percentile": "p99",
+        "value": 904.4
+      },
+      {
+        "mode": "fiber",
+        "concurrency": 200,
+        "processes": "6 proc",
+        "percentile": "max",
+        "value": 916.43
+      }
+    ]
+  },
+  "mark": {
+    "type": "line",
+    "point": true,
+    "tooltip": true
+  },
+  "encoding": {
+    "x": {
+      "field": "concurrency",
+      "type": "quantitative",
+      "title": "Concurrency"
+    },
+    "y": {
+      "field": "value",
+      "type": "quantitative",
+      "title": "Latency (ms)"
+    },
+    "color": {
+      "field": "percentile",
+      "type": "nominal"
+    },
+    "tooltip": [
+      {
+        "field": "mode",
+        "type": "nominal"
+      },
+      {
+        "field": "concurrency",
+        "type": "nominal"
+      },
+      {
+        "field": "processes",
+        "type": "nominal"
+      },
+      {
+        "field": "metric",
+        "type": "nominal"
+      },
+      {
+        "field": "percentile",
+        "type": "nominal"
+      },
+      {
+        "field": "value",
+        "type": "quantitative"
+      }
+    ],
+    "strokeDash": {
+      "field": "mode",
+      "type": "nominal"
+    },
+    "column": {
+      "field": "processes",
+      "type": "nominal"
+    }
+  },
+  "config": {
+    "background": "white",
+    "axis": {
+      "labelFont": "Arial",
+      "titleFont": "Arial",
+      "grid": true
+    },
+    "legend": {
+      "labelFont": "Arial",
+      "titleFont": "Arial"
+    },
+    "title": {
+      "font": "Arial",
+      "fontSize": 16,
+      "anchor": "start"
+    },
+    "view": {
+      "stroke": null
+    }
+  }
+}

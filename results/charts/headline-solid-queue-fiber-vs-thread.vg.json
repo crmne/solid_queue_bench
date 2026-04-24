@@ -1,0 +1,285 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "title": "Solid Queue fiber over thread",
+  "data": {
+    "values": [
+      {
+        "workload": "Sleep",
+        "concurrency": 5,
+        "processes": "1 proc",
+        "value": -30.302611579383733
+      },
+      {
+        "workload": "Sleep",
+        "concurrency": 10,
+        "processes": "1 proc",
+        "value": -1.2052381504229994
+      },
+      {
+        "workload": "Sleep",
+        "concurrency": 25,
+        "processes": "1 proc",
+        "value": 8.670666245658364
+      },
+      {
+        "workload": "Sleep",
+        "concurrency": 50,
+        "processes": "1 proc",
+        "value": 18.573672270374036
+      },
+      {
+        "workload": "Sleep",
+        "concurrency": 5,
+        "processes": "2 proc",
+        "value": 5.390208434318941
+      },
+      {
+        "workload": "Sleep",
+        "concurrency": 10,
+        "processes": "2 proc",
+        "value": 27.15342553875845
+      },
+      {
+        "workload": "Sleep",
+        "concurrency": 25,
+        "processes": "2 proc",
+        "value": 3.106530200374803
+      },
+      {
+        "workload": "Sleep",
+        "concurrency": 5,
+        "processes": "6 proc",
+        "value": -6.629112343563978
+      },
+      {
+        "workload": "Sleep",
+        "concurrency": 10,
+        "processes": "6 proc",
+        "value": 13.267676090937519
+      },
+      {
+        "workload": "Async::HTTP",
+        "concurrency": 5,
+        "processes": "1 proc",
+        "value": -28.16803449714842
+      },
+      {
+        "workload": "Async::HTTP",
+        "concurrency": 10,
+        "processes": "1 proc",
+        "value": -17.830014370765763
+      },
+      {
+        "workload": "Async::HTTP",
+        "concurrency": 25,
+        "processes": "1 proc",
+        "value": -6.954764698214046
+      },
+      {
+        "workload": "Async::HTTP",
+        "concurrency": 50,
+        "processes": "1 proc",
+        "value": 20.671960904092856
+      },
+      {
+        "workload": "Async::HTTP",
+        "concurrency": 5,
+        "processes": "2 proc",
+        "value": 25.96375287874236
+      },
+      {
+        "workload": "Async::HTTP",
+        "concurrency": 10,
+        "processes": "2 proc",
+        "value": 12.048327553417604
+      },
+      {
+        "workload": "Async::HTTP",
+        "concurrency": 25,
+        "processes": "2 proc",
+        "value": 21.018001700365954
+      },
+      {
+        "workload": "Async::HTTP",
+        "concurrency": 5,
+        "processes": "6 proc",
+        "value": -3.021961932650071
+      },
+      {
+        "workload": "Async::HTTP",
+        "concurrency": 10,
+        "processes": "6 proc",
+        "value": 18.55443436400667
+      },
+      {
+        "workload": "RubyLLM Stream",
+        "concurrency": 5,
+        "processes": "1 proc",
+        "value": 13.53383458646616
+      },
+      {
+        "workload": "RubyLLM Stream",
+        "concurrency": 10,
+        "processes": "1 proc",
+        "value": 0.6944444444444451
+      },
+      {
+        "workload": "RubyLLM Stream",
+        "concurrency": 25,
+        "processes": "1 proc",
+        "value": 5.844155844155835
+      },
+      {
+        "workload": "RubyLLM Stream",
+        "concurrency": 50,
+        "processes": "1 proc",
+        "value": 1.2658227848101276
+      },
+      {
+        "workload": "RubyLLM Stream",
+        "concurrency": 5,
+        "processes": "2 proc",
+        "value": 18.106995884773657
+      },
+      {
+        "workload": "RubyLLM Stream",
+        "concurrency": 10,
+        "processes": "2 proc",
+        "value": 20.22058823529411
+      },
+      {
+        "workload": "RubyLLM Stream",
+        "concurrency": 25,
+        "processes": "2 proc",
+        "value": 17.26907630522087
+      },
+      {
+        "workload": "RubyLLM Stream",
+        "concurrency": 5,
+        "processes": "6 proc",
+        "value": 6.8799999999999955
+      },
+      {
+        "workload": "RubyLLM Stream",
+        "concurrency": 10,
+        "processes": "6 proc",
+        "value": 12.601626016260164
+      },
+      {
+        "workload": "CPU",
+        "concurrency": 5,
+        "processes": "1 proc",
+        "value": -1.5107007973143074
+      },
+      {
+        "workload": "CPU",
+        "concurrency": 10,
+        "processes": "1 proc",
+        "value": 0.3320880033208877
+      },
+      {
+        "workload": "CPU",
+        "concurrency": 25,
+        "processes": "1 proc",
+        "value": 3.0923526953614795
+      },
+      {
+        "workload": "CPU",
+        "concurrency": 50,
+        "processes": "1 proc",
+        "value": 3.957894736842111
+      },
+      {
+        "workload": "CPU",
+        "concurrency": 5,
+        "processes": "2 proc",
+        "value": -0.7197480881691415
+      },
+      {
+        "workload": "CPU",
+        "concurrency": 10,
+        "processes": "2 proc",
+        "value": 0.08914642299977524
+      },
+      {
+        "workload": "CPU",
+        "concurrency": 25,
+        "processes": "2 proc",
+        "value": 5.065879145842792
+      },
+      {
+        "workload": "CPU",
+        "concurrency": 5,
+        "processes": "6 proc",
+        "value": 0.8936883261962332
+      },
+      {
+        "workload": "CPU",
+        "concurrency": 10,
+        "processes": "6 proc",
+        "value": 5.082687097075584
+      }
+    ]
+  },
+  "mark": {
+    "type": "tick",
+    "thickness": 2,
+    "size": 22,
+    "tooltip": true
+  },
+  "encoding": {
+    "x": {
+      "field": "value",
+      "type": "quantitative",
+      "title": "Throughput advantage (%)"
+    },
+    "y": {
+      "field": "workload",
+      "type": "nominal",
+      "title": null
+    },
+    "color": {
+      "field": "workload",
+      "type": "nominal",
+      "legend": null
+    },
+    "tooltip": [
+      {
+        "field": "workload",
+        "type": "nominal"
+      },
+      {
+        "field": "concurrency",
+        "type": "nominal"
+      },
+      {
+        "field": "processes",
+        "type": "nominal"
+      },
+      {
+        "field": "value",
+        "type": "quantitative"
+      }
+    ]
+  },
+  "config": {
+    "background": "white",
+    "axis": {
+      "labelFont": "Arial",
+      "titleFont": "Arial",
+      "grid": true
+    },
+    "legend": {
+      "labelFont": "Arial",
+      "titleFont": "Arial"
+    },
+    "title": {
+      "font": "Arial",
+      "fontSize": 16,
+      "anchor": "start"
+    },
+    "view": {
+      "stroke": null
+    }
+  }
+}

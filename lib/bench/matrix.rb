@@ -2,6 +2,7 @@ require "optparse"
 require "json"
 require "csv"
 require "fileutils"
+require "shellwords"
 
 module Bench
   class Matrix
@@ -43,14 +44,14 @@ module Bench
           parser.banner = "Usage: bin/matrix [options]"
 
           parser.on("--backend NAME", "solid_queue or async_job (default: solid_queue)") { |v| options[:backend] = v }
-          parser.on("--workload NAME", "sleep, cpu, http, async_http, llm_batch, llm_stream, ruby_llm_stream, db_queries, db_transaction, or db_mixed (default: sleep)") { |v| options[:workload] = v }
+          parser.on("--workload NAME", "sleep, cpu, http, async_http, llm_batch, llm_stream, ruby_llm_stream, db_queries, db_transaction, db_transaction_pool_pressure, or db_mixed (default: sleep)") { |v| options[:workload] = v }
           parser.on("--jobs N", Integer, "Jobs per cell (default: 500)") { |v| options[:jobs] = v }
           parser.on("--concurrencies LIST", "Comma-separated concurrency levels (default: 5,10,25,50,100,200)") { |v| options[:concurrencies] = v.split(",").map(&:to_i) }
           parser.on("--processes LIST", "Comma-separated process counts (default: 1,2,4)") { |v| options[:processes] = v.split(",").map(&:to_i) }
           parser.on("--modes LIST", "Comma-separated modes (default: thread,fiber)") { |v| options[:modes] = v.split(",") }
           parser.on("--duration-ms N", Integer, "Sleep, HTTP, mixed HTTP, or DB slow-query delay in ms") { |v| options[:payload][:duration_ms] = v }
           parser.on("--duration-s N", Integer, "Long wait duration in seconds") { |v| options[:payload][:duration_s] = v }
-          parser.on("--db-pool VALUE", "Override per-process DB pool for all modes. Use an integer or 'matched' for concurrency + 5") { |v| options[:db_pool] = v }
+          parser.on("--db-pool VALUE", "DB pool policy: default, matched, or a positive integer") { |v| options[:db_pool] = v }
           parser.on("--iterations N", Integer, "CPU workload iterations") { |v| options[:payload][:iterations] = v }
           parser.on("--reads N", Integer, "Sequential SELECT queries per DB-heavy job") { |v| options[:payload][:reads] = v }
           parser.on("--writes N", Integer, "Write queries per DB-heavy job") { |v| options[:payload][:writes] = v }
@@ -105,13 +106,14 @@ module Bench
             model_id: options[:payload][:model_id] || "gpt-4.1-mini",
             prompt: options[:payload][:prompt] || "Respond with a concise sentence."
           }
-        when "db_queries", "db_transaction"
+        when "db_queries", "db_transaction", "db_transaction_pool_pressure"
           options[:payload] = {
             reads: options[:payload][:reads] || 10,
             writes: options[:payload][:writes] || 2,
             duration_ms: options[:payload][:duration_ms] || 0
           }
           options[:db_pool] ||= :matched if options[:workload] == "db_transaction"
+          options[:db_pool] ||= :default if options[:workload] == "db_transaction_pool_pressure"
         when "db_mixed"
           options[:payload] = {
             reads: options[:payload][:reads] || 10,
@@ -127,12 +129,14 @@ module Bench
         return if options[:db_pool].nil?
 
         value = options[:db_pool].to_s.strip.downcase
-        options[:db_pool] = if value == "matched"
+        options[:db_pool] = if value == "default"
+          :default
+        elsif value == "matched"
           :matched
         elsif value.match?(/\A\d+\z/) && Integer(value).positive?
           Integer(value)
         else
-          raise ArgumentError, "--db-pool must be a positive integer or 'matched'"
+          raise ArgumentError, "--db-pool must be default, matched, or a positive integer"
         end
       end
 
@@ -259,6 +263,9 @@ module Bench
           failed_cells: planned_cells - results.size,
           results: results
         }
+        if options[:backend] == "solid_queue" && (revision = solid_queue_revision)
+          json_output[:solid_queue_revision] = revision
+        end
 
         json_path = File.join(options[:output_dir], "#{base}.json")
         File.write(json_path, JSON.pretty_generate(json_output))
@@ -280,7 +287,7 @@ module Bench
         return unless File.exist?(plot_script)
 
         puts "\nGenerating charts..."
-        system("python3", plot_script, csv_path, "--output-dir", options[:output_dir])
+        system("ruby", plot_script, csv_path, "--output-dir", options[:output_dir])
       end
 
       def write_csv(path, results)
@@ -324,7 +331,19 @@ module Bench
       end
 
       def serialize_db_pool_option(value)
-        value == :matched ? "matched" : value
+        case value
+        when :matched then "matched"
+        when :default then "default"
+        else value
+        end
+      end
+
+      def solid_queue_revision
+        repo = File.expand_path("../../../solid_queue", __dir__)
+        return unless Dir.exist?(repo)
+
+        sha = `git -C #{Shellwords.escape(repo)} rev-parse HEAD 2>/dev/null`.strip
+        sha unless sha.empty?
       end
   end
 end

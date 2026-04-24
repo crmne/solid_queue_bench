@@ -1,391 +1,52 @@
-#!/usr/bin/env python3
-"""
-Generate comparison charts from solid_queue_bench matrix sweep CSV.
+#!/usr/bin/env ruby
 
-Usage:
-    bin/plot tmp/benchmarks/matrix-sleep-20260402-160000.csv
-    bin/plot tmp/benchmarks/matrix-sleep-20260402-160000.csv --output-dir tmp/charts
-"""
+require "csv"
+require "fileutils"
+require "json"
+require "pathname"
 
-import csv
-import sys
-import os
-import argparse
-from collections import defaultdict
+csv_path = ARGV.fetch(0)
+output_dir = if (index = ARGV.index("--output-dir"))
+  ARGV.fetch(index + 1)
+else
+  File.dirname(csv_path)
+end
 
-import matplotlib
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-import numpy as np
+rows = CSV.read(csv_path, headers: true).map do |row|
+  row.to_h.transform_values do |value|
+    next nil if value.nil? || value.empty?
 
-# ── Style ──────────────────────────────────────────────────────────────────────
+    Float(value)
+  rescue ArgumentError
+    value
+  end
+end
 
-MODE_STYLE = {
-    "thread": {"color": "#3b82f6", "marker": "o", "label": "Thread"},
-    "fiber":  {"color": "#ef4444", "marker": "s", "label": "Fiber"},
+workload = File.basename(csv_path, "-data.csv").tr("-", "_")
+family = File.basename(File.expand_path(output_dir))
+family = rows.first&.fetch("backend", "solid_queue").to_s.tr("_", "-") unless %w[solid-queue async-job solid-queue-stress].include?(family)
+json_path = File.join(output_dir, "#{workload.tr('_', '-')}-data.json")
+
+data = {
+  "workload" => workload,
+  "results" => rows.map do |row|
+    row.merge(
+      "total_latency_ms" => {
+        "p50" => row.delete("total_latency_p50_ms"),
+        "p95" => row.delete("total_latency_p95_ms"),
+        "p99" => row.delete("total_latency_p99_ms"),
+        "max" => row.delete("total_latency_max_ms")
+      }.compact
+    )
+  end
 }
 
-BACKEND_LABEL = {
-    "solid_queue": "Solid Queue",
-    "async_job": "Async::Job",
-}
+tmp_json = File.join(output_dir, ".#{File.basename(json_path)}")
+File.write(tmp_json, JSON.pretty_generate(data))
 
-WORKLOAD_LABEL = {
-    "sleep": "Sleep",
-    "cpu": "CPU",
-    "http": "Net::HTTP",
-    "async_http": "Async::HTTP",
-    "db_queries": "DB Queries",
-    "db_transaction": "DB Transaction",
-    "db_mixed": "DB Mixed",
-    "llm_batch": "LLM Batch",
-    "llm_stream": "LLM Stream",
-    "ruby_llm_stream": "RubyLLM Stream",
-}
+require_relative "../lib/bench/report"
 
-GRID_METRICS = [
-    ("jobs_per_second",       "Throughput (jobs/s)", 1),
-    ("peak_rss_kb",           "Peak RSS (MB)",       1 / 1024),
-    ("avg_cpu_pct",           "Avg CPU (%)",         1),
-    ("total_latency_p50_ms",  "Latency p50 (ms)",    1),
-]
-
-DELTA_METRICS = [
-    ("jobs_per_second",       "Throughput",   1),
-    ("peak_rss_kb",           "Peak RSS",    -1),
-    ("avg_cpu_pct",           "Avg CPU",     -1),
-    ("total_latency_p50_ms",  "Latency p50", -1),
-]
-
-
-# ── Data ───────────────────────────────────────────────────────────────────────
-
-def read_csv_data(path):
-    rows = []
-    with open(path) as f:
-        for row in csv.DictReader(f):
-            parsed = {}
-            for key, val in row.items():
-                if key == "mode":
-                    parsed[key] = val
-                elif val in ("", None):
-                    parsed[key] = None
-                else:
-                    try:
-                        parsed[key] = float(val)
-                    except ValueError:
-                        parsed[key] = val
-            rows.append(parsed)
-    return rows
-
-
-def build_lookup(rows):
-    lookup = {}
-    for r in rows:
-        lookup[(r["mode"], int(r["processes"]), int(r["concurrency"]))] = r
-    return lookup
-
-
-def scaled_metric(row, metric, scale=1):
-    value = row.get(metric)
-    if value is None:
-        return np.nan
-    return float(value) * scale
-
-
-def backend_title(rows):
-    backends = sorted({r.get("backend") for r in rows if r.get("backend")})
-    if len(backends) == 1:
-        return BACKEND_LABEL.get(backends[0], backends[0])
-    return "Benchmark"
-
-
-def infer_workload_label(path):
-    base = os.path.basename(path).replace(".csv", "")
-    for slug in sorted(WORKLOAD_LABEL.keys(), key=len, reverse=True):
-        if slug in base or slug.replace("_", "-") in base:
-            return WORKLOAD_LABEL[slug]
-    return None
-
-
-def chart_title(rows, out_base):
-    parts = [backend_title(rows)]
-    workload = infer_workload_label(out_base)
-    if workload:
-        parts.append(workload)
-    return " — ".join(parts)
-
-
-# ── Figure 1: Comparison Grid ─────────────────────────────────────────────────
-
-def plot_comparison_grid(rows, out_base):
-    process_counts = sorted(set(int(r["processes"]) for r in rows))
-    modes = sorted(set(r["mode"] for r in rows), key=lambda m: (m != "thread"))
-    by_mode_proc = defaultdict(list)
-    for r in rows:
-        by_mode_proc[(r["mode"], int(r["processes"]))].append(r)
-    for v in by_mode_proc.values():
-        v.sort(key=lambda r: r["concurrency"])
-
-    n_cols = len(process_counts)
-    n_rows = len(GRID_METRICS)
-
-    fig, axes = plt.subplots(
-        n_rows, n_cols,
-        figsize=(4.5 * n_cols + 0.8, 3.2 * n_rows + 1.2),
-        squeeze=False,
-    )
-    title = chart_title(rows, out_base)
-    if set(modes) == {"thread", "fiber"}:
-        title = f"{title} — Thread vs Fiber"
-    fig.suptitle(title, fontsize=14, fontweight="bold", y=0.98)
-
-    for col, procs in enumerate(process_counts):
-        axes[0][col].set_title(
-            f"{procs} process{'es' if procs != 1 else ''}",
-            fontsize=11, pad=8,
-        )
-        for row_i, (metric, label, scale) in enumerate(GRID_METRICS):
-            ax = axes[row_i][col]
-            for mode in modes:
-                data = by_mode_proc.get((mode, procs), [])
-                if not data:
-                    continue
-                x = [r["concurrency"] for r in data]
-                y = [scaled_metric(r, metric, scale) for r in data]
-                s = MODE_STYLE.get(mode, {})
-                ax.plot(
-                    x, y,
-                    color=s.get("color", "#888"),
-                    marker=s.get("marker", "."),
-                    markersize=5, linewidth=1.8,
-                    label=s.get("label", mode),
-                )
-            if col == 0:
-                ax.set_ylabel(label, fontsize=10)
-            if row_i == n_rows - 1:
-                ax.set_xlabel("Concurrency", fontsize=10)
-            ax.grid(True, alpha=0.25, linewidth=0.5)
-            ax.tick_params(labelsize=8)
-            ax.set_xlim(left=0)
-
-    handles, labels = axes[0][0].get_legend_handles_labels()
-    if handles:
-        fig.legend(
-            handles, labels, loc="upper center",
-            ncol=len(modes), bbox_to_anchor=(0.5, 0.955),
-            fontsize=10, frameon=False,
-        )
-
-    plt.tight_layout(rect=[0, 0, 1, 0.94])
-    for ext in ("png", "svg"):
-        fig.savefig(f"{out_base}-grid.{ext}", dpi=150, bbox_inches="tight")
-    plt.close(fig)
-    print(f"  Grid:  {out_base}-grid.png")
-
-
-# ── Figure 2: Fiber Advantage Bars ────────────────────────────────────────────
-
-def plot_fiber_advantage(rows, out_base):
-    process_counts = sorted(set(int(r["processes"]) for r in rows))
-    concurrencies = sorted(set(int(r["concurrency"]) for r in rows))
-    lookup = build_lookup(rows)
-
-    n = len(DELTA_METRICS)
-    fig, axes = plt.subplots(1, n, figsize=(4 * n, 4.2), squeeze=False)
-    fig.suptitle(
-        f"{chart_title(rows, out_base)} — Fiber Advantage Over Thread (%)",
-        fontsize=13, fontweight="bold", y=1.02,
-    )
-
-    bar_w = 0.8 / max(len(process_counts), 1)
-    colors = plt.cm.Set2(np.linspace(0, 0.6, len(process_counts)))
-
-    for mi, (metric, label, sign) in enumerate(DELTA_METRICS):
-        ax = axes[0][mi]
-        for pi, procs in enumerate(process_counts):
-            deltas = []
-            for cap in concurrencies:
-                t = lookup.get(("thread", procs, cap))
-                a = lookup.get(("fiber", procs, cap))
-                if t and a:
-                    tv = t.get(metric)
-                    av = a.get(metric)
-                    if tv in (None, 0) or av is None:
-                        pct = np.nan
-                    else:
-                        pct = sign * (float(av) - float(tv)) / float(tv) * 100
-                else:
-                    pct = np.nan
-                deltas.append(pct)
-            x = np.arange(len(concurrencies)) + pi * bar_w
-            ax.bar(
-                x, deltas, bar_w,
-                label=f"{procs}p", color=colors[pi],
-                edgecolor="white", linewidth=0.5,
-            )
-        ax.set_title(label, fontsize=10)
-        ticks = np.arange(len(concurrencies)) + bar_w * (len(process_counts) - 1) / 2
-        ax.set_xticks(ticks)
-        ax.set_xticklabels([str(c) for c in concurrencies], fontsize=8)
-        ax.set_xlabel("Concurrency", fontsize=9)
-        ax.axhline(0, color="#666", linewidth=0.8)
-        ax.grid(True, axis="y", alpha=0.25, linewidth=0.5)
-        ax.tick_params(labelsize=8)
-        if mi == 0:
-            ax.set_ylabel("Advantage (%)", fontsize=10)
-            ax.legend(fontsize=8, title="Procs", title_fontsize=8)
-
-    plt.tight_layout()
-    for ext in ("png", "svg"):
-        fig.savefig(f"{out_base}-delta.{ext}", dpi=150, bbox_inches="tight")
-    plt.close(fig)
-    print(f"  Delta: {out_base}-delta.png")
-
-
-# ── Figure 3: Latency Breakdown ───────────────────────────────────────────────
-
-LATENCY_PCTS = [
-    ("total_latency_p50_ms", "p50"),
-    ("total_latency_p95_ms", "p95"),
-    ("total_latency_p99_ms", "p99"),
-    ("total_latency_max_ms", "max"),
-]
-
-def plot_latency_breakdown(rows, out_base):
-    process_counts = sorted(set(int(r["processes"]) for r in rows))
-    modes = sorted(set(r["mode"] for r in rows), key=lambda m: (m != "thread"))
-    by_mode_proc = defaultdict(list)
-    for r in rows:
-        by_mode_proc[(r["mode"], int(r["processes"]))].append(r)
-    for v in by_mode_proc.values():
-        v.sort(key=lambda r: r["concurrency"])
-
-    n_cols = len(process_counts)
-    fig, axes = plt.subplots(
-        1, n_cols,
-        figsize=(5 * n_cols, 4),
-        squeeze=False,
-    )
-    fig.suptitle(
-        f"{chart_title(rows, out_base)} — Total Latency Percentiles (ms)",
-        fontsize=13, fontweight="bold",
-    )
-
-    linestyles = {"p50": "-", "p95": "--", "p99": ":", "max": "-."}
-    alphas = {"p50": 1.0, "p95": 0.8, "p99": 0.6, "max": 0.5}
-
-    for col, procs in enumerate(process_counts):
-        ax = axes[0][col]
-        ax.set_title(f"{procs} process{'es' if procs != 1 else ''}", fontsize=11)
-        for mode in modes:
-            data = by_mode_proc.get((mode, procs), [])
-            if not data:
-                continue
-            s = MODE_STYLE.get(mode, {})
-            x = [r["concurrency"] for r in data]
-            for metric, pct_label in LATENCY_PCTS:
-                y = [scaled_metric(r, metric) for r in data]
-                ax.plot(
-                    x, y,
-                    color=s.get("color", "#888"),
-                    linestyle=linestyles[pct_label],
-                    alpha=alphas[pct_label],
-                    linewidth=1.5,
-                    label=f"{s.get('label', mode)} {pct_label}",
-                )
-        ax.set_xlabel("Concurrency", fontsize=10)
-        if col == 0:
-            ax.set_ylabel("Latency (ms)", fontsize=10)
-            ax.legend(fontsize=7, ncol=2)
-        ax.grid(True, alpha=0.25, linewidth=0.5)
-        ax.tick_params(labelsize=8)
-        ax.set_xlim(left=0)
-        ax.set_ylim(bottom=0)
-
-    plt.tight_layout()
-    for ext in ("png", "svg"):
-        fig.savefig(f"{out_base}-latency.{ext}", dpi=150, bbox_inches="tight")
-    plt.close(fig)
-    print(f"  Latency: {out_base}-latency.png")
-
-
-# ── Text Summary ──────────────────────────────────────────────────────────────
-
-def print_summary(rows):
-    process_counts = sorted(set(int(r["processes"]) for r in rows))
-    concurrencies = sorted(set(int(r["concurrency"]) for r in rows))
-    lookup = build_lookup(rows)
-
-    print()
-    print("Fiber vs Thread — per-cell advantage (positive = fiber wins):")
-    print(f"{'conc':>5}  {'proc':>4}  {'throughput':>11}  {'peak RSS':>11}  {'avg CPU':>9}  {'lat p50':>9}")
-    print("-" * 60)
-
-    for procs in process_counts:
-        for cap in concurrencies:
-            t = lookup.get(("thread", procs, cap))
-            a = lookup.get(("fiber", procs, cap))
-            if not (t and a):
-                continue
-
-            def delta(metric, invert=False):
-                tv = t.get(metric)
-                av = a.get(metric)
-                if tv in (None, 0) or av is None:
-                    return "    n/a"
-                pct = (float(av) - float(tv)) / float(tv) * 100
-                if invert:
-                    pct = -pct
-                return f"{'+'if pct >= 0 else ''}{pct:.1f}%"
-
-            print(
-                f"{cap:>5}  {procs:>4}  "
-                f"{delta('jobs_per_second'):>11}  "
-                f"{delta('peak_rss_kb', True):>11}  "
-                f"{delta('avg_cpu_pct', True):>9}  "
-                f"{delta('total_latency_p50_ms', True):>9}"
-            )
-
-    print()
-    print("(Positive % = fiber is better: higher throughput, lower memory/CPU/latency)")
-
-
-# ── Main ──────────────────────────────────────────────────────────────────────
-
-def main():
-    parser = argparse.ArgumentParser(description="Plot matrix sweep results")
-    parser.add_argument("csv_file", help="Path to matrix CSV file")
-    parser.add_argument("--output-dir", default=None, help="Output directory (default: same as CSV)")
-    args = parser.parse_args()
-
-    if not os.path.exists(args.csv_file):
-        print(f"Error: {args.csv_file} not found", file=sys.stderr)
-        sys.exit(1)
-
-    output_dir = args.output_dir or os.path.dirname(args.csv_file) or "."
-    os.makedirs(output_dir, exist_ok=True)
-    base = os.path.splitext(os.path.basename(args.csv_file))[0]
-    out_base = os.path.join(output_dir, base)
-
-    rows = read_csv_data(args.csv_file)
-    if not rows:
-        print("Error: no data in CSV", file=sys.stderr)
-        sys.exit(1)
-
-    modes = set(r["mode"] for r in rows)
-    print(f"Loaded {len(rows)} rows, modes: {', '.join(sorted(modes))}")
-    print()
-
-    plot_comparison_grid(rows, out_base)
-
-    if "thread" in modes and "fiber" in modes:
-        plot_fiber_advantage(rows, out_base)
-        plot_latency_breakdown(rows, out_base)
-        print_summary(rows)
-
-    print("\nDone.")
-
-
-if __name__ == "__main__":
-    main()
+report = Bench::Report.new(File.expand_path("..", output_dir))
+dataset = Bench::Report::Dataset.new(family:, json_path: tmp_json, data:)
+report.send(:write_workload_charts, dataset)
+FileUtils.rm_f(tmp_json)

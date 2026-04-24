@@ -26,6 +26,16 @@ Uses the `:async_job` ActiveJob adapter with a Redis backend and fiber-based
 execution. A queue-side concurrency limiter makes the `concurrency` dimension mean
 "maximum concurrent jobs per worker process" for both families.
 
+## Research Questions
+
+The suite separates executor behavior from resource sizing:
+
+1. Is Solid Queue `fiber` faster than Solid Queue `thread` for the same workload?
+2. Does `fiber` reduce memory, CPU, latency, or database connection pressure?
+3. Do short DB bursts still work well with a smaller shared fiber pool?
+4. What happens when jobs pin DB connections for a whole transaction?
+5. How much faster is Async::Job + Redis when the backend changes too?
+
 ## Workloads
 
 ### Headline
@@ -39,15 +49,13 @@ These drive the charts and conclusions:
 | `async_http` | Local `Async::HTTP` call | Fiber-friendly I/O |
 | `ruby_llm_stream` | Fake OpenAI SSE + RubyLLM chat + Turbo broadcasts | Production-shaped streaming |
 
-### Supplementary
+### DB and Control
 
-Useful controls, not the main story:
+These are part of the default full sweep:
 
 | Workload | Shape |
 |----------|-------|
 | `http` | Local `Net::HTTP` call (blocking HTTP control) |
-| `llm_batch` | Long synthetic external wait |
-| `llm_stream` | Synthetic parent job + child broadcast jobs |
 | `db_queries` | Sequential DB reads plus writes |
 | `db_transaction` | Same DB reads and writes in one transaction |
 | `db_mixed` | DB reads, delayed HTTP call, then DB writes |
@@ -58,16 +66,31 @@ queries. For `db_queries` and `db_transaction`, `--duration-ms` injects a
 `pg_sleep` into each read query to model slower queries. For `db_mixed`,
 `--duration-ms` remains the delay-server HTTP wait.
 
-`--db-pool` overrides the per-process Active Record pool for a benchmark run.
-Use an integer to force a specific pool size, or `matched` to use
-`concurrency + 5` for every mode. `db_transaction` defaults to `matched` so
-thread and fiber compare with the same pool size unless you override it.
+`db_queries` and `db_mixed` use the normal mode-specific pool sizing because
+that is part of what they test: can fiber mode keep throughput up with a smaller
+shared pool when jobs release connections between DB operations?
+
+`db_transaction` defaults to `--db-pool matched`, which means both modes use
+`concurrency + 5` connections per process. That makes the transaction result a
+fair executor comparison instead of a pool-size comparison. To test the
+small-pool pressure case separately, run `sweep:db_transaction_pool_pressure`;
+it writes separate `db-transaction-pool-pressure` artifacts.
+
+### Synthetic
+
+These are still available, but no longer part of the default full sweep:
+
+| Workload | Shape |
+|----------|-------|
+| `llm_batch` | Long synthetic external wait |
+| `llm_stream` | Synthetic parent job + child broadcast jobs |
 
 ## Current Results
 
-Latest checked-in results: **April 23, 2026**.
-Solid Queue commit under test: [2f845aaf82084f6391d3bac2cebc8726e9366f20](https://github.com/crmne/solid_queue/commit/2f845aaf82084f6391d3bac2cebc8726e9366f20)
-(`2f845aa`).
+Latest checked-in results: **April 24, 2026** for DB workloads and
+**April 5, 2026** for the headline, Async::Job, and stress workloads.
+Solid Queue commit under test: [305bf4018352e099019f9f24502a18ee4794e64e](https://github.com/crmne/solid_queue/commit/305bf4018352e099019f9f24502a18ee4794e64e)
+(`305bf40`).
 
 Full generated summaries:
 [results/](results/README.md) |
@@ -116,9 +139,10 @@ reference, not a same-backend comparison.
 - For staying on Solid Queue, `fiber` trades some throughput ceiling for smaller
   DB pools and the Rails-native / Mission Control story
 
-![Throughput advantage ranges](results/headline-throughput-ranges.png)
-
-![Representative headline test](results/headline-representative-cell.png)
+Generated charts:
+[interactive report](results/index.html) |
+[Solid Queue fiber vs thread](results/charts/headline-solid-queue-fiber-vs-thread.vg.json) |
+[Async::Job vs Solid Queue fiber](results/charts/headline-async-job-vs-solid-queue-fiber.vg.json)
 
 ## Stress Suite (DB Pool Ceiling)
 
@@ -144,11 +168,10 @@ completed all 10/10 planned tests per workload. Thread mode needs one DB
 connection per concurrent job; `fiber` multiplexes fibers over a much smaller
 pool, so it survives where threads cannot.
 
-![Stress cell status](results/solid-queue-stress/stress-cell-status.png)
-
-![Stress throughput envelope](results/solid-queue-stress/stress-throughput-envelope.png)
-
-![Stress RSS envelope](results/solid-queue-stress/stress-rss-envelope.png)
+Stress charts:
+[cell status](results/charts/stress-cell-status.vg.json) |
+[throughput](results/charts/stress-throughput.vg.json) |
+[RSS](results/charts/stress-rss.vg.json)
 
 ## Measurement
 
@@ -182,12 +205,17 @@ gem "solid_queue", path: "../solid_queue"
 ```bash
 export DB_USER=your_user
 export DB_PASSWORD=your_password
+source .env
 
 bin/setup
 ```
 
 `bin/setup` installs gems, prepares the database, ensures the Solid Queue
 schema exists, and loads the RubyLLM model catalog.
+
+`.env` is just a shell-friendly `OPENAI_API_KEY` export that reads from
+1Password via `op-cache`. Source it, or set `OPENAI_API_KEY` another way. If the
+key is missing, RubyLLM fails plainly.
 
 ## Running
 
@@ -228,6 +256,11 @@ bin/matrix --backend solid_queue --workload db_transaction --jobs 500 \
   --concurrencies 5,10,25,50,100 --processes 1,2,6 --modes thread,fiber \
   --reads 10 --writes 2 --duration-ms 20 --db-pool matched \
   --repeat 3 --max-total-concurrency 60
+
+bin/matrix --backend solid_queue --workload db_transaction_pool_pressure --jobs 500 \
+  --concurrencies 5,10,25,50,100 --processes 1,2,6 --modes thread,fiber \
+  --reads 10 --writes 2 --duration-ms 20 \
+  --repeat 3 --max-total-concurrency 60
 ```
 
 ### Sweep tasks
@@ -237,17 +270,31 @@ bundle exec rake sweep:solid_queue_headline   # Headline Solid Queue
 bundle exec rake sweep:solid_queue_stress      # Stress suite
 bundle exec rake sweep:async_job_headline      # Headline Async::Job
 bundle exec rake sweep:families                # Both headline families
-bundle exec rake sweep:full                    # Everything
+bundle exec rake sweep:full                    # Headline + HTTP control + DB
+bundle exec rake sweep:publish                 # Full publishable suite
 ```
 
 Single-workload sweeps are also available (`sweep:sleep`,
 `sweep:db_queries`, `sweep:db_transaction`, `sweep:db_mixed`,
-`sweep:ruby_llm_stream`, `sweep:async_job_sleep`, etc.).
+`sweep:db_transaction_pool_pressure`, `sweep:ruby_llm_stream`,
+`sweep:async_job_sleep`, etc.). The old synthetic LLM controls are available
+with `sweep:synthetic`.
 
 ### Charts and reports
 
-Charts generate automatically when Python 3 with matplotlib is available.
-Refresh all generated summaries and plots:
+Reports are generated by Ruby. Charts are written as Vega-Lite specs under
+`results/charts/`, and `results/index.html` renders them interactively. If
+`vl2svg` is available through npm's Vega tooling, the Markdown reports link to
+static SVGs; otherwise they link to the Vega specs.
+
+Optional static SVG export:
+
+```bash
+npm install --save-dev vega-cli vega-lite
+bin/report
+```
+
+Refresh all generated summaries, charts, and narrative:
 
 ```bash
 bin/report
@@ -273,7 +320,6 @@ Override with environment variables:
 ```bash
 CONCURRENCIES=5,10,25,50,100
 PRESSURE_CONCURRENCIES=25,50,100,150,200
-STRESS_CONCURRENCIES=150,200   # appended only by sweep:full
 HEADLINE_MAX_TOTAL_CONCURRENCY=60
 SOLID_QUEUE_PROCESSES=1,2,6
 ASYNC_JOB_PROCESSES=1,2,6

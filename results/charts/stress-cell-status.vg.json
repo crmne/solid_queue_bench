@@ -1,0 +1,513 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "title": "Solid Queue Stress Cell Status",
+  "data": {
+    "values": [
+      {
+        "workload": "Async::HTTP",
+        "mode": "thread",
+        "concurrency": 25,
+        "processes": 2,
+        "status": "completed"
+      },
+      {
+        "workload": "Async::HTTP",
+        "mode": "thread",
+        "concurrency": 50,
+        "processes": 2,
+        "status": "failed"
+      },
+      {
+        "workload": "Async::HTTP",
+        "mode": "thread",
+        "concurrency": 100,
+        "processes": 2,
+        "status": "failed"
+      },
+      {
+        "workload": "Async::HTTP",
+        "mode": "thread",
+        "concurrency": 150,
+        "processes": 2,
+        "status": "failed"
+      },
+      {
+        "workload": "Async::HTTP",
+        "mode": "thread",
+        "concurrency": 200,
+        "processes": 2,
+        "status": "failed"
+      },
+      {
+        "workload": "Async::HTTP",
+        "mode": "thread",
+        "concurrency": 25,
+        "processes": 6,
+        "status": "failed"
+      },
+      {
+        "workload": "Async::HTTP",
+        "mode": "thread",
+        "concurrency": 50,
+        "processes": 6,
+        "status": "failed"
+      },
+      {
+        "workload": "Async::HTTP",
+        "mode": "thread",
+        "concurrency": 100,
+        "processes": 6,
+        "status": "failed"
+      },
+      {
+        "workload": "Async::HTTP",
+        "mode": "thread",
+        "concurrency": 150,
+        "processes": 6,
+        "status": "failed"
+      },
+      {
+        "workload": "Async::HTTP",
+        "mode": "thread",
+        "concurrency": 200,
+        "processes": 6,
+        "status": "failed"
+      },
+      {
+        "workload": "Async::HTTP",
+        "mode": "fiber",
+        "concurrency": 25,
+        "processes": 2,
+        "status": "completed"
+      },
+      {
+        "workload": "Async::HTTP",
+        "mode": "fiber",
+        "concurrency": 50,
+        "processes": 2,
+        "status": "completed"
+      },
+      {
+        "workload": "Async::HTTP",
+        "mode": "fiber",
+        "concurrency": 100,
+        "processes": 2,
+        "status": "completed"
+      },
+      {
+        "workload": "Async::HTTP",
+        "mode": "fiber",
+        "concurrency": 150,
+        "processes": 2,
+        "status": "completed"
+      },
+      {
+        "workload": "Async::HTTP",
+        "mode": "fiber",
+        "concurrency": 200,
+        "processes": 2,
+        "status": "completed"
+      },
+      {
+        "workload": "Async::HTTP",
+        "mode": "fiber",
+        "concurrency": 25,
+        "processes": 6,
+        "status": "completed"
+      },
+      {
+        "workload": "Async::HTTP",
+        "mode": "fiber",
+        "concurrency": 50,
+        "processes": 6,
+        "status": "completed"
+      },
+      {
+        "workload": "Async::HTTP",
+        "mode": "fiber",
+        "concurrency": 100,
+        "processes": 6,
+        "status": "completed"
+      },
+      {
+        "workload": "Async::HTTP",
+        "mode": "fiber",
+        "concurrency": 150,
+        "processes": 6,
+        "status": "completed"
+      },
+      {
+        "workload": "Async::HTTP",
+        "mode": "fiber",
+        "concurrency": 200,
+        "processes": 6,
+        "status": "completed"
+      },
+      {
+        "workload": "RubyLLM Stream",
+        "mode": "thread",
+        "concurrency": 25,
+        "processes": 2,
+        "status": "completed"
+      },
+      {
+        "workload": "RubyLLM Stream",
+        "mode": "thread",
+        "concurrency": 50,
+        "processes": 2,
+        "status": "failed"
+      },
+      {
+        "workload": "RubyLLM Stream",
+        "mode": "thread",
+        "concurrency": 100,
+        "processes": 2,
+        "status": "failed"
+      },
+      {
+        "workload": "RubyLLM Stream",
+        "mode": "thread",
+        "concurrency": 150,
+        "processes": 2,
+        "status": "failed"
+      },
+      {
+        "workload": "RubyLLM Stream",
+        "mode": "thread",
+        "concurrency": 200,
+        "processes": 2,
+        "status": "failed"
+      },
+      {
+        "workload": "RubyLLM Stream",
+        "mode": "thread",
+        "concurrency": 25,
+        "processes": 6,
+        "status": "failed"
+      },
+      {
+        "workload": "RubyLLM Stream",
+        "mode": "thread",
+        "concurrency": 50,
+        "processes": 6,
+        "status": "failed"
+      },
+      {
+        "workload": "RubyLLM Stream",
+        "mode": "thread",
+        "concurrency": 100,
+        "processes": 6,
+        "status": "failed"
+      },
+      {
+        "workload": "RubyLLM Stream",
+        "mode": "thread",
+        "concurrency": 150,
+        "processes": 6,
+        "status": "failed"
+      },
+      {
+        "workload": "RubyLLM Stream",
+        "mode": "thread",
+        "concurrency": 200,
+        "processes": 6,
+        "status": "failed"
+      },
+      {
+        "workload": "RubyLLM Stream",
+        "mode": "fiber",
+        "concurrency": 25,
+        "processes": 2,
+        "status": "completed"
+      },
+      {
+        "workload": "RubyLLM Stream",
+        "mode": "fiber",
+        "concurrency": 50,
+        "processes": 2,
+        "status": "completed"
+      },
+      {
+        "workload": "RubyLLM Stream",
+        "mode": "fiber",
+        "concurrency": 100,
+        "processes": 2,
+        "status": "completed"
+      },
+      {
+        "workload": "RubyLLM Stream",
+        "mode": "fiber",
+        "concurrency": 150,
+        "processes": 2,
+        "status": "completed"
+      },
+      {
+        "workload": "RubyLLM Stream",
+        "mode": "fiber",
+        "concurrency": 200,
+        "processes": 2,
+        "status": "completed"
+      },
+      {
+        "workload": "RubyLLM Stream",
+        "mode": "fiber",
+        "concurrency": 25,
+        "processes": 6,
+        "status": "completed"
+      },
+      {
+        "workload": "RubyLLM Stream",
+        "mode": "fiber",
+        "concurrency": 50,
+        "processes": 6,
+        "status": "completed"
+      },
+      {
+        "workload": "RubyLLM Stream",
+        "mode": "fiber",
+        "concurrency": 100,
+        "processes": 6,
+        "status": "completed"
+      },
+      {
+        "workload": "RubyLLM Stream",
+        "mode": "fiber",
+        "concurrency": 150,
+        "processes": 6,
+        "status": "completed"
+      },
+      {
+        "workload": "RubyLLM Stream",
+        "mode": "fiber",
+        "concurrency": 200,
+        "processes": 6,
+        "status": "completed"
+      },
+      {
+        "workload": "Sleep",
+        "mode": "thread",
+        "concurrency": 25,
+        "processes": 2,
+        "status": "completed"
+      },
+      {
+        "workload": "Sleep",
+        "mode": "thread",
+        "concurrency": 50,
+        "processes": 2,
+        "status": "failed"
+      },
+      {
+        "workload": "Sleep",
+        "mode": "thread",
+        "concurrency": 100,
+        "processes": 2,
+        "status": "failed"
+      },
+      {
+        "workload": "Sleep",
+        "mode": "thread",
+        "concurrency": 150,
+        "processes": 2,
+        "status": "failed"
+      },
+      {
+        "workload": "Sleep",
+        "mode": "thread",
+        "concurrency": 200,
+        "processes": 2,
+        "status": "failed"
+      },
+      {
+        "workload": "Sleep",
+        "mode": "thread",
+        "concurrency": 25,
+        "processes": 6,
+        "status": "failed"
+      },
+      {
+        "workload": "Sleep",
+        "mode": "thread",
+        "concurrency": 50,
+        "processes": 6,
+        "status": "failed"
+      },
+      {
+        "workload": "Sleep",
+        "mode": "thread",
+        "concurrency": 100,
+        "processes": 6,
+        "status": "failed"
+      },
+      {
+        "workload": "Sleep",
+        "mode": "thread",
+        "concurrency": 150,
+        "processes": 6,
+        "status": "failed"
+      },
+      {
+        "workload": "Sleep",
+        "mode": "thread",
+        "concurrency": 200,
+        "processes": 6,
+        "status": "failed"
+      },
+      {
+        "workload": "Sleep",
+        "mode": "fiber",
+        "concurrency": 25,
+        "processes": 2,
+        "status": "completed"
+      },
+      {
+        "workload": "Sleep",
+        "mode": "fiber",
+        "concurrency": 50,
+        "processes": 2,
+        "status": "completed"
+      },
+      {
+        "workload": "Sleep",
+        "mode": "fiber",
+        "concurrency": 100,
+        "processes": 2,
+        "status": "completed"
+      },
+      {
+        "workload": "Sleep",
+        "mode": "fiber",
+        "concurrency": 150,
+        "processes": 2,
+        "status": "completed"
+      },
+      {
+        "workload": "Sleep",
+        "mode": "fiber",
+        "concurrency": 200,
+        "processes": 2,
+        "status": "completed"
+      },
+      {
+        "workload": "Sleep",
+        "mode": "fiber",
+        "concurrency": 25,
+        "processes": 6,
+        "status": "completed"
+      },
+      {
+        "workload": "Sleep",
+        "mode": "fiber",
+        "concurrency": 50,
+        "processes": 6,
+        "status": "completed"
+      },
+      {
+        "workload": "Sleep",
+        "mode": "fiber",
+        "concurrency": 100,
+        "processes": 6,
+        "status": "completed"
+      },
+      {
+        "workload": "Sleep",
+        "mode": "fiber",
+        "concurrency": 150,
+        "processes": 6,
+        "status": "completed"
+      },
+      {
+        "workload": "Sleep",
+        "mode": "fiber",
+        "concurrency": 200,
+        "processes": 6,
+        "status": "completed"
+      }
+    ]
+  },
+  "mark": {
+    "type": "point",
+    "filled": true,
+    "size": 130
+  },
+  "encoding": {
+    "x": {
+      "field": "concurrency",
+      "type": "ordinal",
+      "title": "Concurrency"
+    },
+    "y": {
+      "field": "processes",
+      "type": "ordinal",
+      "title": "Processes"
+    },
+    "color": {
+      "field": "status",
+      "type": "nominal",
+      "scale": {
+        "domain": [
+          "completed",
+          "failed"
+        ],
+        "range": [
+          "#10b981",
+          "#ef4444"
+        ]
+      }
+    },
+    "shape": {
+      "field": "mode",
+      "type": "nominal"
+    },
+    "row": {
+      "field": "workload",
+      "type": "nominal"
+    },
+    "column": {
+      "field": "mode",
+      "type": "nominal"
+    },
+    "tooltip": [
+      {
+        "field": "workload",
+        "type": "nominal"
+      },
+      {
+        "field": "mode",
+        "type": "nominal"
+      },
+      {
+        "field": "concurrency",
+        "type": "nominal"
+      },
+      {
+        "field": "processes",
+        "type": "nominal"
+      },
+      {
+        "field": "status",
+        "type": "nominal"
+      }
+    ]
+  },
+  "config": {
+    "background": "white",
+    "axis": {
+      "labelFont": "Arial",
+      "titleFont": "Arial",
+      "grid": true
+    },
+    "legend": {
+      "labelFont": "Arial",
+      "titleFont": "Arial"
+    },
+    "title": {
+      "font": "Arial",
+      "fontSize": 16,
+      "anchor": "start"
+    },
+    "view": {
+      "stroke": null
+    }
+  }
+}

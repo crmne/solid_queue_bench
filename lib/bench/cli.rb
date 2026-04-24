@@ -39,13 +39,13 @@ module Bench
           parser.on("--name NAME", "Benchmark run name") { |value| options[:name] = value }
           parser.on("--backend NAME", "solid_queue or async_job (default: solid_queue)") { |value| options[:backend] = value }
           parser.on("--modes MODES", "Comma-separated list, e.g. thread,fiber") { |value| options[:modes] = value.split(",") }
-          parser.on("--workload NAME", "sleep, cpu, http, async_http, llm_batch, llm_stream, ruby_llm_stream, db_queries, db_transaction, or db_mixed") { |value| options[:workload] = value }
+          parser.on("--workload NAME", "sleep, cpu, http, async_http, llm_batch, llm_stream, ruby_llm_stream, db_queries, db_transaction, db_transaction_pool_pressure, or db_mixed") { |value| options[:workload] = value }
           parser.on("--concurrency N", Integer, "Concurrent jobs per worker process") { |value| options[:concurrency] = value }
           parser.on("--processes N", Integer, "Worker process count") { |value| options[:processes] = value }
           parser.on("--jobs N", Integer, "Number of jobs to enqueue") { |value| options[:jobs] = value }
           parser.on("--duration-ms N", Integer, "Sleep, HTTP, mixed HTTP, or DB slow-query delay in ms") { |value| options[:payload][:duration_ms] = value }
           parser.on("--duration-s N", Integer, "Long wait duration in seconds") { |value| options[:payload][:duration_s] = value }
-          parser.on("--db-pool VALUE", "Override per-process DB pool for all modes. Use an integer or 'matched' for concurrency + 5") { |value| options[:db_pool] = value }
+          parser.on("--db-pool VALUE", "DB pool policy: default, matched, or a positive integer") { |value| options[:db_pool] = value }
           parser.on("--iterations N", Integer, "CPU workload iterations per job") { |value| options[:payload][:iterations] = value }
           parser.on("--reads N", Integer, "Sequential SELECT queries per DB-heavy job") { |value| options[:payload][:reads] = value }
           parser.on("--writes N", Integer, "Write queries per DB-heavy job") { |value| options[:payload][:writes] = value }
@@ -97,20 +97,21 @@ module Bench
             model_id: options[:payload][:model_id] || "gpt-4.1-mini",
             prompt: options[:payload][:prompt] || "Respond with a concise sentence."
           }
-        when "db_queries", "db_transaction"
+        when "db_queries", "db_transaction", "db_transaction_pool_pressure"
           options[:payload] = {
             reads: options[:payload][:reads] || 10,
             writes: options[:payload][:writes] || 2,
             duration_ms: options[:payload][:duration_ms] || 0
           }
           options[:db_pool] ||= :matched if options[:workload] == "db_transaction"
+          options[:db_pool] ||= :default if options[:workload] == "db_transaction_pool_pressure"
         when "db_mixed"
           options[:payload] = {
             reads: options[:payload][:reads] || 10,
             writes: options[:payload][:writes] || 2,
             duration_ms: options[:payload][:duration_ms] || 50
           }
-      else
+        else
           raise ArgumentError, "Unsupported workload: #{options[:workload]}"
         end
       end
@@ -119,12 +120,14 @@ module Bench
         return if options[:db_pool].nil?
 
         value = options[:db_pool].to_s.strip.downcase
-        options[:db_pool] = if value == "matched"
+        options[:db_pool] = if value == "default"
+          :default
+        elsif value == "matched"
           :matched
         elsif value.match?(/\A\d+\z/) && Integer(value).positive?
           Integer(value)
         else
-          raise ArgumentError, "--db-pool must be a positive integer or 'matched'"
+          raise ArgumentError, "--db-pool must be default, matched, or a positive integer"
         end
       end
   end
