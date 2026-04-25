@@ -7,3 +7,4 @@
 /db/*.sqlite3
 /db/*.sqlite3-*
 /config/master.key
+node_modules/

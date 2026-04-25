@@ -8,308 +8,308 @@
         "concurrency": 25,
         "processes": "2 proc",
         "percentile": "p50",
-        "value": 2082.37
+        "value": 1962.15
       },
       {
         "mode": "thread",
         "concurrency": 25,
         "processes": "2 proc",
         "percentile": "p95",
-        "value": 3551.49
+        "value": 3672.93
       },
       {
         "mode": "thread",
         "concurrency": 25,
         "processes": "2 proc",
         "percentile": "p99",
-        "value": 3793.56
+        "value": 3720.55
       },
       {
         "mode": "thread",
         "concurrency": 25,
         "processes": "2 proc",
         "percentile": "max",
-        "value": 3800.46
+        "value": 3722.23
       },
       {
         "mode": "fiber",
         "concurrency": 25,
         "processes": "2 proc",
         "percentile": "p50",
-        "value": 1850.0
+        "value": 1841.29
       },
       {
         "mode": "fiber",
         "concurrency": 25,
         "processes": "2 proc",
         "percentile": "p95",
-        "value": 3377.27
+        "value": 3431.25
       },
       {
         "mode": "fiber",
         "concurrency": 25,
         "processes": "2 proc",
         "percentile": "p99",
-        "value": 3467.65
+        "value": 3483.85
       },
       {
         "mode": "fiber",
         "concurrency": 25,
         "processes": "2 proc",
         "percentile": "max",
-        "value": 3478.87
+        "value": 3506.83
       },
       {
         "mode": "fiber",
         "concurrency": 50,
         "processes": "2 proc",
         "percentile": "p50",
-        "value": 1335.43
+        "value": 1331.59
       },
       {
         "mode": "fiber",
         "concurrency": 50,
         "processes": "2 proc",
         "percentile": "p95",
-        "value": 2162.94
+        "value": 2126.53
       },
       {
         "mode": "fiber",
         "concurrency": 50,
         "processes": "2 proc",
         "percentile": "p99",
-        "value": 2174.51
+        "value": 2150.6
       },
       {
         "mode": "fiber",
         "concurrency": 50,
         "processes": "2 proc",
         "percentile": "max",
-        "value": 2178.48
+        "value": 2164.44
       },
       {
         "mode": "fiber",
         "concurrency": 100,
         "processes": "2 proc",
         "percentile": "p50",
-        "value": 1042.03
+        "value": 1099.66
       },
       {
         "mode": "fiber",
         "concurrency": 100,
         "processes": "2 proc",
         "percentile": "p95",
-        "value": 1642.84
+        "value": 1665.95
       },
       {
         "mode": "fiber",
         "concurrency": 100,
         "processes": "2 proc",
         "percentile": "p99",
-        "value": 1652.72
+        "value": 1691.43
       },
       {
         "mode": "fiber",
         "concurrency": 100,
         "processes": "2 proc",
         "percentile": "max",
-        "value": 1656.53
+        "value": 1695.03
       },
       {
         "mode": "fiber",
         "concurrency": 150,
         "processes": "2 proc",
         "percentile": "p50",
-        "value": 647.49
+        "value": 614.6
       },
       {
         "mode": "fiber",
         "concurrency": 150,
         "processes": "2 proc",
         "percentile": "p95",
-        "value": 1404.46
+        "value": 1375.22
       },
       {
         "mode": "fiber",
         "concurrency": 150,
         "processes": "2 proc",
         "percentile": "p99",
-        "value": 1414.4
+        "value": 1383.52
       },
       {
         "mode": "fiber",
         "concurrency": 150,
         "processes": "2 proc",
         "percentile": "max",
-        "value": 1418.26
+        "value": 1385.48
       },
       {
         "mode": "fiber",
         "concurrency": 200,
         "processes": "2 proc",
         "percentile": "p50",
-        "value": 708.59
+        "value": 697.65
       },
       {
         "mode": "fiber",
         "concurrency": 200,
         "processes": "2 proc",
         "percentile": "p95",
-        "value": 1430.09
+        "value": 1404.31
       },
       {
         "mode": "fiber",
         "concurrency": 200,
         "processes": "2 proc",
         "percentile": "p99",
-        "value": 1439.11
+        "value": 1411.47
       },
       {
         "mode": "fiber",
         "concurrency": 200,
         "processes": "2 proc",
         "percentile": "max",
-        "value": 1440.51
+        "value": 1414.31
       },
       {
         "mode": "fiber",
         "concurrency": 25,
         "processes": "6 proc",
         "percentile": "p50",
-        "value": 873.07
+        "value": 867.85
       },
       {
         "mode": "fiber",
         "concurrency": 25,
         "processes": "6 proc",
         "percentile": "p95",
-        "value": 1477.8
+        "value": 1440.1
       },
       {
         "mode": "fiber",
         "concurrency": 25,
         "processes": "6 proc",
         "percentile": "p99",
-        "value": 1545.17
+        "value": 1528.83
       },
       {
         "mode": "fiber",
         "concurrency": 25,
         "processes": "6 proc",
         "percentile": "max",
-        "value": 1549.86
+        "value": 1560.02
       },
       {
         "mode": "fiber",
         "concurrency": 50,
         "processes": "6 proc",
         "percentile": "p50",
-        "value": 534.57
+        "value": 532.34
       },
       {
         "mode": "fiber",
         "concurrency": 50,
         "processes": "6 proc",
         "percentile": "p95",
-        "value": 1001.28
+        "value": 1042.86
       },
       {
         "mode": "fiber",
         "concurrency": 50,
         "processes": "6 proc",
         "percentile": "p99",
-        "value": 1010.21
+        "value": 1053.32
       },
       {
         "mode": "fiber",
         "concurrency": 50,
         "processes": "6 proc",
         "percentile": "max",
-        "value": 1011.61
+        "value": 1057.85
       },
       {
         "mode": "fiber",
         "concurrency": 100,
         "processes": "6 proc",
         "percentile": "p50",
-        "value": 596.39
+        "value": 567.94
       },
       {
         "mode": "fiber",
         "concurrency": 100,
         "processes": "6 proc",
         "percentile": "p95",
-        "value": 630.31
+        "value": 607.11
       },
       {
         "mode": "fiber",
         "concurrency": 100,
         "processes": "6 proc",
         "percentile": "p99",
-        "value": 633.76
+        "value": 612.13
       },
       {
         "mode": "fiber",
         "concurrency": 100,
         "processes": "6 proc",
         "percentile": "max",
-        "value": 635.79
+        "value": 613.15
       },
       {
         "mode": "fiber",
         "concurrency": 150,
         "processes": "6 proc",
         "percentile": "p50",
-        "value": 640.26
+        "value": 610.63
       },
       {
         "mode": "fiber",
         "concurrency": 150,
         "processes": "6 proc",
         "percentile": "p95",
-        "value": 694.61
+        "value": 673.7
       },
       {
         "mode": "fiber",
         "concurrency": 150,
         "processes": "6 proc",
         "percentile": "p99",
-        "value": 700.84
+        "value": 684.83
       },
       {
         "mode": "fiber",
         "concurrency": 150,
         "processes": "6 proc",
         "percentile": "max",
-        "value": 702.34
+        "value": 688.99
       },
       {
         "mode": "fiber",
         "concurrency": 200,
         "processes": "6 proc",
         "percentile": "p50",
-        "value": 645.81
+        "value": 617.1
       },
       {
         "mode": "fiber",
         "concurrency": 200,
         "processes": "6 proc",
         "percentile": "p95",
-        "value": 782.84
+        "value": 763.48
       },
       {
         "mode": "fiber",
         "concurrency": 200,
         "processes": "6 proc",
         "percentile": "p99",
-        "value": 790.9
+        "value": 770.31
       },
       {
         "mode": "fiber",
         "concurrency": 200,
         "processes": "6 proc",
         "percentile": "max",
-        "value": 805.14
+        "value": 775.22
       }
     ]
   },

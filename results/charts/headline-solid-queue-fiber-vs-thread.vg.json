@@ -7,217 +7,217 @@
         "workload": "Sleep",
         "concurrency": 5,
         "processes": "1 proc",
-        "value": -30.302611579383733
+        "value": -6.423034330011075
       },
       {
         "workload": "Sleep",
         "concurrency": 10,
         "processes": "1 proc",
-        "value": -1.2052381504229994
+        "value": 7.11036392405063
       },
       {
         "workload": "Sleep",
         "concurrency": 25,
         "processes": "1 proc",
-        "value": 8.670666245658364
+        "value": 2.8998668119627027
       },
       {
         "workload": "Sleep",
         "concurrency": 50,
         "processes": "1 proc",
-        "value": 18.573672270374036
+        "value": 20.424266681914364
       },
       {
         "workload": "Sleep",
         "concurrency": 5,
         "processes": "2 proc",
-        "value": 5.390208434318941
+        "value": -1.3001912045889015
       },
       {
         "workload": "Sleep",
         "concurrency": 10,
         "processes": "2 proc",
-        "value": 27.15342553875845
+        "value": 9.393890761247526
       },
       {
         "workload": "Sleep",
         "concurrency": 25,
         "processes": "2 proc",
-        "value": 3.106530200374803
+        "value": 12.773964249625411
       },
       {
         "workload": "Sleep",
         "concurrency": 5,
         "processes": "6 proc",
-        "value": -6.629112343563978
+        "value": -1.7516393926862428
       },
       {
         "workload": "Sleep",
         "concurrency": 10,
         "processes": "6 proc",
-        "value": 13.267676090937519
+        "value": 10.23767966039606
       },
       {
         "workload": "Async::HTTP",
         "concurrency": 5,
         "processes": "1 proc",
-        "value": -28.16803449714842
+        "value": -6.163714963045583
       },
       {
         "workload": "Async::HTTP",
         "concurrency": 10,
         "processes": "1 proc",
-        "value": -17.830014370765763
+        "value": 9.089056449969434
       },
       {
         "workload": "Async::HTTP",
         "concurrency": 25,
         "processes": "1 proc",
-        "value": -6.954764698214046
+        "value": 7.93900825404826
       },
       {
         "workload": "Async::HTTP",
         "concurrency": 50,
         "processes": "1 proc",
-        "value": 20.671960904092856
+        "value": 21.2047012732615
       },
       {
         "workload": "Async::HTTP",
         "concurrency": 5,
         "processes": "2 proc",
-        "value": 25.96375287874236
+        "value": -2.9709758512988538
       },
       {
         "workload": "Async::HTTP",
         "concurrency": 10,
         "processes": "2 proc",
-        "value": 12.048327553417604
+        "value": 10.69810599858086
       },
       {
         "workload": "Async::HTTP",
         "concurrency": 25,
         "processes": "2 proc",
-        "value": 21.018001700365954
+        "value": 15.126170562584907
       },
       {
         "workload": "Async::HTTP",
         "concurrency": 5,
         "processes": "6 proc",
-        "value": -3.021961932650071
+        "value": -2.473204477301738
       },
       {
         "workload": "Async::HTTP",
         "concurrency": 10,
         "processes": "6 proc",
-        "value": 18.55443436400667
+        "value": 10.259413116492842
       },
       {
         "workload": "RubyLLM Stream",
         "concurrency": 5,
         "processes": "1 proc",
-        "value": 13.53383458646616
+        "value": 8.724832214765108
       },
       {
         "workload": "RubyLLM Stream",
         "concurrency": 10,
         "processes": "1 proc",
-        "value": 0.6944444444444451
+        "value": 15.09433962264151
       },
       {
         "workload": "RubyLLM Stream",
         "concurrency": 25,
         "processes": "1 proc",
-        "value": 5.844155844155835
+        "value": 21.290322580645153
       },
       {
         "workload": "RubyLLM Stream",
         "concurrency": 50,
         "processes": "1 proc",
-        "value": 1.2658227848101276
+        "value": 15.24390243902439
       },
       {
         "workload": "RubyLLM Stream",
         "concurrency": 5,
         "processes": "2 proc",
-        "value": 18.106995884773657
+        "value": 7.29927007299269
       },
       {
         "workload": "RubyLLM Stream",
         "concurrency": 10,
         "processes": "2 proc",
-        "value": 20.22058823529411
+        "value": 14.285714285714285
       },
       {
         "workload": "RubyLLM Stream",
         "concurrency": 25,
         "processes": "2 proc",
-        "value": 17.26907630522087
+        "value": 27.95275590551181
       },
       {
         "workload": "RubyLLM Stream",
         "concurrency": 5,
         "processes": "6 proc",
-        "value": 6.8799999999999955
+        "value": 3.9881831610044385
       },
       {
         "workload": "RubyLLM Stream",
         "concurrency": 10,
         "processes": "6 proc",
-        "value": 12.601626016260164
+        "value": 4.770642201834859
       },
       {
         "workload": "CPU",
         "concurrency": 5,
         "processes": "1 proc",
-        "value": -1.5107007973143074
+        "value": -2.0565552699228813
       },
       {
         "workload": "CPU",
         "concurrency": 10,
         "processes": "1 proc",
-        "value": 0.3320880033208877
+        "value": 0.12701100762065023
       },
       {
         "workload": "CPU",
         "concurrency": 25,
         "processes": "1 proc",
-        "value": 3.0923526953614795
+        "value": 3.7403267411865753
       },
       {
         "workload": "CPU",
         "concurrency": 50,
         "processes": "1 proc",
-        "value": 3.957894736842111
+        "value": 3.93498716852011
       },
       {
         "workload": "CPU",
         "concurrency": 5,
         "processes": "2 proc",
-        "value": -0.7197480881691415
+        "value": 0.0
       },
       {
         "workload": "CPU",
         "concurrency": 10,
         "processes": "2 proc",
-        "value": 0.08914642299977524
+        "value": 0.54545454545455
       },
       {
         "workload": "CPU",
         "concurrency": 25,
         "processes": "2 proc",
-        "value": 5.065879145842792
+        "value": 4.660726525017133
       },
       {
         "workload": "CPU",
         "concurrency": 5,
         "processes": "6 proc",
-        "value": 0.8936883261962332
+        "value": -0.8370535714285636
       },
       {
         "workload": "CPU",
         "concurrency": 10,
         "processes": "6 proc",
-        "value": 5.082687097075584
+        "value": 4.981355770150104
       }
     ]
   },

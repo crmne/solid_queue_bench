@@ -8,231 +8,231 @@
         "mode": "thread",
         "concurrency": 25,
         "processes": "2 proc",
-        "value": 133.84
+        "value": 135.8
       },
       {
         "workload": "Async::HTTP",
         "mode": "fiber",
         "concurrency": 25,
         "processes": "2 proc",
-        "value": 141.38
+        "value": 144.51
       },
       {
         "workload": "Async::HTTP",
         "mode": "fiber",
         "concurrency": 50,
         "processes": "2 proc",
-        "value": 222.33
+        "value": 224.74
       },
       {
         "workload": "Async::HTTP",
         "mode": "fiber",
         "concurrency": 100,
         "processes": "2 proc",
-        "value": 279.35
+        "value": 283.96
       },
       {
         "workload": "Async::HTTP",
         "mode": "fiber",
         "concurrency": 150,
         "processes": "2 proc",
-        "value": 332.89
+        "value": 359.26
       },
       {
         "workload": "Async::HTTP",
         "mode": "fiber",
         "concurrency": 200,
         "processes": "2 proc",
-        "value": 328.48
+        "value": 322.33
       },
       {
         "workload": "Async::HTTP",
         "mode": "fiber",
         "concurrency": 25,
         "processes": "6 proc",
-        "value": 324.01
+        "value": 319.14
       },
       {
         "workload": "Async::HTTP",
         "mode": "fiber",
         "concurrency": 50,
         "processes": "6 proc",
-        "value": 488.27
+        "value": 458.04
       },
       {
         "workload": "Async::HTTP",
         "mode": "fiber",
         "concurrency": 100,
         "processes": "6 proc",
-        "value": 726.78
+        "value": 739.49
       },
       {
         "workload": "Async::HTTP",
         "mode": "fiber",
         "concurrency": 150,
         "processes": "6 proc",
-        "value": 618.33
+        "value": 646.19
       },
       {
         "workload": "Async::HTTP",
         "mode": "fiber",
         "concurrency": 200,
         "processes": "6 proc",
-        "value": 542.16
+        "value": 567.73
       },
       {
         "workload": "RubyLLM Stream",
         "mode": "thread",
         "concurrency": 25,
         "processes": "2 proc",
-        "value": 2.99
+        "value": 3.07
       },
       {
         "workload": "RubyLLM Stream",
         "mode": "fiber",
         "concurrency": 25,
         "processes": "2 proc",
-        "value": 3.21
+        "value": 3.31
       },
       {
         "workload": "RubyLLM Stream",
         "mode": "fiber",
         "concurrency": 50,
+        "processes": "2 proc",
+        "value": 3.31
+      },
+      {
+        "workload": "RubyLLM Stream",
+        "mode": "fiber",
+        "concurrency": 100,
         "processes": "2 proc",
         "value": 3.26
       },
       {
         "workload": "RubyLLM Stream",
         "mode": "fiber",
-        "concurrency": 100,
-        "processes": "2 proc",
-        "value": 3.16
-      },
-      {
-        "workload": "RubyLLM Stream",
-        "mode": "fiber",
         "concurrency": 150,
         "processes": "2 proc",
-        "value": 3.02
+        "value": 3.27
       },
       {
         "workload": "RubyLLM Stream",
         "mode": "fiber",
         "concurrency": 200,
         "processes": "2 proc",
-        "value": 3.13
+        "value": 3.25
       },
       {
         "workload": "RubyLLM Stream",
         "mode": "fiber",
         "concurrency": 25,
         "processes": "6 proc",
-        "value": 8.54
+        "value": 8.64
       },
       {
         "workload": "RubyLLM Stream",
         "mode": "fiber",
         "concurrency": 50,
         "processes": "6 proc",
-        "value": 8.72
+        "value": 8.86
       },
       {
         "workload": "RubyLLM Stream",
         "mode": "fiber",
         "concurrency": 100,
         "processes": "6 proc",
-        "value": 6.57
+        "value": 6.81
       },
       {
         "workload": "RubyLLM Stream",
         "mode": "fiber",
         "concurrency": 150,
         "processes": "6 proc",
-        "value": 4.53
+        "value": 5.01
       },
       {
         "workload": "RubyLLM Stream",
         "mode": "fiber",
         "concurrency": 200,
         "processes": "6 proc",
-        "value": 3.44
+        "value": 3.76
       },
       {
         "workload": "Sleep",
         "mode": "thread",
         "concurrency": 25,
         "processes": "2 proc",
-        "value": 131.18
+        "value": 134.1
       },
       {
         "workload": "Sleep",
         "mode": "fiber",
         "concurrency": 25,
         "processes": "2 proc",
-        "value": 143.51
+        "value": 142.35
       },
       {
         "workload": "Sleep",
         "mode": "fiber",
         "concurrency": 50,
         "processes": "2 proc",
-        "value": 228.97
+        "value": 230.41
       },
       {
         "workload": "Sleep",
         "mode": "fiber",
         "concurrency": 100,
         "processes": "2 proc",
-        "value": 300.31
+        "value": 293.96
       },
       {
         "workload": "Sleep",
         "mode": "fiber",
         "concurrency": 150,
         "processes": "2 proc",
-        "value": 351.09
+        "value": 359.5
       },
       {
         "workload": "Sleep",
         "mode": "fiber",
         "concurrency": 200,
         "processes": "2 proc",
-        "value": 345.77
+        "value": 352.18
       },
       {
         "workload": "Sleep",
         "mode": "fiber",
         "concurrency": 25,
         "processes": "6 proc",
-        "value": 321.46
+        "value": 319.42
       },
       {
         "workload": "Sleep",
         "mode": "fiber",
         "concurrency": 50,
         "processes": "6 proc",
-        "value": 491.67
+        "value": 470.17
       },
       {
         "workload": "Sleep",
         "mode": "fiber",
         "concurrency": 100,
         "processes": "6 proc",
-        "value": 779.32
+        "value": 807.53
       },
       {
         "workload": "Sleep",
         "mode": "fiber",
         "concurrency": 150,
         "processes": "6 proc",
-        "value": 706.77
+        "value": 719.98
       },
       {
         "workload": "Sleep",
         "mode": "fiber",
         "concurrency": 200,
         "processes": "6 proc",
-        "value": 616.93
+        "value": 639.83
       }
     ]
   },

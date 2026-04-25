@@ -1,0 +1,291 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
+  "title": "Solid Queue DB Transaction Pool Pressure Fiber Advantage",
+  "data": {
+    "values": [
+      {
+        "concurrency": 5,
+        "processes": "1 proc",
+        "metric": "Throughput",
+        "value": -1.94264569842739
+      },
+      {
+        "concurrency": 5,
+        "processes": "1 proc",
+        "metric": "Peak RSS",
+        "value": 100.0
+      },
+      {
+        "concurrency": 5,
+        "processes": "1 proc",
+        "metric": "Avg CPU",
+        "value": 2.7272727272727337
+      },
+      {
+        "concurrency": 5,
+        "processes": "1 proc",
+        "metric": "p50 latency",
+        "value": -2.3356337522624466
+      },
+      {
+        "concurrency": 10,
+        "processes": "1 proc",
+        "metric": "Throughput",
+        "value": -48.21042517415326
+      },
+      {
+        "concurrency": 10,
+        "processes": "1 proc",
+        "metric": "Peak RSS",
+        "value": 100.0
+      },
+      {
+        "concurrency": 10,
+        "processes": "1 proc",
+        "metric": "Avg CPU",
+        "value": 48.12206572769953
+      },
+      {
+        "concurrency": 10,
+        "processes": "1 proc",
+        "metric": "p50 latency",
+        "value": -88.90502205778394
+      },
+      {
+        "concurrency": 25,
+        "processes": "1 proc",
+        "metric": "Throughput",
+        "value": -69.88676079966449
+      },
+      {
+        "concurrency": 25,
+        "processes": "1 proc",
+        "metric": "Peak RSS",
+        "value": 100.0
+      },
+      {
+        "concurrency": 25,
+        "processes": "1 proc",
+        "metric": "Avg CPU",
+        "value": 74.96962332928311
+      },
+      {
+        "concurrency": 25,
+        "processes": "1 proc",
+        "metric": "p50 latency",
+        "value": -210.70000290753765
+      },
+      {
+        "concurrency": 50,
+        "processes": "1 proc",
+        "metric": "Throughput",
+        "value": -74.75432849789425
+      },
+      {
+        "concurrency": 50,
+        "processes": "1 proc",
+        "metric": "Peak RSS",
+        "value": 100.0
+      },
+      {
+        "concurrency": 50,
+        "processes": "1 proc",
+        "metric": "Avg CPU",
+        "value": 79.51564076690212
+      },
+      {
+        "concurrency": 50,
+        "processes": "1 proc",
+        "metric": "p50 latency",
+        "value": -280.64637330241914
+      },
+      {
+        "concurrency": 5,
+        "processes": "2 proc",
+        "metric": "Throughput",
+        "value": -1.711026615969579
+      },
+      {
+        "concurrency": 5,
+        "processes": "2 proc",
+        "metric": "Peak RSS",
+        "value": 100.0
+      },
+      {
+        "concurrency": 5,
+        "processes": "2 proc",
+        "metric": "Avg CPU",
+        "value": 0.6622516556291328
+      },
+      {
+        "concurrency": 5,
+        "processes": "2 proc",
+        "metric": "p50 latency",
+        "value": -2.336009621635671
+      },
+      {
+        "concurrency": 10,
+        "processes": "2 proc",
+        "metric": "Throughput",
+        "value": -35.58488612836439
+      },
+      {
+        "concurrency": 10,
+        "processes": "2 proc",
+        "metric": "Peak RSS",
+        "value": 100.0
+      },
+      {
+        "concurrency": 10,
+        "processes": "2 proc",
+        "metric": "Avg CPU",
+        "value": 38.61834654586636
+      },
+      {
+        "concurrency": 10,
+        "processes": "2 proc",
+        "metric": "p50 latency",
+        "value": -47.00898682822678
+      },
+      {
+        "concurrency": 25,
+        "processes": "2 proc",
+        "metric": "Throughput",
+        "value": -60.941213753763265
+      },
+      {
+        "concurrency": 25,
+        "processes": "2 proc",
+        "metric": "Peak RSS",
+        "value": 100.0
+      },
+      {
+        "concurrency": 25,
+        "processes": "2 proc",
+        "metric": "Avg CPU",
+        "value": 69.58151155527796
+      },
+      {
+        "concurrency": 25,
+        "processes": "2 proc",
+        "metric": "p50 latency",
+        "value": -137.63105917968028
+      },
+      {
+        "concurrency": 5,
+        "processes": "6 proc",
+        "metric": "Throughput",
+        "value": -1.075456850572706
+      },
+      {
+        "concurrency": 5,
+        "processes": "6 proc",
+        "metric": "Peak RSS",
+        "value": -0.0
+      },
+      {
+        "concurrency": 5,
+        "processes": "6 proc",
+        "metric": "Avg CPU",
+        "value": 3.0207677784770364
+      },
+      {
+        "concurrency": 5,
+        "processes": "6 proc",
+        "metric": "p50 latency",
+        "value": -0.8804622426774201
+      },
+      {
+        "concurrency": 10,
+        "processes": "6 proc",
+        "metric": "Throughput",
+        "value": 1.6944720464410756
+      },
+      {
+        "concurrency": 10,
+        "processes": "6 proc",
+        "metric": "Peak RSS",
+        "value": 100.0
+      },
+      {
+        "concurrency": 10,
+        "processes": "6 proc",
+        "metric": "Avg CPU",
+        "value": 2.7351067815661128
+      },
+      {
+        "concurrency": 10,
+        "processes": "6 proc",
+        "metric": "p50 latency",
+        "value": 3.3300400263464516
+      }
+    ]
+  },
+  "mark": {
+    "type": "bar",
+    "tooltip": true
+  },
+  "encoding": {
+    "x": {
+      "field": "concurrency",
+      "type": "ordinal",
+      "title": "Concurrency"
+    },
+    "y": {
+      "field": "value",
+      "type": "quantitative",
+      "title": "Fiber advantage (%)"
+    },
+    "color": {
+      "field": "processes",
+      "type": "nominal"
+    },
+    "column": {
+      "field": "metric",
+      "type": "nominal"
+    },
+    "tooltip": [
+      {
+        "field": "metric",
+        "type": "nominal"
+      },
+      {
+        "field": "concurrency",
+        "type": "nominal"
+      },
+      {
+        "field": "processes",
+        "type": "nominal"
+      },
+      {
+        "field": "value",
+        "type": "quantitative"
+      }
+    ]
+  },
+  "resolve": {
+    "scale": {
+      "y": "independent"
+    }
+  },
+  "config": {
+    "background": "white",
+    "axis": {
+      "labelFont": "Arial",
+      "titleFont": "Arial",
+      "grid": true
+    },
+    "legend": {
+      "labelFont": "Arial",
+      "titleFont": "Arial"
+    },
+    "title": {
+      "font": "Arial",
+      "fontSize": 16,
+      "anchor": "start"
+    },
+    "view": {
+      "stroke": null
+    }
+  }
+}
