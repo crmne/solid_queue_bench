@@ -404,15 +404,25 @@ module Bench
         return [ 5, options.fetch(:processes) + 4 ].max
       end
 
-      if mode == "thread"
-        options.fetch(:concurrency) + 5
-      else
-        [ 5, options.fetch(:processes) + 4 ].max
-      end
+      solid_queue_minimum_db_pool_for(mode)
     end
 
     def matched_db_pool
-      options.fetch(:concurrency) + 5
+      solid_queue_minimum_db_pool_for("thread")
+    end
+
+    def solid_queue_minimum_db_pool_for(mode)
+      if mode.to_s == "thread"
+        options.fetch(:concurrency) + 2
+      elsif solid_queue_fiber_jobs_release_connections_between_queries?
+        3
+      else
+        options.fetch(:concurrency) + 2
+      end
+    end
+
+    def solid_queue_fiber_jobs_release_connections_between_queries?
+      ActiveRecord.gem_version >= SolidQueue::Configuration::FIBER_QUERY_SCOPED_CONNECTIONS_VERSION
     end
 
     def database_env
