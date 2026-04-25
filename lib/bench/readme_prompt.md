@@ -10,6 +10,7 @@ Style:
 - Same spirit as a strong Rails README: research question first, then methodology, then results, then how to run it.
 - No hype and no claims beyond the supplied facts.
 - Use exact numbers from the facts. Round percentages and numeric metrics to one decimal or two decimals where that reads better.
+- Use the exact setup and running facts as supplied. Do not assume a local checkout, a path-based Gemfile entry, or any command that is not present in the facts.
 - Define the benchmark terms clearly: in Solid Queue, `concurrency = N` means `threads: N` in thread mode or `fibers: N` in fiber mode; `processes` is the number of worker OS processes.
 - Report both average fiber throughput delta and best fiber throughput delta when both are available.
 - The `## Headline Results` section is only for the headline workloads: `sleep`, `async_http`, `ruby_llm_stream`, and `cpu`.
@@ -18,6 +19,7 @@ Style:
 - Be explicit that Async::Job changes the backend, so it is a throughput-ceiling reference, not the same comparison as Solid Queue fiber vs thread.
 - Treat the stress suite as a current Solid Queue implementation/design failure-envelope test under high connection demand, not as a fundamental thread-vs-fiber law.
 - When relevant, note that the capped suites intentionally omit cells above the max total concurrency cap, so higher concurrencies may show only `1 proc` results.
+- If `environment.ruby_version`, `environment.isolation_level`, or `environment.representative_run` are supplied, use them once where they help reproducibility, preferably in the introduction or methodology.
 
 Required structure:
 
@@ -34,6 +36,8 @@ Required structure:
 11. `## Setup`
 12. `## Running`
 13. `## Caveats`
+
+In `## Running`, include the supplied `bin/report` command and the supplied note about single-workload sweeps when those facts are present.
 
 Include these links exactly where useful:
 
