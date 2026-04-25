@@ -1,75 +1,63 @@
-# Solid Queue Fiber Benchmark Summary
+# Solid Queue Fiber Mode Benchmark Summary
 
-In the main Solid Queue runs, fiber mode produced the best-throughput result for every headline workload tested: Sleep, Net::HTTP, Async::HTTP, RubyLLM Stream, CPU, DB Queries, DB Mixed, DB Transaction, and DB Transaction Pool Pressure. This does not mean fiber was faster at every setting, but the reported best-throughput point and lowest-latency point both landed on fiber for each main workload.
+Solid Queue fiber mode produced the best observed throughput for every headline Solid Queue workload in this dataset. The strongest consistency was on `DB Queries` and `RubyLLM Stream`, where fiber won throughput in 9/9 paired comparisons. It was also ahead in 6/9 pairs for `Async::HTTP`, `Net::HTTP`, `Sleep`, and `CPU`, and 5/9 for `DB Mixed`.
 
-The largest reported fiber-over-thread throughput deltas were strongest on I/O-shaped work: RubyLLM Stream `27.95275590551181%`, Net::HTTP `22.466539196940722%`, Async::HTTP `21.2047012732615%`, and Sleep `20.424266681914364%`. CPU work improved less: `4.981355770150104%`. DB Transaction Pool Pressure improved only `1.6944720464410756%` on throughput, which is important because that test is about pool sizing pressure, not just runtime fairness.
+The transaction results are more mixed. With a matched DB pool, fiber still had the best observed throughput point for `DB Transaction` at 195.27 jobs/sec, but won only 4/9 paired throughput comparisons. Under default-pool transaction pressure, fiber’s best point was 194.45 jobs/sec, but it won only 1/9 paired comparisons. Treat the matched-pool result as the fairer runtime comparison; treat the default-pool result as evidence about DB pool sizing pressure.
 
-Memory and CPU results mostly also favored fiber in the main Solid Queue suite. Lowest RSS was fiber for every main workload except Sleep, where thread mode had the lowest RSS at `137156 KB`. Lowest CPU was fiber for every main Solid Queue workload. Lowest latency was fiber for every main Solid Queue workload, with the best-throughput configurations often also producing the lowest latency.
+Where the data supports it, fiber also had the lowest observed latency for all headline Solid Queue workloads. Lowest observed CPU was also fiber across the headline set. Lowest observed RSS was fiber for all headline workloads except `Sleep`, where thread had the lowest RSS at 137,156 KB.
 
-Async::Job had higher best throughput than Solid Queue fiber on the comparable workloads shown: Async::HTTP `653.93` vs `498.99` jobs/sec, CPU `120.18` vs `109.8`, RubyLLM Stream `16.87` vs `7.04`, and Sleep `635.94` vs `511.58`. It also showed lower best latencies on those workloads. However, Async::Job changes the backend, so these results compare backend choices, not Solid Queue thread mode vs Solid Queue fiber mode.
+Async::Job showed higher best throughput than Solid Queue on the overlapping workloads tested: `Async::HTTP`, `CPU`, `RubyLLM Stream`, and `Sleep`. But that comparison changes the backend, so it should not be read as “Solid Queue fiber mode versus Solid Queue thread mode.”
 
 ## What The Benchmarks Answer
 
-### Solid Queue fiber vs Solid Queue thread
+- **Solid Queue fiber vs thread, headline throughput**
+  - Fiber had the best observed throughput for all headline Solid Queue workloads.
+  - Pairwise throughput wins varied:
+    - `DB Queries`: 9/9
+    - `RubyLLM Stream`: 9/9
+    - `Async::HTTP`: 6/9
+    - `Net::HTTP`: 6/9
+    - `Sleep`: 6/9
+    - `CPU`: 6/9
+    - `DB Mixed`: 5/9
+    - `DB Transaction`, matched pool: 4/9
+    - `DB Transaction Pool Pressure`, default pool: 1/9
 
-For the main Solid Queue matrix, each workload completed `18/18` tests. The best-throughput result was fiber in all cases:
+- **Memory, CPU, and latency**
+  - Lowest observed latency was fiber for every headline Solid Queue workload.
+  - Lowest observed CPU was fiber for every headline Solid Queue workload.
+  - Lowest observed RSS was usually fiber, but not universally: `Sleep` had the lowest RSS in thread mode.
+  - The data supports saying fiber often improved latency and CPU in these runs; it does not support saying fiber always reduces memory.
 
-| Workload | Best Solid Queue throughput | Best fiber delta |
-|---|---:|---:|
-| Sleep | `511.58` jobs/sec | `20.424266681914364%` |
-| Net::HTTP | `476.07` jobs/sec | `22.466539196940722%` |
-| Async::HTTP | `498.99` jobs/sec | `21.2047012732615%` |
-| RubyLLM Stream | `7.04` jobs/sec | `27.95275590551181%` |
-| CPU | `109.8` jobs/sec | `4.981355770150104%` |
-| DB Queries | `393.07` jobs/sec | `13.903619345677946%` |
-| DB Mixed | `334.75` jobs/sec | `13.100975008405241%` |
-| DB Transaction, matched pool | `195.27` jobs/sec | `19.676360225140712%` |
-| DB Transaction Pool Pressure, default pool | `194.45` jobs/sec | `1.6944720464410756%` |
+- **DB workload differences**
+  - `DB Queries` is the short DB burst case: 10 reads, 2 writes, no added duration. Fiber won 9/9 throughput pairs, with best throughput 393.07 jobs/sec.
+  - `DB Mixed` adds 50 ms duration to the 10-read/2-write shape, representing mixed read/API/write work. Fiber won 5/9 pairs, with best throughput 334.75 jobs/sec.
+  - `DB Transaction` keeps the 10-read/2-write shape but holds work inside a 20 ms transaction. With matched pool sizing, fiber won 4/9 pairs and reached 195.27 jobs/sec.
+  - `DB Transaction Pool Pressure` uses the default pool. Fiber won only 1/9 pairs and reached 194.45 jobs/sec. This is the sizing-pressure result, not the cleanest runtime fairness result.
 
-The latency winners were also fiber across the main Solid Queue workloads. Examples:
+- **Stress runs**
+  - Stress tests used longer waits or higher concurrency and completed 11/20 tests per workload.
+  - Fiber had the best observed throughput for the stress workloads:
+    - `Async::HTTP`: 739.49 jobs/sec
+    - `Sleep`: 807.53 jobs/sec
+    - `RubyLLM Stream`: 8.86 jobs/sec
+  - Each stress workload had only 1 paired throughput comparison, and fiber won that one pair in each case.
 
-| Workload | Lowest-latency mode | p50 | p95 | p99 |
-|---|---|---:|---:|---:|
-| Sleep | fiber | `1177.7 ms` | `1875.81 ms` | `1925.21 ms` |
-| Net::HTTP | fiber | `1244.33 ms` | `2041.68 ms` | `2085.37 ms` |
-| Async::HTTP | fiber | `1210.55 ms` | `1912.63 ms` | `1993.31 ms` |
-| CPU | fiber | `2303.85 ms` | `4273.39 ms` | `4456.55 ms` |
-| DB Queries | fiber | `748.48 ms` | `1226.66 ms` | `1250.77 ms` |
-| DB Mixed | fiber | `899.22 ms` | `1457.1 ms` | `1479.75 ms` |
-| DB Transaction | fiber | `1533.01 ms` | `2443.64 ms` | `2543.92 ms` |
-| DB Transaction Pool Pressure | fiber | `1526.38 ms` | `2425.32 ms` | `2548.42 ms` |
-
-### DB workload differences
-
-The DB cases are not interchangeable:
-
-- **DB Queries** is short DB-burst work: `10` reads, `2` writes, `duration_ms: 0`. Fiber’s best throughput was `393.07` jobs/sec, with lowest latency p50 `748.48 ms` and p95 `1226.66 ms`.
-- **DB Mixed** adds `duration_ms: 50` around `10` reads and `2` writes. This represents read/API/write mixed work rather than only short DB bursts. Fiber’s best throughput was `334.75` jobs/sec, with lowest latency p50 `899.22 ms` and p95 `1457.1 ms`.
-- **DB Transaction** uses `10` reads, `2` writes, and `duration_ms: 20` with a matched DB pool. This answers runtime fairness when the pool is sized to the workload. Fiber’s best throughput was `195.27` jobs/sec.
-- **DB Transaction Pool Pressure** uses the same transaction payload with the default DB pool. This answers sizing pressure: what happens when transaction-holding work competes under the default pool. Fiber’s best throughput was `194.45` jobs/sec, but the best fiber throughput delta was only `1.6944720464410756%`.
-
-### Memory and CPU
-
-In the main Solid Queue runs, lowest CPU was fiber for every workload. Lowest RSS was fiber for every workload except Sleep, where thread mode had the lowest RSS at `137156 KB`.
-
-For Solid Queue stress runs, the reported best-throughput, lowest-RSS, lowest-CPU, and lowest-latency modes were fiber for Async::HTTP, RubyLLM Stream, and Sleep. These stress runs completed `11/20` tests, so they should be read with more caution than the main `18/18` matrix.
-
-### Async::Job comparison
-
-Async::Job results were fiber-only and completed `9/9` tests for each shown workload. Compared with the best Solid Queue fiber results on the same headline workloads:
-
-| Workload | Solid Queue fiber best throughput | Async::Job best throughput |
-|---|---:|---:|
-| Async::HTTP | `498.99` jobs/sec | `653.93` jobs/sec |
-| CPU | `109.8` jobs/sec | `120.18` jobs/sec |
-| RubyLLM Stream | `7.04` jobs/sec | `16.87` jobs/sec |
-| Sleep | `511.58` jobs/sec | `635.94` jobs/sec |
-
-Async::Job also had lower lowest-latency values on those workloads. But this is not a Solid Queue mode comparison: using Async::Job changes the job backend.
+- **Async::Job comparison**
+  - Async::Job best throughput exceeded Solid Queue’s best throughput on overlapping workloads:
+    - `Async::HTTP`: 653.93 vs Solid Queue 498.99 jobs/sec
+    - `CPU`: 120.18 vs Solid Queue 109.8 jobs/sec
+    - `RubyLLM Stream`: 16.87 vs Solid Queue 7.04 jobs/sec
+    - `Sleep`: 635.94 vs Solid Queue 511.58 jobs/sec
+  - Async::Job also had lower observed latency on those overlapping workloads.
+  - This is a backend comparison, not a Solid Queue thread-vs-fiber comparison.
 
 ## Caveats
 
-- The data shows best and lowest observed results from the tested matrix; it does not prove fiber wins at every concurrency, process count, or pool size.
-- The main Solid Queue workloads completed `18/18` tests. The Solid Queue stress workloads completed `11/20` tests.
-- DB pool configuration changes the meaning of transaction results. Matched-pool transaction results answer runtime fairness; default-pool transaction pressure results answer sizing pressure.
-- Async::Job results are useful as a backend comparison, but they are not evidence that Solid Queue fiber and Async::Job are equivalent choices.
+- These results describe the tested workloads, concurrency levels, process counts, DB pool settings, and repeat count.
+- “Best observed throughput” and “pairwise win rate” answer different questions. Fiber can have the best point while not winning most paired comparisons.
+- Transaction benchmarks must be read with pool sizing in mind:
+  - matched-pool results answer runtime fairness;
+  - default-pool pressure results answer sizing pressure.
+- Async::Job results are useful context, but they change the job backend and should not be attributed to Solid Queue fiber mode alone.
+- Stress results are less complete than the headline runs: 11/20 tests completed for each listed stress workload.

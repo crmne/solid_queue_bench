@@ -22,7 +22,11 @@ rows = CSV.read(csv_path, headers: true).map do |row|
   end
 end
 
-workload = File.basename(csv_path, "-data.csv").tr("-", "_")
+basename = File.basename(csv_path, ".csv").sub(/-data\z/, "")
+workload = basename
+  .sub(/\A(?:matrix|sweep)-(?:solid-queue|async-job)-/, "")
+  .sub(/-\d{8}-\d{6}\z/, "")
+  .tr("-", "_")
 family = File.basename(File.expand_path(output_dir))
 family = rows.first&.fetch("backend", "solid_queue").to_s.tr("_", "-") unless %w[solid-queue async-job solid-queue-stress].include?(family)
 json_path = File.join(output_dir, "#{workload.tr('_', '-')}-data.json")

@@ -85,79 +85,74 @@ namespace :sweep do
 
   desc "Run only the Solid Queue sleep sweep"
   task sleep: :environment do
-    run_workload(backend: "solid_queue", workload: "sleep", profile: :headline)
-    finalize(backend: "solid_queue", workloads: [ "sleep" ], prune_stale: false, profile: :headline)
+    run_single_workload(backend: "solid_queue", workload: "sleep", profile: :headline)
   end
 
   desc "Run only the Solid Queue cpu sweep"
   task cpu: :environment do
-    run_workload(backend: "solid_queue", workload: "cpu", profile: :headline)
-    finalize(backend: "solid_queue", workloads: [ "cpu" ], prune_stale: false, profile: :headline)
+    run_single_workload(backend: "solid_queue", workload: "cpu", profile: :headline)
   end
 
   desc "Run only the Solid Queue async_http sweep"
   task async_http: :environment do
-    run_workload(backend: "solid_queue", workload: "async_http", profile: :headline)
-    finalize(backend: "solid_queue", workloads: [ "async_http" ], prune_stale: false, profile: :headline)
+    run_single_workload(backend: "solid_queue", workload: "async_http", profile: :headline)
   end
 
   desc "Run only the Solid Queue ruby_llm_stream sweep"
   task ruby_llm_stream: :environment do
-    run_workload(backend: "solid_queue", workload: "ruby_llm_stream", profile: :headline)
-    finalize(backend: "solid_queue", workloads: [ "ruby_llm_stream" ], prune_stale: false, profile: :headline)
+    run_single_workload(backend: "solid_queue", workload: "ruby_llm_stream", profile: :headline)
   end
 
   desc "Run only the Solid Queue db_queries sweep"
   task db_queries: :environment do
-    run_workload(backend: "solid_queue", workload: "db_queries", profile: :headline)
-    finalize(backend: "solid_queue", workloads: [ "db_queries" ], prune_stale: false, profile: :headline)
+    run_single_workload(backend: "solid_queue", workload: "db_queries", profile: :headline)
   end
 
   desc "Run only the Solid Queue db_transaction sweep"
   task db_transaction: :environment do
-    run_workload(backend: "solid_queue", workload: "db_transaction", profile: :headline)
-    finalize(backend: "solid_queue", workloads: [ "db_transaction" ], prune_stale: false, profile: :headline)
+    run_single_workload(backend: "solid_queue", workload: "db_transaction", profile: :headline)
   end
 
   desc "Run db_transaction with normal mode-specific DB pools"
   task db_transaction_pool_pressure: :environment do
-    run_workload(backend: "solid_queue", workload: "db_transaction_pool_pressure", profile: :headline)
-    finalize(backend: "solid_queue", workloads: [ "db_transaction_pool_pressure" ], prune_stale: false, profile: :headline)
+    run_single_workload(backend: "solid_queue", workload: "db_transaction_pool_pressure", profile: :headline)
   end
 
   desc "Run only the Solid Queue db_mixed sweep"
   task db_mixed: :environment do
-    run_workload(backend: "solid_queue", workload: "db_mixed", profile: :headline)
-    finalize(backend: "solid_queue", workloads: [ "db_mixed" ], prune_stale: false, profile: :headline)
+    run_single_workload(backend: "solid_queue", workload: "db_mixed", profile: :headline)
   end
 
   desc "Run only the Async::Job sleep sweep"
   task async_job_sleep: :environment do
-    run_workload(backend: "async_job", workload: "sleep", profile: :headline)
-    finalize(backend: "async_job", workloads: [ "sleep" ], prune_stale: false, profile: :headline)
+    run_single_workload(backend: "async_job", workload: "sleep", profile: :headline)
   end
 
   desc "Run only the Async::Job cpu sweep"
   task async_job_cpu: :environment do
-    run_workload(backend: "async_job", workload: "cpu", profile: :headline)
-    finalize(backend: "async_job", workloads: [ "cpu" ], prune_stale: false, profile: :headline)
+    run_single_workload(backend: "async_job", workload: "cpu", profile: :headline)
   end
 
   desc "Run only the Async::Job async_http sweep"
   task async_job_async_http: :environment do
-    run_workload(backend: "async_job", workload: "async_http", profile: :headline)
-    finalize(backend: "async_job", workloads: [ "async_http" ], prune_stale: false, profile: :headline)
+    run_single_workload(backend: "async_job", workload: "async_http", profile: :headline)
   end
 
   desc "Run only the Async::Job ruby_llm_stream sweep"
   task async_job_ruby_llm_stream: :environment do
-    run_workload(backend: "async_job", workload: "ruby_llm_stream", profile: :headline)
-    finalize(backend: "async_job", workloads: [ "ruby_llm_stream" ], prune_stale: false, profile: :headline)
+    run_single_workload(backend: "async_job", workload: "ruby_llm_stream", profile: :headline)
   end
 
   def run_suite(backend:, workloads:, profile:)
+    started_at = Time.now
     workloads.each { |workload| run_workload(backend:, workload:, profile:) }
-    finalize(backend:, workloads:, prune_stale: true, profile:)
+    finalize(backend:, workloads:, prune_stale: true, profile:, started_at:)
+  end
+
+  def run_single_workload(backend:, workload:, profile:)
+    started_at = Time.now
+    run_workload(backend:, workload:, profile:)
+    finalize(backend:, workloads: [ workload ], prune_stale: false, profile:, started_at:)
   end
 
   def run_workload(backend:, workload:, profile:)
@@ -274,7 +269,7 @@ namespace :sweep do
     system(*cmd) || warn("WARNING: #{backend} #{workload} sweep exited with errors (some cells may have failed)")
   end
 
-  def finalize(backend:, workloads:, prune_stale:, profile:)
+  def finalize(backend:, workloads:, prune_stale:, profile:, started_at: Time.at(0))
     require "fileutils"
 
     destination_dir = results_dir_for(backend, profile:)
@@ -282,20 +277,28 @@ namespace :sweep do
     prune_stale_family_results!(destination_dir, keep_workloads: workloads) if prune_stale
 
     workloads.each do |workload|
-      csv = latest_file(tmp_output_dir_for(backend, profile:), "sweep-#{backend_slug(backend)}-#{workload}-*.csv")
-      next unless csv
+      csv = latest_file(tmp_output_dir_for(backend, profile:), "sweep-#{backend_slug(backend)}-#{workload}-*.csv", since: started_at)
+      unless csv
+        warn "WARNING: no fresh CSV found for #{backend} #{workload} in #{tmp_output_dir_for(backend, profile:)}"
+        next
+      end
 
       base = workload.tr("_", "-")
       FileUtils.cp(csv, File.join(destination_dir, "#{base}-data.csv"))
 
       json = csv.sub(".csv", ".json")
-      FileUtils.cp(json, File.join(destination_dir, "#{base}-data.json")) if File.exist?(json)
+      if File.exist?(json)
+        FileUtils.cp(json, File.join(destination_dir, "#{base}-data.json"))
+      else
+        warn "WARNING: missing JSON companion for #{csv}"
+      end
 
       puts "\nGenerating charts for #{backend} #{workload}..."
-      system("ruby", "bin/plot", File.join(destination_dir, "#{base}-data.csv"), "--output-dir", destination_dir)
+      system("ruby", "bin/plot", File.join(destination_dir, "#{base}-data.csv"), "--output-dir", destination_dir) ||
+        warn("WARNING: chart generation failed for #{backend} #{workload}")
     end
 
-    system("ruby", "bin/report")
+    system("ruby", "bin/report") || warn("WARNING: report generation failed")
     puts "\n#{"=" * 60}"
     puts "#{backend} results in #{destination_dir}"
     system("ls", "-lh", destination_dir)
@@ -421,8 +424,10 @@ namespace :sweep do
     backend_slug(backend)
   end
 
-  def latest_file(dir, glob)
-    Dir.glob(File.join(dir, glob)).max_by { |file| File.mtime(file) }
+  def latest_file(dir, glob, since: Time.at(0))
+    Dir.glob(File.join(dir, glob))
+      .select { |file| File.mtime(file) >= since }
+      .max_by { |file| File.mtime(file) }
   end
 
   def prepare_database!
