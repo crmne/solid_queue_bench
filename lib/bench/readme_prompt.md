@@ -10,6 +10,7 @@ Style:
 - Same spirit as a strong Rails README: research question first, then methodology, then results, then how to run it.
 - No hype and no claims beyond the supplied facts.
 - Use exact numbers from the facts. Round percentages and numeric metrics to one decimal or two decimals where that reads better.
+- Report both average fiber throughput delta and best fiber throughput delta when both are available.
 - Keep the DB transaction framing precise: matched-pool transaction results answer fair executor/runtime comparison; default-pool transaction pressure results answer database pool sizing pressure.
 - Be explicit that Async::Job changes the backend, so it is a throughput-ceiling reference, not the same comparison as Solid Queue fiber vs thread.
 
@@ -19,7 +20,7 @@ Required structure:
 2. A short introduction explaining the benchmark and latest checked-in result date.
 3. `## Research Questions`
 4. `## Headline Results`, with the headline chart links or image links from the facts.
-5. A Solid Queue results table covering throughput, memory, latency, and best fiber throughput delta.
+5. A Solid Queue results table covering throughput, memory, latency, average fiber throughput delta, and best fiber throughput delta.
 6. `## DB Workloads`, with the DB-specific interpretation and the DB chart links if available.
 7. `## Stress Suite`, explaining the connection-pool ceiling test and showing the stress chart links.
 8. `## Async::Job Comparison`
@@ -32,7 +33,6 @@ Required structure:
 Include these links exactly where useful:
 
 - `results/README.md`
-- `results/index.html`
 - `results/solid-queue/README.md`
 - `results/async-job/README.md`
 - `results/solid-queue-stress/README.md`

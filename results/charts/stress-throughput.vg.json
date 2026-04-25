@@ -1,6 +1,8 @@
 {
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "title": "Solid Queue Stress Throughput (jobs/s)",
+  "width": 180,
+  "height": 120,
   "data": {
     "values": [
       {
@@ -263,7 +265,7 @@
       },
       {
         "field": "concurrency",
-        "type": "nominal"
+        "type": "quantitative"
       },
       {
         "field": "processes",
@@ -284,31 +286,63 @@
     ],
     "row": {
       "field": "workload",
-      "type": "nominal"
+      "type": "nominal",
+      "sort": [
+        "Sleep",
+        "Async::HTTP",
+        "RubyLLM Stream",
+        "CPU"
+      ]
     },
     "column": {
       "field": "processes",
-      "type": "nominal"
+      "type": "nominal",
+      "sort": null
     }
   },
   "config": {
     "background": "white",
     "axis": {
-      "labelFont": "Arial",
-      "titleFont": "Arial",
-      "grid": true
+      "labelFont": "Helvetica",
+      "titleFont": "Helvetica",
+      "labelFontSize": 12,
+      "titleFontSize": 12,
+      "labelColor": "#111827",
+      "titleColor": "#111827",
+      "domainColor": "#111827",
+      "tickColor": "#9ca3af",
+      "grid": true,
+      "gridColor": "#e5e7eb"
+    },
+    "header": {
+      "labelFont": "Helvetica",
+      "titleFont": "Helvetica",
+      "labelFontSize": 12,
+      "titleFontSize": 12,
+      "labelColor": "#111827",
+      "titleColor": "#111827"
     },
     "legend": {
-      "labelFont": "Arial",
-      "titleFont": "Arial"
+      "labelFont": "Helvetica",
+      "titleFont": "Helvetica",
+      "labelFontSize": 12,
+      "titleFontSize": 12,
+      "labelColor": "#111827",
+      "titleColor": "#111827"
     },
     "title": {
-      "font": "Arial",
+      "font": "Helvetica",
       "fontSize": 16,
-      "anchor": "start"
+      "anchor": "start",
+      "color": "#111827"
     },
     "view": {
       "stroke": null
+    }
+  },
+  "resolve": {
+    "scale": {
+      "y": "independent"
     }
   }
 }

@@ -1,8 +1,6 @@
 require "csv"
-require "erb"
 require "fileutils"
 require "json"
-require "open3"
 require "pathname"
 require "shellwords"
 require "time"
@@ -41,6 +39,8 @@ module Bench
     }.freeze
 
     VEGA_SCHEMA = "https://vega.github.io/schema/vega-lite/v6.json"
+    METRIC_ORDER = [ "Throughput", "Peak RSS", "Avg CPU", "p50 latency" ].freeze
+    LATENCY_PERCENTILES = %w[p50 p95 p99 max].freeze
 
     def initialize(results_root = File.expand_path("../../results", __dir__))
       @results_root = File.expand_path(results_root)
@@ -62,7 +62,6 @@ module Bench
       narrative = write_narrative
       write_root_readme(headline_charts:, stress_charts:, narrative:)
       write_project_readme(headline_charts:, stress_charts:, narrative:)
-      write_html_report
     end
 
     private
@@ -145,6 +144,7 @@ module Bench
         lowest_cpu: rows.min_by { |row| number(row["avg_cpu_pct"]) || Float::INFINITY },
         lowest_latency: rows.min_by { |row| number(row.dig("total_latency_ms", "p50")) || Float::INFINITY },
         throughput_win_rate: win_rate(rows, "jobs_per_second"),
+        average_throughput_delta: average_delta(rows, "jobs_per_second"),
         throughput_delta: best_delta(rows, "jobs_per_second"),
         rss_delta: best_delta(rows, "peak_rss_kb", lower_is_better: true),
         cpu_delta: best_delta(rows, "avg_cpu_pct", lower_is_better: true),
@@ -169,6 +169,20 @@ module Bench
         }
       end
       deltas.max_by { |delta| delta[:value] }
+    end
+
+    def average_delta(rows, metric, lower_is_better: false)
+      values = paired_rows(rows).filter_map do |thread, fiber|
+        thread_value = metric_value(thread, metric)
+        fiber_value = metric_value(fiber, metric)
+        next unless thread_value&.positive? && fiber_value
+
+        value = ((fiber_value - thread_value) / thread_value) * 100.0
+        lower_is_better ? -value : value
+      end
+      return unless values.any?
+
+      { value: values.sum / values.size, pairs: values.size }
     end
 
     def win_rate(rows, metric)
@@ -263,25 +277,28 @@ module Bench
       lines << ""
       lines << FAMILY_SUMMARIES.fetch(family)
       lines << ""
-      lines << "| Workload | Tests | Best Throughput | Lowest RSS | Lowest p50 Latency | Best Fiber Throughput Delta | Artifacts |"
-      lines << "|---|---|---|---|---|---|---|"
+      lines << "| Workload | Tests | Best Throughput | Lowest RSS | Lowest p50 Latency | Avg Fiber Throughput Delta | Best Fiber Throughput Delta | Artifacts |"
+      lines << "|---|---|---|---|---|---|---|---|"
 
       datasets.sort_by { |dataset| workload_sort_key(dataset.workload) }.each do |dataset|
         summary = dataset_summary(dataset)
         delta = summary[:throughput_delta]
         delta_text = delta ? "#{fmt_percent(delta[:value])} at c=#{delta[:concurrency]}, proc=#{delta[:processes]}" : "n/a"
+        average_delta = summary[:average_throughput_delta]
+        average_delta_text = average_delta ? "#{fmt_percent(average_delta[:value])} across #{average_delta[:pairs]} cells" : "n/a"
         artifacts = [
           relative_link(dir, dataset.csv_path, "CSV"),
           relative_link(dir, dataset.json_path, "JSON")
         ] + chart_links(dir, dataset)
 
-        lines << "| #{label_for_workload(dataset.workload)} | #{summary[:tests]} | #{fmt_cell(summary[:best_throughput], "jobs_per_second", unit: " jobs/s")} | #{fmt_cell(summary[:lowest_rss], "peak_rss_kb", scale: 1.0 / 1024.0, unit: " MB")} | #{fmt_cell(summary[:lowest_latency], "total_latency_p50_ms", unit: " ms")} | #{delta_text} | #{artifacts.join(' / ')} |"
+        lines << "| #{label_for_workload(dataset.workload)} | #{summary[:tests]} | #{fmt_cell(summary[:best_throughput], "jobs_per_second", unit: " jobs/s")} | #{fmt_cell(summary[:lowest_rss], "peak_rss_kb", scale: 1.0 / 1024.0, unit: " MB")} | #{fmt_cell(summary[:lowest_latency], "total_latency_p50_ms", unit: " ms")} | #{average_delta_text} | #{delta_text} | #{artifacts.join(' / ')} |"
       end
 
       lines << ""
       lines << "## Notes"
       lines << ""
       lines << "- `Best Fiber Throughput Delta` compares `fiber` to `thread` in the same `(concurrency, processes)` cell."
+      lines << "- `Avg Fiber Throughput Delta` averages those same paired-cell throughput deltas."
       lines << "- `Tests` is `completed/planned`, so failed or timed-out cells stay visible."
       lines << "- Async::Job is single-mode, so paired fiber/thread deltas are `n/a` there."
 
@@ -328,8 +345,6 @@ module Bench
       lines << "## Stress Charts"
       lines << ""
       lines.concat(chart_list(@results_root, stress_charts))
-      lines << ""
-      lines << "Interactive charts: #{relative_link(@results_root, File.join(@results_root, 'index.html'), 'index.html')}"
 
       File.write(File.join(@results_root, "README.md"), lines.join("\n") + "\n")
     end
@@ -366,7 +381,6 @@ module Bench
         },
         links: {
           generated_artifacts: "results/README.md",
-          interactive_report: "results/index.html",
           narrative: relative_path(project_root, narrative),
           solid_queue_results: "results/solid-queue/README.md",
           async_job_results: "results/async-job/README.md",
@@ -387,7 +401,7 @@ module Bench
       lines << "Latest checked-in results: **#{facts[:result_dates]}**."
       lines << "Solid Queue commit under test: `#{facts[:solid_queue_revision]}`." if facts[:solid_queue_revision]
       lines << ""
-      lines << "Full generated artifacts: [results](#{facts[:links][:generated_artifacts]}), [Solid Queue](#{facts[:links][:solid_queue_results]}), [Async::Job](#{facts[:links][:async_job_results]}), [stress](#{facts[:links][:stress_results]}), and the [interactive chart explorer](#{facts[:links][:interactive_report]})."
+      lines << "Full generated artifacts: [results](#{facts[:links][:generated_artifacts]}), [Solid Queue](#{facts[:links][:solid_queue_results]}), [Async::Job](#{facts[:links][:async_job_results]}), and [stress](#{facts[:links][:stress_results]})."
       lines << ""
       lines << "## Research Questions"
       lines << ""
@@ -405,8 +419,8 @@ module Bench
       lines << ""
       lines << "## DB Workloads"
       lines << ""
-      lines << "| Workload | What It Tests | Payload | DB Pool | Best Fiber Throughput Delta |"
-      lines << "|---|---|---|---|---:|"
+      lines << "| Workload | What It Tests | Payload | DB Pool | Avg Fiber Throughput Delta | Best Fiber Throughput Delta |"
+      lines << "|---|---|---|---|---:|---:|"
       db_result_rows(facts).each { |row| lines << row }
       lines << ""
       lines << "`DB Transaction` uses a matched pool (`concurrency + 5` per process for both modes), so it is the fair executor comparison. `DB Transaction Pool Pressure` keeps the default mode-specific pool behavior, so it answers the sizing-pressure question instead."
@@ -662,10 +676,10 @@ module Bench
     def workload_summary_table(facts, family)
       rows = facts[:results].fetch(family, []).sort_by { |result| workload_sort_key(result[:workload]) }
       lines = []
-      lines << "| Workload | Tests | Best Throughput | Lowest RSS | Lowest p50 Latency | Best Fiber Throughput Delta |"
-      lines << "|---|---:|---|---|---|---:|"
+      lines << "| Workload | Tests | Best Throughput | Lowest RSS | Lowest p50 Latency | Avg Fiber Throughput Delta | Best Fiber Throughput Delta |"
+      lines << "|---|---:|---|---|---|---:|---:|"
       rows.each do |result|
-        lines << "| #{result[:label]} | #{result[:tests]} | #{summary_cell(result[:best_throughput], "jobs_per_second", unit: " jobs/s")} | #{summary_cell(result[:lowest_rss], "peak_rss_kb", scale: 1.0 / 1024.0, unit: " MB")} | #{summary_cell(result[:lowest_latency], "total_latency_p50_ms", unit: " ms")} | #{delta_text(result[:best_fiber_delta])} |"
+        lines << "| #{result[:label]} | #{result[:tests]} | #{summary_cell(result[:best_throughput], "jobs_per_second", unit: " jobs/s")} | #{summary_cell(result[:lowest_rss], "peak_rss_kb", scale: 1.0 / 1024.0, unit: " MB")} | #{summary_cell(result[:lowest_latency], "total_latency_p50_ms", unit: " ms")} | #{average_delta_text(result[:average_fiber_delta])} | #{delta_text(result[:best_fiber_delta])} |"
       end
       lines
     end
@@ -677,7 +691,7 @@ module Bench
 
         description = workload_descriptions.find { |entry| entry[:name] == workload }
         db_pool = result[:db_pool] || "mode-specific"
-        "| #{result[:label]} | #{description[:purpose]} | #{payload_text(result[:payload])} | #{db_pool} | #{delta_text(result[:best_fiber_delta])} |"
+        "| #{result[:label]} | #{description[:purpose]} | #{payload_text(result[:payload])} | #{db_pool} | #{average_delta_text(result[:average_fiber_delta])} | #{delta_text(result[:best_fiber_delta])} |"
       end
     end
 
@@ -728,6 +742,12 @@ module Bench
       "#{fmt_percent(delta[:value])} at c=#{delta[:concurrency]}, proc=#{delta[:processes]}"
     end
 
+    def average_delta_text(delta)
+      return "n/a" unless delta
+
+      "#{fmt_percent(delta[:value])} across #{delta[:pairs]} cells"
+    end
+
     def write_workload_charts(dataset)
       rows = dataset.successful_rows
       write_chart("#{dataset.family}-#{dataset.slug}-grid", workload_grid_spec(dataset, rows))
@@ -750,13 +770,16 @@ module Bench
         values:,
         y_title: "Value",
         facet_row: "metric",
-        facet_column: "processes"
+        facet_column: "processes",
+        facet_row_sort: METRIC_ORDER,
+        width: 180,
+        height: 120
       )
     end
 
     def workload_latency_spec(dataset, rows)
       values = rows.flat_map do |row|
-        %w[p50 p95 p99 max].map do |percentile|
+        LATENCY_PERCENTILES.map do |percentile|
           {
             mode: row["mode"],
             concurrency: row["concurrency"],
@@ -773,7 +796,10 @@ module Bench
         y_title: "Latency (ms)",
         color_field: "percentile",
         stroke_dash_field: "mode",
-        facet_column: "processes"
+        facet_column: "processes",
+        color_sort: LATENCY_PERCENTILES,
+        width: 200,
+        height: 220
       )
     end
 
@@ -791,7 +817,10 @@ module Bench
         title: "#{label_for_family(dataset.family)} #{label_for_workload(dataset.workload)} Fiber Advantage",
         values:,
         y_title: "Fiber advantage (%)",
-        facet_column: "metric"
+        facet_column: "metric",
+        facet_column_sort: METRIC_ORDER,
+        width: 180,
+        height: 220
       )
     end
 
@@ -831,12 +860,14 @@ module Bench
 
       charts << write_chart("headline-solid-queue-fiber-vs-thread", throughput_range_spec(
         title: "Solid Queue fiber over thread",
-        values: headline_deltas(solid_queue, comparison: :fiber_vs_thread)
+        values: headline_deltas(solid_queue, comparison: :fiber_vs_thread),
+        x_title: "Fiber throughput advantage over thread (%)"
       ))
 
       charts << write_chart("headline-async-job-vs-solid-queue-fiber", throughput_range_spec(
         title: "Async::Job over Solid Queue fiber",
-        values: headline_deltas(solid_queue, async_job:, comparison: :async_job_vs_solid_queue)
+        values: headline_deltas(solid_queue, async_job:, comparison: :async_job_vs_solid_queue),
+        x_title: "Async::Job throughput advantage over Solid Queue fiber (%)"
       ))
 
       charts.compact
@@ -886,13 +917,99 @@ module Bench
       }
     end
 
-    def throughput_range_spec(title:, values:)
-      strip_spec(
-        title:,
-        values: values.compact,
-        x_title: "Throughput advantage (%)",
-        y_field: "workload"
-      )
+    def throughput_range_spec(title:, values:, x_title:)
+      values = values.compact
+      summaries = throughput_delta_summaries(values)
+      zero = summaries.map { |summary| { workload: summary[:workload], value: 0 } }
+
+      {
+        "$schema" => VEGA_SCHEMA,
+        "title" => title,
+        "width" => 720,
+        "height" => { "step" => 46 },
+        "layer" => [
+          {
+            "data" => { "values" => zero },
+            "mark" => { "type" => "rule", "color" => "#111827", "strokeWidth" => 1.5, "opacity" => 0.75 },
+            "encoding" => {
+              "x" => headline_x_encoding(x_title),
+              "y" => headline_y_encoding
+            }
+          },
+          {
+            "data" => { "values" => summaries },
+            "mark" => { "type" => "rule", "strokeWidth" => 8, "color" => "#94a3b8", "opacity" => 0.55 },
+            "encoding" => {
+              "x" => headline_x_encoding(x_title).merge("field" => "min"),
+              "x2" => { "field" => "max" },
+              "y" => headline_y_encoding,
+              "tooltip" => tooltip_fields(%w[workload min max average cells])
+            }
+          },
+          {
+            "data" => { "values" => values },
+            "mark" => { "type" => "point", "filled" => true, "size" => 58, "opacity" => 0.72 },
+            "encoding" => {
+              "x" => headline_x_encoding(x_title),
+              "y" => headline_y_encoding,
+              "color" => { "field" => "workload", "type" => "nominal", "legend" => nil, "scale" => { "scheme" => "tableau10" } },
+              "tooltip" => tooltip_fields(%w[workload concurrency processes value])
+            }
+          },
+          {
+            "data" => { "values" => summaries },
+            "mark" => { "type" => "point", "filled" => true, "shape" => "diamond", "size" => 150, "color" => "#111827" },
+            "encoding" => {
+              "x" => headline_x_encoding(x_title).merge("field" => "average"),
+              "y" => headline_y_encoding,
+              "tooltip" => tooltip_fields(%w[workload average min max cells])
+            }
+          },
+          {
+            "data" => { "values" => summaries },
+            "mark" => { "type" => "text", "align" => "left", "baseline" => "middle", "dx" => 10, "fontSize" => 12, "fontWeight" => "bold", "color" => "#111827" },
+            "encoding" => {
+              "x" => headline_x_encoding(x_title).merge("field" => "average"),
+              "y" => headline_y_encoding,
+              "text" => { "field" => "average_label" }
+            }
+          }
+        ],
+        "config" => chart_config
+      }
+    end
+
+    def throughput_delta_summaries(values)
+      values.group_by { |row| row[:workload] }.map do |workload, rows|
+        deltas = rows.map { |row| row[:value] }
+        average = deltas.sum / deltas.size
+        {
+          workload:,
+          min: deltas.min,
+          max: deltas.max,
+          average:,
+          average_label: "avg #{fmt_percent(average)}",
+          cells: deltas.size
+        }
+      end.sort_by { |row| workload_sort_key(WORKLOADS.key(row[:workload]) || row[:workload].downcase.tr(" ", "_")) }
+    end
+
+    def headline_x_encoding(title)
+      {
+        "field" => "value",
+        "type" => "quantitative",
+        "title" => title,
+        "scale" => { "zero" => true, "nice" => true },
+        "axis" => { "format" => "+.0f" }
+      }
+    end
+
+    def headline_y_encoding
+      { "field" => "workload", "type" => "nominal", "title" => nil, "sort" => headline_workload_labels }
+    end
+
+    def headline_workload_labels
+      HEADLINE_WORKLOADS.map { |workload| label_for_workload(workload) }
     end
 
     def write_stress_charts
@@ -937,9 +1054,9 @@ module Bench
           "x" => { "field" => "concurrency", "type" => "ordinal", "title" => "Concurrency" },
           "y" => { "field" => "processes", "type" => "ordinal", "title" => "Processes" },
           "color" => { "field" => "status", "type" => "nominal", "scale" => { "domain" => %w[completed failed], "range" => %w[#10b981 #ef4444] } },
-          "shape" => { "field" => "mode", "type" => "nominal" },
-          "row" => { "field" => "workload", "type" => "nominal" },
-          "column" => { "field" => "mode", "type" => "nominal" },
+          "shape" => { "field" => "mode", "type" => "nominal", "sort" => %w[thread fiber] },
+          "row" => { "field" => "workload", "type" => "nominal", "sort" => headline_workload_labels },
+          "column" => { "field" => "mode", "type" => "nominal", "sort" => %w[thread fiber] },
           "tooltip" => tooltip_fields(%w[workload mode concurrency processes status])
         },
         "config" => chart_config
@@ -962,13 +1079,24 @@ module Bench
         end
       end.compact
 
-      line_spec(title: "Solid Queue Stress #{title}", values:, y_title: title, facet_row: "workload", facet_column: "processes")
+      line_spec(
+        title: "Solid Queue Stress #{title}",
+        values:,
+        y_title: title,
+        facet_row: "workload",
+        facet_column: "processes",
+        facet_row_sort: headline_workload_labels,
+        width: 180,
+        height: 120
+      )
     end
 
-    def line_spec(title:, values:, y_title:, color_field: "mode", stroke_dash_field: nil, facet_row: nil, facet_column: nil)
+    def line_spec(title:, values:, y_title:, color_field: "mode", stroke_dash_field: nil, facet_row: nil, facet_column: nil, facet_row_sort: nil, facet_column_sort: nil, color_sort: nil, width: nil, height: nil)
       spec = {
         "$schema" => VEGA_SCHEMA,
         "title" => title,
+        "width" => width,
+        "height" => height,
         "data" => { "values" => values },
         "mark" => { "type" => "line", "point" => true, "tooltip" => true },
         "encoding" => {
@@ -979,56 +1107,74 @@ module Bench
         },
         "config" => chart_config
       }
+      spec["encoding"]["color"]["sort"] = color_sort if color_sort
       spec["encoding"]["strokeDash"] = { "field" => stroke_dash_field, "type" => "nominal" } if stroke_dash_field
-      spec["encoding"]["row"] = { "field" => facet_row, "type" => "nominal" } if facet_row
-      spec["encoding"]["column"] = { "field" => facet_column, "type" => "nominal" } if facet_column
-      spec
+      spec["encoding"]["row"] = { "field" => facet_row, "type" => "nominal", "sort" => facet_row_sort } if facet_row
+      spec["encoding"]["column"] = { "field" => facet_column, "type" => "nominal", "sort" => facet_column_sort } if facet_column
+      spec["resolve"] = { "scale" => { "y" => "independent" } } if facet_row
+      spec.compact
     end
 
-    def bar_spec(title:, values:, y_title:, facet_column:)
+    def bar_spec(title:, values:, y_title:, facet_column:, facet_column_sort: nil, width: nil, height: nil)
       {
         "$schema" => VEGA_SCHEMA,
         "title" => title,
+        "width" => width,
+        "height" => height,
         "data" => { "values" => values },
         "mark" => { "type" => "bar", "tooltip" => true },
         "encoding" => {
           "x" => { "field" => "concurrency", "type" => "ordinal", "title" => "Concurrency" },
           "y" => { "field" => "value", "type" => "quantitative", "title" => y_title },
           "color" => { "field" => "processes", "type" => "nominal" },
-          "column" => { "field" => facet_column, "type" => "nominal" },
+          "column" => { "field" => facet_column, "type" => "nominal", "sort" => facet_column_sort },
           "tooltip" => tooltip_fields(%w[metric concurrency processes value])
         },
         "resolve" => { "scale" => { "y" => "independent" } },
         "config" => chart_config
-      }
-    end
-
-    def strip_spec(title:, values:, x_title:, y_field:)
-      {
-        "$schema" => VEGA_SCHEMA,
-        "title" => title,
-        "data" => { "values" => values },
-        "mark" => { "type" => "tick", "thickness" => 2, "size" => 22, "tooltip" => true },
-        "encoding" => {
-          "x" => { "field" => "value", "type" => "quantitative", "title" => x_title },
-          "y" => { "field" => y_field, "type" => "nominal", "title" => nil },
-          "color" => { "field" => y_field, "type" => "nominal", "legend" => nil },
-          "tooltip" => tooltip_fields(%w[workload concurrency processes value])
-        },
-        "config" => chart_config
-      }
+      }.compact
     end
 
     def tooltip_fields(fields)
-      fields.map { |field| { "field" => field, "type" => field == "value" ? "quantitative" : "nominal" } }
+      quantitative = %w[value min max average cells concurrency]
+
+      fields.map do |field|
+        { "field" => field, "type" => quantitative.include?(field) ? "quantitative" : "nominal" }
+      end
     end
 
     def chart_config
       {
         "background" => "white",
-        "axis" => { "labelFont" => "Arial", "titleFont" => "Arial", "grid" => true },
-        "legend" => { "labelFont" => "Arial", "titleFont" => "Arial" },
-        "title" => { "font" => "Arial", "fontSize" => 16, "anchor" => "start" },
+        "axis" => {
+          "labelFont" => "Helvetica",
+          "titleFont" => "Helvetica",
+          "labelFontSize" => 12,
+          "titleFontSize" => 12,
+          "labelColor" => "#111827",
+          "titleColor" => "#111827",
+          "domainColor" => "#111827",
+          "tickColor" => "#9ca3af",
+          "grid" => true,
+          "gridColor" => "#e5e7eb"
+        },
+        "header" => {
+          "labelFont" => "Helvetica",
+          "titleFont" => "Helvetica",
+          "labelFontSize" => 12,
+          "titleFontSize" => 12,
+          "labelColor" => "#111827",
+          "titleColor" => "#111827"
+        },
+        "legend" => {
+          "labelFont" => "Helvetica",
+          "titleFont" => "Helvetica",
+          "labelFontSize" => 12,
+          "titleFontSize" => 12,
+          "labelColor" => "#111827",
+          "titleColor" => "#111827"
+        },
+        "title" => { "font" => "Helvetica", "fontSize" => 16, "anchor" => "start", "color" => "#111827" },
         "view" => { "stroke" => nil }
       }
     end
@@ -1082,6 +1228,7 @@ module Bench
             lowest_cpu: summary[:lowest_cpu]&.slice("mode", "concurrency", "processes", "avg_cpu_pct", "db_pool"),
             lowest_latency: summary[:lowest_latency]&.slice("mode", "concurrency", "processes", "total_latency_ms", "db_pool"),
             throughput_win_rate: summary[:throughput_win_rate],
+            average_fiber_delta: summary[:average_throughput_delta],
             best_fiber_delta: summary[:throughput_delta]&.slice(:value, :concurrency, :processes),
             best_rss_delta: summary[:rss_delta]&.slice(:value, :concurrency, :processes),
             best_cpu_delta: summary[:cpu_delta]&.slice(:value, :concurrency, :processes),
@@ -1142,11 +1289,11 @@ module Bench
       end
       lines << "## Solid Queue Fiber vs Thread"
       lines << ""
-      lines << "| Workload | Tests | Best throughput | Best fiber delta |"
-      lines << "|---|---:|---:|---:|"
+      lines << "| Workload | Tests | Best throughput | Avg fiber delta | Best fiber delta |"
+      lines << "|---|---:|---:|---:|---:|"
       solid_queue.sort_by { |dataset| workload_sort_key(dataset[:workload]) }.each do |dataset|
         best = dataset.dig(:best_throughput, "jobs_per_second")
-        lines << "| #{dataset[:label]} | #{dataset[:tests]} | #{fmt_number(best)} jobs/s | #{delta_text(dataset[:best_fiber_delta])} |"
+        lines << "| #{dataset[:label]} | #{dataset[:tests]} | #{fmt_number(best)} jobs/s | #{average_delta_text(dataset[:average_fiber_delta])} | #{delta_text(dataset[:best_fiber_delta])} |"
       end
       lines << ""
       lines << "## Async::Job Comparison"
@@ -1170,132 +1317,6 @@ module Bench
       lines.join("\n")
     end
 
-    def write_html_report
-      chart_paths = Dir.glob(File.join(@charts_dir, "*.vg.json")).sort_by { |path| chart_sort_key(path) }
-      cards = chart_paths.map.with_index do |path, index|
-        id = "chart-#{index}"
-        relative = Pathname.new(path).relative_path_from(Pathname.new(@results_root)).to_s
-        title = ERB::Util.html_escape(chart_title(path))
-        group = ERB::Util.html_escape(chart_group(path))
-        <<~HTML
-          <section class="chart-card">
-            <div class="card-kicker">#{group}</div>
-            <h2>#{title}</h2>
-            <div id="#{id}" class="chart"></div>
-            <script>vegaEmbed('##{id}', '#{relative}', {actions: true, renderer: 'svg'});</script>
-          </section>
-        HTML
-      end
-
-      html = <<~HTML
-        <!doctype html>
-        <html>
-        <head>
-          <meta charset="utf-8">
-          <title>Solid Queue Bench Results</title>
-          <script src="https://cdn.jsdelivr.net/npm/vega@6"></script>
-          <script src="https://cdn.jsdelivr.net/npm/vega-lite@6"></script>
-          <script src="https://cdn.jsdelivr.net/npm/vega-embed@7"></script>
-          <style>
-            :root {
-              --ink: #18201f;
-              --muted: #5f6966;
-              --line: #d9ded7;
-              --paper: #fffaf0;
-              --card: rgba(255, 255, 255, 0.86);
-              --accent: #0f766e;
-              --accent-2: #b45309;
-            }
-
-            * { box-sizing: border-box; }
-            body {
-              margin: 0;
-              color: var(--ink);
-              font-family: "Avenir Next", "Segoe UI", sans-serif;
-              background:
-                radial-gradient(circle at top left, rgba(15, 118, 110, 0.18), transparent 34rem),
-                radial-gradient(circle at 85% 10%, rgba(180, 83, 9, 0.16), transparent 28rem),
-                linear-gradient(135deg, #fffaf0 0%, #eef4ef 100%);
-            }
-            main { max-width: 1240px; margin: 0 auto; padding: 48px 28px 72px; }
-            .hero {
-              display: grid;
-              gap: 18px;
-              margin-bottom: 34px;
-              padding: 34px;
-              border: 1px solid rgba(24, 32, 31, 0.12);
-              border-radius: 28px;
-              background: rgba(255, 250, 240, 0.72);
-              box-shadow: 0 24px 70px rgba(24, 32, 31, 0.10);
-            }
-            h1 {
-              max-width: 760px;
-              margin: 0;
-              font-family: Optima, "Avenir Next", sans-serif;
-              font-size: clamp(38px, 7vw, 78px);
-              line-height: 0.94;
-              letter-spacing: -0.05em;
-            }
-            .hero p { max-width: 740px; margin: 0; color: var(--muted); font-size: 18px; line-height: 1.55; }
-            .links { display: flex; flex-wrap: wrap; gap: 10px; }
-            .links a {
-              color: var(--ink);
-              text-decoration: none;
-              border: 1px solid var(--line);
-              border-radius: 999px;
-              padding: 8px 13px;
-              background: rgba(255, 255, 255, 0.72);
-            }
-            .charts { display: grid; gap: 22px; }
-            .chart-card {
-              overflow: hidden;
-              padding: 22px;
-              border: 1px solid rgba(24, 32, 31, 0.12);
-              border-radius: 24px;
-              background: var(--card);
-              box-shadow: 0 18px 46px rgba(24, 32, 31, 0.08);
-            }
-            .card-kicker {
-              margin-bottom: 8px;
-              color: var(--accent-2);
-              font-size: 12px;
-              font-weight: 800;
-              letter-spacing: 0.12em;
-              text-transform: uppercase;
-            }
-            h2 { margin: 0 0 18px; font-size: 22px; letter-spacing: -0.02em; }
-            .chart { overflow-x: auto; }
-            @media (max-width: 700px) {
-              main { padding: 24px 14px 48px; }
-              .hero { padding: 22px; border-radius: 20px; }
-              .chart-card { padding: 16px; border-radius: 18px; }
-            }
-          </style>
-        </head>
-        <body>
-          <main>
-            <header class="hero">
-              <h1>Solid Queue Bench Results</h1>
-              <p>Generated from the checked-in benchmark artifacts. The Markdown summaries are optimized for reading; this page is for exploring the Vega charts directly.</p>
-              <nav class="links">
-                <a href="README.md">Results README</a>
-                <a href="narrative.md">Narrative</a>
-                <a href="solid-queue/README.md">Solid Queue</a>
-                <a href="async-job/README.md">Async::Job</a>
-                <a href="solid-queue-stress/README.md">Stress</a>
-              </nav>
-            </header>
-            <div class="charts">
-              #{cards.join("\n")}
-            </div>
-          </main>
-        </body>
-        </html>
-      HTML
-
-      File.write(File.join(@results_root, "index.html"), html)
-    end
-
     def chart_title(path)
       title = File.basename(path, ".vg.json").tr("-", " ").split.map do |word|
         case word
@@ -1308,31 +1329,6 @@ module Bench
         end
       end.join(" ")
       title.sub(/\AAsync Job /, "Async::Job ")
-    end
-
-    def chart_group(path)
-      name = File.basename(path)
-      if name.start_with?("headline-")
-        "Headline"
-      elsif name.start_with?("stress-") || name.start_with?("solid-queue-stress-")
-        "Stress"
-      elsif name.start_with?("async-job-")
-        "Async::Job"
-      else
-        "Solid Queue"
-      end
-    end
-
-    def chart_sort_key(path)
-      name = File.basename(path)
-      group_order = case chart_group(path)
-      when "Headline" then 0
-      when "Solid Queue" then 1
-      when "Async::Job" then 2
-      when "Stress" then 3
-      else 4
-      end
-      [ group_order, name ]
     end
   end
 end
