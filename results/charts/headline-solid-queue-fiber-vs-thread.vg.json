@@ -7,26 +7,6 @@
   },
   "layer": [
     {
-      "data": {
-        "values": [
-          {
-            "workload": "Sleep",
-            "value": 0
-          },
-          {
-            "workload": "Async::HTTP",
-            "value": 0
-          },
-          {
-            "workload": "RubyLLM Stream",
-            "value": 0
-          },
-          {
-            "workload": "CPU",
-            "value": 0
-          }
-        ]
-      },
       "mark": {
         "type": "rule",
         "color": "#111827",
@@ -44,18 +24,8 @@
           },
           "axis": {
             "format": "+.0f"
-          }
-        },
-        "y": {
-          "field": "workload",
-          "type": "nominal",
-          "title": null,
-          "sort": [
-            "Sleep",
-            "Async::HTTP",
-            "RubyLLM Stream",
-            "CPU"
-          ]
+          },
+          "datum": 0
         }
       }
     },

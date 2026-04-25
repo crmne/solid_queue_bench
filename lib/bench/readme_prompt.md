@@ -11,8 +11,12 @@ Style:
 - No hype and no claims beyond the supplied facts.
 - Use exact numbers from the facts. Round percentages and numeric metrics to one decimal or two decimals where that reads better.
 - Report both average fiber throughput delta and best fiber throughput delta when both are available.
-- Keep the DB transaction framing precise: matched-pool transaction results answer fair executor/runtime comparison; default-pool transaction pressure results answer database pool sizing pressure.
+- The `## Headline Results` section is only for the headline workloads: `sleep`, `async_http`, `ruby_llm_stream`, and `cpu`.
+- Keep the DB transaction framing precise: `db_transaction` is the fair executor/runtime comparison because the DB pool is matched for both modes.
+- Do not use `db_transaction_pool_pressure` in the public README headline or DB sections. Ignore it in the public README even if it appears elsewhere in the facts.
 - Be explicit that Async::Job changes the backend, so it is a throughput-ceiling reference, not the same comparison as Solid Queue fiber vs thread.
+- Treat the stress suite as a current Solid Queue implementation/design failure-envelope test under high connection demand, not as a fundamental thread-vs-fiber law.
+- When relevant, note that the capped suites intentionally omit cells above the max total concurrency cap, so higher concurrencies may show only `1 proc` results.
 
 Required structure:
 
@@ -20,9 +24,9 @@ Required structure:
 2. A short introduction explaining the benchmark and latest checked-in result date.
 3. `## Research Questions`
 4. `## Headline Results`, with the headline chart links or image links from the facts.
-5. A Solid Queue results table covering throughput, memory, latency, average fiber throughput delta, and best fiber throughput delta.
-6. `## DB Workloads`, with the DB-specific interpretation and the DB chart links if available.
-7. `## Stress Suite`, explaining the connection-pool ceiling test and showing the stress chart links.
+5. A headline Solid Queue results table covering only the headline workloads and covering throughput, memory, latency, average fiber throughput delta, and best fiber throughput delta.
+6. `## DB Workloads`, covering `db_queries`, `db_mixed`, and `db_transaction`, with the DB-specific interpretation and the DB chart links if available.
+7. `## Stress Suite`, explaining the completion/failure-envelope test and showing only the stress status chart when available.
 8. `## Async::Job Comparison`
 9. `## Methodology`
 10. `## Workloads`

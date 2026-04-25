@@ -1,8 +1,6 @@
 {
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
   "title": "Solid Queue DB Queries Fiber Advantage",
-  "width": 180,
-  "height": 220,
   "data": {
     "values": [
       {
@@ -223,25 +221,7 @@
       }
     ]
   },
-  "mark": {
-    "type": "bar",
-    "tooltip": true
-  },
-  "encoding": {
-    "x": {
-      "field": "concurrency",
-      "type": "ordinal",
-      "title": "Concurrency"
-    },
-    "y": {
-      "field": "value",
-      "type": "quantitative",
-      "title": "Fiber advantage (%)"
-    },
-    "color": {
-      "field": "processes",
-      "type": "nominal"
-    },
+  "facet": {
     "column": {
       "field": "metric",
       "type": "nominal",
@@ -251,23 +231,81 @@
         "Avg CPU",
         "p50 latency"
       ]
-    },
-    "tooltip": [
+    }
+  },
+  "spec": {
+    "width": 180,
+    "height": 220,
+    "layer": [
       {
-        "field": "metric",
-        "type": "nominal"
+        "mark": {
+          "type": "rule",
+          "color": "#111827",
+          "strokeWidth": 1.5,
+          "opacity": 0.75
+        },
+        "encoding": {
+          "y": {
+            "datum": 0,
+            "type": "quantitative",
+            "title": "Fiber advantage (%)"
+          }
+        }
       },
       {
-        "field": "concurrency",
-        "type": "quantitative"
-      },
-      {
-        "field": "processes",
-        "type": "nominal"
-      },
-      {
-        "field": "value",
-        "type": "quantitative"
+        "mark": {
+          "type": "bar",
+          "tooltip": true
+        },
+        "encoding": {
+          "x": {
+            "field": "concurrency",
+            "type": "ordinal",
+            "title": "Concurrency"
+          },
+          "xOffset": {
+            "field": "processes",
+            "type": "nominal",
+            "sort": [
+              "1 proc",
+              "2 proc",
+              "6 proc"
+            ]
+          },
+          "y": {
+            "field": "value",
+            "type": "quantitative",
+            "title": "Fiber advantage (%)",
+            "stack": null
+          },
+          "color": {
+            "field": "processes",
+            "type": "nominal",
+            "sort": [
+              "1 proc",
+              "2 proc",
+              "6 proc"
+            ]
+          },
+          "tooltip": [
+            {
+              "field": "metric",
+              "type": "nominal"
+            },
+            {
+              "field": "concurrency",
+              "type": "quantitative"
+            },
+            {
+              "field": "processes",
+              "type": "nominal"
+            },
+            {
+              "field": "value",
+              "type": "quantitative"
+            }
+          ]
+        }
       }
     ]
   },

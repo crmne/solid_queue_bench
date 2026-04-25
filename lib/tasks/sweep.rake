@@ -16,7 +16,7 @@ namespace :sweep do
   STRESS_WORKLOADS = %w[sleep async_http ruby_llm_stream]
   SUPPLEMENTARY_WORKLOADS = CONTROL_WORKLOADS + DB_WORKLOADS
   ALL_WORKLOADS = HEADLINE_WORKLOADS + SUPPLEMENTARY_WORKLOADS
-  PUBLISH_WORKLOADS = ALL_WORKLOADS + DB_PRESSURE_WORKLOADS
+  PUBLISH_WORKLOADS = ALL_WORKLOADS
 
   BACKEND_LABELS = {
     "solid_queue" => "solid-queue",
@@ -61,7 +61,7 @@ namespace :sweep do
     run_suite(backend: "async_job", workloads: ALL_WORKLOADS, profile: :full)
   end
 
-  desc "Run the full publishable suite: Solid Queue, Async::Job headline, pool pressure, and stress"
+  desc "Run the public report suite: Solid Queue, Async::Job headline, and stress"
   task publish: :environment do
     run_suite(backend: "solid_queue", workloads: PUBLISH_WORKLOADS, profile: :full)
     run_suite(backend: "async_job", workloads: HEADLINE_WORKLOADS, profile: :headline)
@@ -113,7 +113,7 @@ namespace :sweep do
     run_single_workload(backend: "solid_queue", workload: "db_transaction", profile: :headline)
   end
 
-  desc "Run db_transaction with normal mode-specific DB pools"
+  desc "Run the exploratory db_transaction current-default-pool pressure sweep"
   task db_transaction_pool_pressure: :environment do
     run_single_workload(backend: "solid_queue", workload: "db_transaction_pool_pressure", profile: :headline)
   end

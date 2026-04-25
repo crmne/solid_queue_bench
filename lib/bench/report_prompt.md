@@ -7,9 +7,12 @@ Use the facts exactly. Do not invent numbers. Do not oversell. Explain:
 - Whether Solid Queue fiber is faster than Solid Queue thread for the headline workloads.
 - Both average fiber throughput delta across paired cells and best fiber throughput delta.
 - What happens to memory, CPU, and latency when the data supports it.
-- How the DB workloads differ: short DB bursts, read/API/write mixed work, and long transactions.
-- That matched-pool transaction results answer runtime fairness, while any default-pool transaction pressure result answers sizing pressure.
+- Keep the headline discussion limited to `sleep`, `async_http`, `ruby_llm_stream`, and `cpu`.
+- How the DB workloads differ: short DB bursts, read/API/write mixed work, and matched-pool long transactions.
+- Do not use `db_transaction_pool_pressure` in the generated public narrative. Ignore it even if it appears elsewhere in the facts.
+- That `db_transaction` answers runtime fairness because the DB pool is matched for both modes.
 - How Async::Job compares, clearly noting that it changes the backend.
+- That the stress suite is a current Solid Queue implementation/design failure-envelope test under high connection demand, not a fundamental thread-vs-fiber law.
 
 Write concise Markdown with:
 

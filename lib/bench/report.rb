@@ -12,6 +12,7 @@ module Bench
       "async-job" => "Async::Job",
       "solid-queue-stress" => "Solid Queue Stress"
     }.freeze
+    PROCESS_LABELS = [ "1 proc", "2 proc", "6 proc" ].freeze
 
     WORKLOADS = {
       "sleep" => "Sleep",
@@ -28,8 +29,11 @@ module Bench
     }.freeze
 
     HEADLINE_WORKLOADS = %w[sleep async_http ruby_llm_stream cpu].freeze
-    DB_WORKLOADS = %w[db_queries db_mixed db_transaction db_transaction_pool_pressure].freeze
     CONTROL_WORKLOADS = %w[http].freeze
+    DB_WORKLOADS = %w[db_queries db_mixed db_transaction].freeze
+    DB_PRESSURE_WORKLOADS = %w[db_transaction_pool_pressure].freeze
+    SUPPLEMENTARY_WORKLOADS = CONTROL_WORKLOADS + DB_WORKLOADS
+    PUBLIC_SOLID_QUEUE_WORKLOADS = HEADLINE_WORKLOADS + SUPPLEMENTARY_WORKLOADS
     STRESS_WORKLOADS = %w[sleep async_http ruby_llm_stream].freeze
 
     FAMILY_SUMMARIES = {
@@ -317,7 +321,7 @@ module Bench
     end
 
     def workload_sort_key(workload)
-      order = HEADLINE_WORKLOADS + DB_WORKLOADS + CONTROL_WORKLOADS
+      order = PUBLIC_SOLID_QUEUE_WORKLOADS + DB_PRESSURE_WORKLOADS
       [ order.index(workload) || order.length, workload ]
     end
 
@@ -362,6 +366,12 @@ module Bench
     def public_report_facts(headline_charts:, stress_charts:, narrative:)
       datasets = datasets_by_family
       all_datasets = datasets.values.flatten
+      public_results = filtered_report_facts(
+        "solid-queue" => PUBLIC_SOLID_QUEUE_WORKLOADS,
+        "async-job" => HEADLINE_WORKLOADS,
+        "solid-queue-stress" => STRESS_WORKLOADS
+      )
+
       {
         title: "Solid Queue Bench",
         audience: "Rails developers deciding whether to use Solid Queue fiber execution mode.",
@@ -371,8 +381,15 @@ module Bench
         research_questions: research_questions,
         methodology: methodology_notes,
         benchmark_matrix: benchmark_matrix_facts(all_datasets),
-        workloads: workload_descriptions,
-        results: report_facts,
+        workloads: public_workload_descriptions,
+        results: public_results,
+        public_scope: {
+          headline_workloads: HEADLINE_WORKLOADS,
+          supplementary_workloads: SUPPLEMENTARY_WORKLOADS,
+          db_workloads: DB_WORKLOADS,
+          omitted_workloads: DB_PRESSURE_WORKLOADS,
+          stress_interpretation: "Treat stress as a current Solid Queue failure-envelope test driven by implementation choices around high-concurrency connection demand, not as an intrinsic thread-vs-fiber law."
+        },
         stress_completion: stress_completion_facts(datasets.fetch("solid-queue-stress", [])),
         charts: {
           headline: chart_facts(headline_charts),
@@ -409,13 +426,15 @@ module Bench
       lines << ""
       lines << "## Headline Results"
       lines << ""
-      lines << "Inside Solid Queue, this is a same-backend comparison: the queue, Rails app, jobs, and matrix are the same; only the worker execution mode changes."
+      lines << "Inside Solid Queue, this is a same-backend comparison on the headline workloads: the queue, Rails app, jobs, and matrix are the same; only the worker execution mode changes."
       lines << ""
       lines.concat(chart_embeds(facts[:charts][:headline]))
       lines << ""
-      lines.concat(workload_summary_table(facts, "solid-queue"))
+      lines.concat(workload_summary_table(facts, "solid-queue", workloads: HEADLINE_WORKLOADS))
       lines << ""
-      lines << "The strongest fiber gains show up where the jobs spend meaningful time waiting: RubyLLM streaming, HTTP, and sleep-shaped work. CPU remains close, which is the expected control. The DB workloads show that short DB bursts and read/API/write jobs still benefit from fiber, while transaction results need to be read with the pool configuration in mind."
+      lines << "The strongest fiber gains show up where the jobs spend meaningful time waiting. CPU remains close, which is the expected control. The DB and blocking-HTTP workloads are reported separately below so the headline section stays aligned with the headline charts."
+      lines << ""
+      lines << "Full supplementary Solid Queue results, including `http`, `db_queries`, `db_mixed`, and `db_transaction`, are in [results/solid-queue/README.md](#{facts[:links][:solid_queue_results]})."
       lines << ""
       lines << "## DB Workloads"
       lines << ""
@@ -423,13 +442,13 @@ module Bench
       lines << "|---|---|---|---|---:|---:|"
       db_result_rows(facts).each { |row| lines << row }
       lines << ""
-      lines << "`DB Transaction` uses a matched pool (`concurrency + 5` per process for both modes), so it is the fair executor comparison. `DB Transaction Pool Pressure` keeps the default mode-specific pool behavior, so it answers the sizing-pressure question instead."
+      lines << "`DB Transaction` uses a matched pool (`concurrency + 5` per process for both modes), so it is the fair executor comparison. The public README intentionally excludes the old default-pool transaction pressure variant because it is not an apples-to-apples executor comparison."
       lines << ""
       lines.concat(chart_embeds(facts[:charts][:db]))
       lines << ""
       lines << "## Stress Suite"
       lines << ""
-      lines << "The headline suite caps total concurrency at `60` to keep the mode comparison fair. The stress suite removes that cap and asks where thread workers stop completing planned cells when connection demand grows."
+      lines << "The headline suite caps total concurrency at `60` to keep the mode comparison fair. The stress suite removes that cap and is best read as a current Solid Queue failure-envelope test under high connection demand."
       lines << ""
       lines.concat(chart_embeds(facts[:charts][:stress]))
       lines << ""
@@ -438,6 +457,8 @@ module Bench
       facts[:stress_completion].each do |row|
         lines << "| #{row[:label]} | #{row.dig(:modes, "fiber", :completed)}/#{row.dig(:modes, "fiber", :planned)} | #{row.dig(:modes, "thread", :completed)}/#{row.dig(:modes, "thread", :planned)} |"
       end
+      lines << ""
+      lines << "These stress results reflect the current Solid Queue implementation and its connection-pool sizing behavior at high thread counts. They should not be read as a permanent or fundamental property of threads."
       lines << ""
       lines << "## Async::Job Comparison"
       lines << ""
@@ -483,7 +504,7 @@ module Bench
       facts[:running][:sweep_tasks].each { |task| lines << task }
       lines << "```"
       lines << ""
-      lines << "Single-workload sweeps are available too, including `sweep:sleep`, `sweep:db_queries`, `sweep:db_transaction`, `sweep:db_mixed`, `sweep:db_transaction_pool_pressure`, `sweep:ruby_llm_stream`, and the `sweep:async_job_*` tasks."
+      lines << "Single-workload sweeps are available too, including `sweep:sleep`, `sweep:db_queries`, `sweep:db_transaction`, `sweep:db_mixed`, `sweep:ruby_llm_stream`, and the `sweep:async_job_*` tasks."
       lines << ""
       lines << "Regenerate the public README, result summaries, charts, and narrative from existing artifacts:"
       lines << ""
@@ -559,8 +580,11 @@ module Bench
         "`jobs_per_second` counts successful jobs only.",
         "Latency percentiles are from successful jobs only.",
         "Each matrix cell is repeated and reports a real representative run, not a synthetic average row.",
-        "The headline matrix caps total concurrency at `60` so high process counts do not turn the main comparison into a pool-exhaustion test.",
-        "The stress matrix removes that cap to show where high-concurrency thread workers stop completing planned cells.",
+        "The headline suite is limited to `sleep`, `async_http`, `ruby_llm_stream`, and `cpu`.",
+        "Supplementary Solid Queue runs add `http`, `db_queries`, `db_mixed`, and `db_transaction`.",
+        "The headline and supplementary suites cap total concurrency at `60` so high process counts do not turn the main comparison into a pool-exhaustion test.",
+        "Cells above that cap are intentionally omitted from the capped suites, so higher concurrencies may show only `1 proc` results.",
+        "The stress suite removes that cap and is best read as a current Solid Queue failure-envelope test, not as a fundamental thread-vs-fiber law.",
         "Streaming workloads are child-job aware: a run is not complete until downstream broadcast jobs finish."
       ]
     end
@@ -575,21 +599,76 @@ module Bench
         { name: "db_queries", shape: "Sequential DB reads plus writes", purpose: "Report generation / data sync without external I/O" },
         { name: "db_mixed", shape: "DB reads, delayed HTTP call, then DB writes", purpose: "Read state, call API, write result" },
         { name: "db_transaction", shape: "DB reads and writes in one transaction", purpose: "Fair transaction executor comparison with matched pools" },
-        { name: "db_transaction_pool_pressure", shape: "Same transaction under default pools", purpose: "Supplementary pool-sizing pressure test" }
+        { name: "db_transaction_pool_pressure", shape: "Same transaction under mode-specific default pools", purpose: "Exploratory current-default pool-pressure test" }
       ]
     end
 
+    def public_workload_descriptions
+      workload_descriptions.reject { |workload| DB_PRESSURE_WORKLOADS.include?(workload[:name]) }
+    end
+
     def benchmark_matrix_facts(datasets)
-      datasets.group_by(&:family).transform_values do |family_datasets|
-        first = family_datasets.first
-        {
-          workloads: family_datasets.map(&:workload).sort_by { |workload| workload_sort_key(workload) },
-          concurrencies: first&.data&.fetch("concurrencies", nil),
-          processes: first&.data&.fetch("processes", nil),
-          modes: first&.data&.fetch("modes", nil),
-          repeat: first&.repeat,
-          max_total_concurrency: first&.data&.fetch("max_total_concurrency", nil)
+      families = {}
+
+      headline_dataset = datasets.find { |dataset| dataset.family == "solid-queue" && HEADLINE_WORKLOADS.include?(dataset.workload) }
+      if headline_dataset
+        families["solid_queue_headline"] = {
+          label: "Solid Queue headline",
+          workloads: HEADLINE_WORKLOADS,
+          concurrencies: headline_dataset.data["concurrencies"],
+          processes: headline_dataset.data["processes"],
+          modes: headline_dataset.data["modes"],
+          repeat: headline_dataset.repeat,
+          max_total_concurrency: headline_dataset.data["max_total_concurrency"]
         }
+      end
+
+      supplementary_dataset = datasets.find { |dataset| dataset.family == "solid-queue" && SUPPLEMENTARY_WORKLOADS.include?(dataset.workload) }
+      if supplementary_dataset
+        families["solid_queue_supplementary"] = {
+          label: "Solid Queue supplementary",
+          workloads: SUPPLEMENTARY_WORKLOADS,
+          concurrencies: supplementary_dataset.data["concurrencies"],
+          processes: supplementary_dataset.data["processes"],
+          modes: supplementary_dataset.data["modes"],
+          repeat: supplementary_dataset.repeat,
+          max_total_concurrency: supplementary_dataset.data["max_total_concurrency"]
+        }
+      end
+
+      async_dataset = datasets.find { |dataset| dataset.family == "async-job" && HEADLINE_WORKLOADS.include?(dataset.workload) }
+      if async_dataset
+        families["async_job_headline"] = {
+          label: "Async::Job headline",
+          workloads: HEADLINE_WORKLOADS,
+          concurrencies: async_dataset.data["concurrencies"],
+          processes: async_dataset.data["processes"],
+          modes: async_dataset.data["modes"],
+          repeat: async_dataset.repeat,
+          max_total_concurrency: async_dataset.data["max_total_concurrency"]
+        }
+      end
+
+      stress_dataset = datasets.find { |dataset| dataset.family == "solid-queue-stress" }
+      if stress_dataset
+        families["solid_queue_stress"] = {
+          label: "Solid Queue stress",
+          workloads: STRESS_WORKLOADS,
+          concurrencies: stress_dataset.data["concurrencies"],
+          processes: stress_dataset.data["processes"],
+          modes: stress_dataset.data["modes"],
+          repeat: stress_dataset.repeat,
+          max_total_concurrency: stress_dataset.data["max_total_concurrency"]
+        }
+      end
+
+      families
+    end
+
+    def filtered_report_facts(workloads_by_family)
+      report_facts.each_with_object({}) do |(family, rows), filtered|
+        allowed = Array(workloads_by_family[family])
+        filtered[family] = rows.select { |row| allowed.include?(row[:workload]) }
       end
     end
 
@@ -631,7 +710,7 @@ module Bench
           "bundle exec rake sweep:async_job_headline      # Headline Async::Job",
           "bundle exec rake sweep:families                # Both headline families",
           "bundle exec rake sweep:full                    # Headline + HTTP control + DB",
-          "bundle exec rake sweep:publish                 # Full publishable suite"
+          "bundle exec rake sweep:publish                 # Public README/report suite"
         ]
       }
     end
@@ -661,7 +740,8 @@ module Bench
       [
         "The data shows best and lowest observed results from this tested matrix; it does not prove fiber wins at every concurrency, process count, or pool size.",
         "Async::Job changes the backend, so those numbers are a backend comparison rather than a Solid Queue mode comparison.",
-        "Matched-pool DB transaction results answer runtime fairness; default-pool transaction pressure results answer sizing pressure.",
+        "`db_transaction` is the fair transaction comparison because the DB pool is matched for both modes.",
+        "Stress results reflect the current Solid Queue implementation under high connection demand and should not be read as a permanent thread-vs-fiber law.",
         "The harness uses aggressive queue polling, so these numbers reflect execution behavior under a low-latency benchmark configuration, not default production settings."
       ]
     end
@@ -673,8 +753,10 @@ module Bench
       end.tap(&:pop)
     end
 
-    def workload_summary_table(facts, family)
-      rows = facts[:results].fetch(family, []).sort_by { |result| workload_sort_key(result[:workload]) }
+    def workload_summary_table(facts, family, workloads: nil)
+      rows = facts[:results].fetch(family, [])
+      rows = rows.select { |result| workloads.include?(result[:workload]) } if workloads
+      rows = rows.sort_by { |result| workload_sort_key(result[:workload]) }
       lines = []
       lines << "| Workload | Tests | Best Throughput | Lowest RSS | Lowest p50 Latency | Avg Fiber Throughput Delta | Best Fiber Throughput Delta |"
       lines << "|---|---:|---|---|---|---:|---:|"
@@ -920,7 +1002,6 @@ module Bench
     def throughput_range_spec(title:, values:, x_title:)
       values = values.compact
       summaries = throughput_delta_summaries(values)
-      zero = summaries.map { |summary| { workload: summary[:workload], value: 0 } }
 
       {
         "$schema" => VEGA_SCHEMA,
@@ -929,11 +1010,9 @@ module Bench
         "height" => { "step" => 46 },
         "layer" => [
           {
-            "data" => { "values" => zero },
             "mark" => { "type" => "rule", "color" => "#111827", "strokeWidth" => 1.5, "opacity" => 0.75 },
             "encoding" => {
-              "x" => headline_x_encoding(x_title),
-              "y" => headline_y_encoding
+              "x" => headline_x_encoding(x_title).merge("datum" => 0)
             }
           },
           {
@@ -1016,11 +1095,7 @@ module Bench
       stress = datasets_by_family.fetch("solid-queue-stress")
       return [] if stress.empty?
 
-      [
-        write_chart("stress-cell-status", stress_status_spec(stress)),
-        write_chart("stress-throughput", stress_metric_spec(stress, "jobs_per_second", "Throughput (jobs/s)")),
-        write_chart("stress-rss", stress_metric_spec(stress, "peak_rss_kb", "Peak RSS (MB)", scale: 1.0 / 1024.0))
-      ].compact
+      [ write_chart("stress-cell-status", stress_status_spec(stress)) ].compact
     end
 
     def stress_status_spec(datasets)
@@ -1119,16 +1194,31 @@ module Bench
       {
         "$schema" => VEGA_SCHEMA,
         "title" => title,
-        "width" => width,
-        "height" => height,
         "data" => { "values" => values },
-        "mark" => { "type" => "bar", "tooltip" => true },
-        "encoding" => {
-          "x" => { "field" => "concurrency", "type" => "ordinal", "title" => "Concurrency" },
-          "y" => { "field" => "value", "type" => "quantitative", "title" => y_title },
-          "color" => { "field" => "processes", "type" => "nominal" },
-          "column" => { "field" => facet_column, "type" => "nominal", "sort" => facet_column_sort },
-          "tooltip" => tooltip_fields(%w[metric concurrency processes value])
+        "facet" => {
+          "column" => { "field" => facet_column, "type" => "nominal", "sort" => facet_column_sort }
+        },
+        "spec" => {
+          "width" => width,
+          "height" => height,
+          "layer" => [
+            {
+              "mark" => { "type" => "rule", "color" => "#111827", "strokeWidth" => 1.5, "opacity" => 0.75 },
+              "encoding" => {
+                "y" => { "datum" => 0, "type" => "quantitative", "title" => y_title }
+              }
+            },
+            {
+              "mark" => { "type" => "bar", "tooltip" => true },
+              "encoding" => {
+                "x" => { "field" => "concurrency", "type" => "ordinal", "title" => "Concurrency" },
+                "xOffset" => { "field" => "processes", "type" => "nominal", "sort" => PROCESS_LABELS },
+                "y" => { "field" => "value", "type" => "quantitative", "title" => y_title, "stack" => nil },
+                "color" => { "field" => "processes", "type" => "nominal", "sort" => PROCESS_LABELS },
+                "tooltip" => tooltip_fields(%w[metric concurrency processes value])
+              }
+            }
+          ]
         },
         "resolve" => { "scale" => { "y" => "independent" } },
         "config" => chart_config
@@ -1205,7 +1295,7 @@ module Bench
     def write_narrative
       path = File.join(@results_root, "narrative.md")
       prompt_path = File.expand_path("report_prompt.md", __dir__)
-      summary = report_facts
+      summary = public_report_facts(headline_charts: [], stress_charts: [], narrative: path)
       narrative = generate_markdown(prompt_path, summary) || deterministic_narrative(summary)
       File.write(path, narrative.strip + "\n")
       path
@@ -1271,48 +1361,79 @@ module Bench
 
     def deterministic_narrative(facts)
       lines = []
-      solid_queue = facts.fetch("solid-queue", [])
-      async_job = facts.fetch("async-job", [])
-      stress = facts.fetch("solid-queue-stress", [])
+      solid_queue = facts.dig(:results, "solid-queue") || []
+      async_job = facts.dig(:results, "async-job") || []
+      stress = facts.dig(:results, "solid-queue-stress") || []
+      headline = solid_queue.select { |dataset| HEADLINE_WORKLOADS.include?(dataset[:workload]) }
+      db = solid_queue.select { |dataset| DB_WORKLOADS.include?(dataset[:workload]) }
 
       lines << "# Solid Queue Fiber Benchmark Summary"
       lines << ""
       lines << "Generated without an LLM. Set `OPENAI_API_KEY` and rerun `bin/report` to produce the prose narrative."
       lines << ""
-      lines << "In the main Solid Queue matrix, every checked-in workload completed its planned cells and the best-throughput point landed on `fiber`. That does not mean fiber wins at every setting; it means the best observed point in this matrix favored fiber for the same Solid Queue backend."
+      lines << "On the headline Solid Queue workloads, the best-throughput point landed on `fiber` in every checked-in row. That does not mean `fiber` wins every paired cell; it means the best observed point in this same-backend comparison favored `fiber` for `sleep`, `async_http`, `ruby_llm_stream`, and `cpu`."
       lines << ""
-      lines << "The larger gains are on wait-heavy work. CPU is the control and stays much closer. The DB workloads also favor fiber at the best observed points, but transaction results need to be read with the pool configuration: matched-pool transactions are the fair executor comparison, while the default-pool transaction pressure run is about database pool sizing."
+      lines << "The larger gains are on wait-heavy work. CPU is the control and stays much closer. The supplementary DB workloads also favor `fiber` at the best observed points in this dataset, and `db_transaction` is run with a matched pool so it stays an apples-to-apples executor comparison."
       lines << ""
       if async_job.any?
         lines << "Async::Job is faster than Solid Queue fiber on the comparable headline workloads in this run, but it changes the backend to Redis. Treat that as a backend comparison, not evidence about Solid Queue `thread` vs `fiber`."
         lines << ""
       end
-      lines << "## Solid Queue Fiber vs Thread"
+      lines << "## What The Benchmarks Answer"
       lines << ""
-      lines << "| Workload | Tests | Best throughput | Avg fiber delta | Best fiber delta |"
+      lines << "### Headline workloads"
+      lines << ""
+      lines << "| Workload | Fiber wins | Avg fiber throughput delta | Best fiber throughput delta | Best Solid Queue throughput |"
       lines << "|---|---:|---:|---:|---:|"
-      solid_queue.sort_by { |dataset| workload_sort_key(dataset[:workload]) }.each do |dataset|
+      headline.sort_by { |dataset| workload_sort_key(dataset[:workload]) }.each do |dataset|
         best = dataset.dig(:best_throughput, "jobs_per_second")
-        lines << "| #{dataset[:label]} | #{dataset[:tests]} | #{fmt_number(best)} jobs/s | #{average_delta_text(dataset[:average_fiber_delta])} | #{delta_text(dataset[:best_fiber_delta])} |"
+        wins = dataset[:throughput_win_rate]
+        lines << "| #{dataset[:label]} | #{wins[:wins]}/#{wins[:pairs]} | #{average_delta_text(dataset[:average_fiber_delta])} | #{delta_text(dataset[:best_fiber_delta])} | #{dataset.dig(:best_throughput, "mode")}, #{fmt_number(best)} jobs/s |"
       end
       lines << ""
-      lines << "## Async::Job Comparison"
+      lines << "### DB workloads"
       lines << ""
-      lines << "| Workload | Best throughput |"
-      lines << "|---|---:|"
+      lines << "| Workload | Fiber wins | Avg fiber throughput delta | Best fiber throughput delta | Interpretation |"
+      lines << "|---|---:|---:|---:|---|"
+      db.sort_by { |dataset| workload_sort_key(dataset[:workload]) }.each do |dataset|
+        wins = dataset[:throughput_win_rate]
+        interpretation = case dataset[:workload]
+        when "db_queries"
+          "Short DB bursts with no external wait."
+        when "db_mixed"
+          "Read state, call the delay server, then write results."
+        when "db_transaction"
+          "Matched-pool transaction run; fair executor comparison."
+        end
+        lines << "| #{dataset[:label]} | #{wins[:wins]}/#{wins[:pairs]} | #{average_delta_text(dataset[:average_fiber_delta])} | #{delta_text(dataset[:best_fiber_delta])} | #{interpretation} |"
+      end
+      lines << ""
+      lines << "### Stress"
+      lines << ""
+      lines << "The stress suite is about completion, not about headline throughput. It removes the normal total-concurrency cap and shows the current Solid Queue failure envelope under high connection demand."
+      lines << ""
+      lines << "| Workload | Thread completed | Fiber completed |"
+      lines << "|---|---:|---:|"
+      facts.fetch(:stress_completion).each do |row|
+        lines << "| #{row[:label]} | #{row.dig(:modes, "thread", :completed)}/#{row.dig(:modes, "thread", :planned)} | #{row.dig(:modes, "fiber", :completed)}/#{row.dig(:modes, "fiber", :planned)} |"
+      end
+      lines << ""
+      lines << "Read this as a current Solid Queue implementation result, especially around how connection demand scales at high thread counts. It should not be treated as a permanent or fundamental property of threads."
+      lines << ""
+      lines << "### Async::Job Comparison"
+      lines << ""
+      lines << "| Workload | Async::Job best throughput | Solid Queue fiber best throughput |"
+      lines << "|---|---:|---:|"
       async_job.sort_by { |dataset| workload_sort_key(dataset[:workload]) }.each do |dataset|
-        best = dataset.dig(:best_throughput, "jobs_per_second")
-        lines << "| #{dataset[:label]} | #{fmt_number(best)} jobs/s |"
+        solid_queue_row = headline.find { |row| row[:workload] == dataset[:workload] }
+        lines << "| #{dataset[:label]} | #{fmt_number(dataset.dig(:best_throughput, "jobs_per_second"))} jobs/s | #{fmt_number(solid_queue_row&.dig(:best_fiber_throughput, "jobs_per_second"))} jobs/s |"
       end
-      lines << ""
-      lines << "## Stress"
-      lines << ""
-      lines << "Stress results completed #{stress.map { |dataset| dataset[:tests] }.uniq.join(", ")} cells per workload family entry. Read these as failure-envelope runs, not the same fair matrix as the main Solid Queue suite."
       lines << ""
       lines << "## Caveats"
       lines << ""
       lines << "- The data shows best and lowest observed results from the tested matrix; it does not prove fiber wins at every concurrency, process count, or pool size."
-      lines << "- DB pool configuration changes the meaning of transaction results."
+      lines << "- The public report excludes the old `db_transaction_pool_pressure` experiment because it is not an apples-to-apples executor comparison."
+      lines << "- `db_transaction` is the fair transaction comparison because the DB pool is matched for both modes."
       lines << "- Async::Job changes the backend."
       lines.join("\n")
     end
