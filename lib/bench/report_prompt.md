@@ -4,6 +4,7 @@ Audience: Rails developers deciding whether Solid Queue fiber mode is a good fit
 
 Use the facts exactly. Do not invent numbers. Do not oversell. Explain:
 
+- That in Solid Queue, `concurrency = N` means `threads: N` in thread mode or `fibers: N` in fiber mode, while `processes` is the number of worker OS processes.
 - Whether Solid Queue fiber is faster than Solid Queue thread for the headline workloads.
 - Both average fiber throughput delta across paired cells and best fiber throughput delta.
 - What happens to memory, CPU, and latency when the data supports it.

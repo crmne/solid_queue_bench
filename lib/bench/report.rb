@@ -415,6 +415,8 @@ module Bench
       lines << ""
       lines << "Benchmark harness for answering whether Solid Queue `fiber` execution mode is faster, cheaper, or easier on the database than `thread` mode under the same Rails app and backend."
       lines << ""
+      lines << "In this repo, `concurrency = N` means Solid Queue runs `threads: N` in thread mode or `fibers: N` in fiber mode. `Processes` is the number of worker OS processes, so total execution slots are `concurrency x processes`."
+      lines << ""
       lines << "Latest checked-in results: **#{facts[:result_dates]}**."
       lines << "Solid Queue commit under test: `#{facts[:solid_queue_revision]}`." if facts[:solid_queue_revision]
       lines << ""
@@ -580,6 +582,7 @@ module Bench
         "`jobs_per_second` counts successful jobs only.",
         "Latency percentiles are from successful jobs only.",
         "Each matrix cell is repeated and reports a real representative run, not a synthetic average row.",
+        "In Solid Queue, `concurrency = N` means `threads: N` in thread mode or `fibers: N` in fiber mode. `Processes` is the number of worker OS processes.",
         "The headline suite is limited to `sleep`, `async_http`, `ruby_llm_stream`, and `cpu`.",
         "Supplementary Solid Queue runs add `http`, `db_queries`, `db_mixed`, and `db_transaction`.",
         "The headline and supplementary suites cap total concurrency at `60` so high process counts do not turn the main comparison into a pool-exhaustion test.",

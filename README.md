@@ -4,6 +4,8 @@
 
 This repository benchmarks Solid Queue `fiber` execution mode against Solid Queue `thread` mode across Rails job shapes that are mostly waiting, mostly streaming, DB-heavy, and CPU-bound.
 
+In this repo, `concurrency = N` means Solid Queue runs `threads: N` in thread mode or `fibers: N` in fiber mode. `Processes` is the number of worker OS processes, so total execution slots are `concurrency x processes`.
+
 The latest checked-in results were run on **April 24-25, 2026** against Solid Queue revision `305bf4018352e099019f9f24502a18ee4794e64e`.
 
 Detailed generated artifacts are in [results/README.md](results/README.md), with Solid Queue-specific results in [results/solid-queue/README.md](results/solid-queue/README.md).

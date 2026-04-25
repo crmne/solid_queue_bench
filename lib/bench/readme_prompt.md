@@ -10,6 +10,7 @@ Style:
 - Same spirit as a strong Rails README: research question first, then methodology, then results, then how to run it.
 - No hype and no claims beyond the supplied facts.
 - Use exact numbers from the facts. Round percentages and numeric metrics to one decimal or two decimals where that reads better.
+- Define the benchmark terms clearly: in Solid Queue, `concurrency = N` means `threads: N` in thread mode or `fibers: N` in fiber mode; `processes` is the number of worker OS processes.
 - Report both average fiber throughput delta and best fiber throughput delta when both are available.
 - The `## Headline Results` section is only for the headline workloads: `sleep`, `async_http`, `ruby_llm_stream`, and `cpu`.
 - Keep the DB transaction framing precise: `db_transaction` is the fair executor/runtime comparison because the DB pool is matched for both modes.
