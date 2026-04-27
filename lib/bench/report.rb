@@ -5,6 +5,11 @@ require "pathname"
 require "shellwords"
 require "time"
 
+require "bundler/setup"
+require "active_model"
+require "active_record"
+require "solid_queue/configuration"
+
 module Bench
   class Report
     BACKENDS = {

@@ -162,8 +162,15 @@ module Bench
 
     def wait_until_complete(run)
       deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + options.fetch(:timeout_s)
+      last_adapter_failure_sync = nil
 
       loop do
+        now = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+        if last_adapter_failure_sync.nil? || now - last_adapter_failure_sync >= 1.0
+          sync_adapter_failures!(run)
+          last_adapter_failure_sync = now
+        end
+
         run.reload
         executions = run.benchmark_executions
         parent_finished = executions.finished.count >= run.jobs_count
@@ -172,11 +179,62 @@ module Bench
 
         return if parent_finished && (!workload_has_child_jobs?(run.workload) || children_finished >= children_enqueued)
 
-        if Process.clock_gettime(Process::CLOCK_MONOTONIC) > deadline
+        if now > deadline
           raise "Timed out waiting for benchmark run #{run.id} to complete"
         end
 
         sleep 0.1
+      end
+    end
+
+    def sync_adapter_failures!(run)
+      return unless backend == "solid_queue"
+
+      unfinished_executions = run.benchmark_executions
+        .where(finished_at: nil)
+        .where.not(active_job_id: nil)
+      active_job_ids = unfinished_executions.pluck(:active_job_id)
+      return if active_job_ids.empty?
+
+      failures_by_active_job_id = SolidQueue::FailedExecution
+        .joins(:job)
+        .includes(:job)
+        .where(solid_queue_jobs: { active_job_id: active_job_ids })
+        .index_by { |failure| failure.job.active_job_id }
+      return if failures_by_active_job_id.empty?
+
+      now = Time.current
+      unfinished_executions.where(active_job_id: failures_by_active_job_id.keys).find_each do |execution|
+        failure = failures_by_active_job_id.fetch(execution.active_job_id)
+        error_class, error_message = adapter_failure_details(failure)
+
+        execution.update_columns(
+          started_at: execution.started_at || failure.created_at || now,
+          finished_at: failure.created_at || now,
+          error_class: error_class,
+          error_message: error_message,
+          updated_at: now
+        )
+      end
+    end
+
+    def adapter_failure_details(failure)
+      error = failure.error
+
+      case error
+      when Hash
+        exception_class = error["exception_class"] || error[:exception_class]
+        message = error["message"] || error[:message]
+
+        [
+          exception_class.presence || "SolidQueue::FailedExecution",
+          message.presence || error.to_json
+        ]
+      else
+        [
+          "SolidQueue::FailedExecution",
+          error.to_s.presence || "Solid Queue failed execution #{failure.id}"
+        ]
       end
     end
 

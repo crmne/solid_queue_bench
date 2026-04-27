@@ -15,63 +15,63 @@
         "mode": "thread",
         "concurrency": 50,
         "processes": 2,
-        "status": "failed"
+        "status": "completed"
       },
       {
         "workload": "Async::HTTP",
         "mode": "thread",
         "concurrency": 100,
         "processes": 2,
-        "status": "failed"
+        "status": "completed"
       },
       {
         "workload": "Async::HTTP",
         "mode": "thread",
         "concurrency": 150,
         "processes": 2,
-        "status": "failed"
+        "status": "completed"
       },
       {
         "workload": "Async::HTTP",
         "mode": "thread",
         "concurrency": 200,
         "processes": 2,
-        "status": "failed"
+        "status": "completed"
       },
       {
         "workload": "Async::HTTP",
         "mode": "thread",
         "concurrency": 25,
         "processes": 6,
-        "status": "failed"
+        "status": "completed"
       },
       {
         "workload": "Async::HTTP",
         "mode": "thread",
         "concurrency": 50,
         "processes": 6,
-        "status": "failed"
+        "status": "completed"
       },
       {
         "workload": "Async::HTTP",
         "mode": "thread",
         "concurrency": 100,
         "processes": 6,
-        "status": "failed"
+        "status": "completed"
       },
       {
         "workload": "Async::HTTP",
         "mode": "thread",
         "concurrency": 150,
         "processes": 6,
-        "status": "failed"
+        "status": "completed"
       },
       {
         "workload": "Async::HTTP",
         "mode": "thread",
         "concurrency": 200,
         "processes": 6,
-        "status": "failed"
+        "status": "completed"
       },
       {
         "workload": "Async::HTTP",
@@ -295,63 +295,63 @@
         "mode": "thread",
         "concurrency": 50,
         "processes": 2,
-        "status": "failed"
+        "status": "completed"
       },
       {
         "workload": "Sleep",
         "mode": "thread",
         "concurrency": 100,
         "processes": 2,
-        "status": "failed"
+        "status": "completed"
       },
       {
         "workload": "Sleep",
         "mode": "thread",
         "concurrency": 150,
         "processes": 2,
-        "status": "failed"
+        "status": "completed"
       },
       {
         "workload": "Sleep",
         "mode": "thread",
         "concurrency": 200,
         "processes": 2,
-        "status": "failed"
+        "status": "completed"
       },
       {
         "workload": "Sleep",
         "mode": "thread",
         "concurrency": 25,
         "processes": 6,
-        "status": "failed"
+        "status": "completed"
       },
       {
         "workload": "Sleep",
         "mode": "thread",
         "concurrency": 50,
         "processes": 6,
-        "status": "failed"
+        "status": "completed"
       },
       {
         "workload": "Sleep",
         "mode": "thread",
         "concurrency": 100,
         "processes": 6,
-        "status": "failed"
+        "status": "completed"
       },
       {
         "workload": "Sleep",
         "mode": "thread",
         "concurrency": 150,
         "processes": 6,
-        "status": "failed"
+        "status": "completed"
       },
       {
         "workload": "Sleep",
         "mode": "thread",
         "concurrency": 200,
         "processes": 6,
-        "status": "failed"
+        "status": "completed"
       },
       {
         "workload": "Sleep",

@@ -1,6 +1,6 @@
 {
   "$schema": "https://vega.github.io/schema/vega-lite/v6.json",
-  "title": "Async::Job over Solid Queue fiber throughput",
+  "title": "Solid Queue fiber over thread CPU",
   "width": 720,
   "height": {
     "step": 46
@@ -17,7 +17,7 @@
         "x": {
           "field": "value",
           "type": "quantitative",
-          "title": "Async::Job throughput advantage over Solid Queue fiber (%)",
+          "title": "Fiber CPU advantage over thread (%)",
           "scale": {
             "zero": true,
             "nice": true
@@ -34,34 +34,34 @@
         "values": [
           {
             "workload": "Sleep",
-            "min": 9.819018404907972,
-            "max": 228.6163902675221,
-            "average": 89.37450970358357,
-            "average_label": "avg +89.4%",
+            "min": 4.789719626168228,
+            "max": 36.656596173212485,
+            "average": 18.696226043077374,
+            "average_label": "avg +18.7%",
             "cells": 9
           },
           {
             "workload": "Async::HTTP",
-            "min": 21.614446673869438,
-            "max": 206.23121741796996,
-            "average": 90.3392959406782,
-            "average_label": "avg +90.3%",
+            "min": 7.389162561576354,
+            "max": 34.4735435595938,
+            "average": 18.995608790459176,
+            "average_label": "avg +19.0%",
             "cells": 9
           },
           {
             "workload": "RubyLLM Stream",
-            "min": 51.53846153846153,
-            "max": 295.3237410071943,
-            "average": 194.62250532634388,
-            "average_label": "avg +194.6%",
+            "min": 9.542557180352453,
+            "max": 20.723362658846533,
+            "average": 15.270730581377734,
+            "average_label": "avg +15.3%",
             "cells": 9
           },
           {
             "workload": "CPU",
-            "min": 6.970935513169846,
-            "max": 13.526570048309186,
-            "average": 10.349793525862692,
-            "average_label": "avg +10.3%",
+            "min": 1.5425065731814118,
+            "max": 4.200819672131142,
+            "average": 2.757214602616794,
+            "average_label": "avg +2.8%",
             "cells": 9
           }
         ]
@@ -76,7 +76,7 @@
         "x": {
           "field": "min",
           "type": "quantitative",
-          "title": "Async::Job throughput advantage over Solid Queue fiber (%)",
+          "title": "Fiber CPU advantage over thread (%)",
           "scale": {
             "zero": true,
             "nice": true
@@ -130,217 +130,217 @@
             "workload": "Sleep",
             "concurrency": 5,
             "processes": "1 proc",
-            "value": 32.39415623136554
+            "value": 6.201550387596914
           },
           {
             "workload": "Sleep",
             "concurrency": 10,
             "processes": "1 proc",
-            "value": 77.72128255681228
+            "value": 14.886164623467602
           },
           {
             "workload": "Sleep",
             "concurrency": 25,
             "processes": "1 proc",
-            "value": 159.32749562171628
+            "value": 33.222591362126245
           },
           {
             "workload": "Sleep",
             "concurrency": 50,
             "processes": "1 proc",
-            "value": 228.6163902675221
+            "value": 36.656596173212485
           },
           {
             "workload": "Sleep",
             "concurrency": 5,
             "processes": "2 proc",
-            "value": 27.490920574767085
+            "value": 6.037735849056601
           },
           {
             "workload": "Sleep",
             "concurrency": 10,
             "processes": "2 proc",
-            "value": 80.13077053153712
+            "value": 16.536118363794603
           },
           {
             "workload": "Sleep",
             "concurrency": 25,
             "processes": "2 proc",
-            "value": 151.72782329889566
+            "value": 35.15320334261838
           },
           {
             "workload": "Sleep",
             "concurrency": 5,
             "processes": "6 proc",
-            "value": 9.819018404907972
+            "value": 4.789719626168228
           },
           {
             "workload": "Sleep",
             "concurrency": 10,
             "processes": "6 proc",
-            "value": 37.14272984472811
+            "value": 14.782354659655278
           },
           {
             "workload": "Async::HTTP",
             "concurrency": 5,
             "processes": "1 proc",
-            "value": 31.99520671060515
+            "value": 7.389162561576354
           },
           {
             "workload": "Async::HTTP",
             "concurrency": 10,
             "processes": "1 proc",
-            "value": 80.16407236011781
+            "value": 15.966386554621847
           },
           {
             "workload": "Async::HTTP",
             "concurrency": 25,
             "processes": "1 proc",
-            "value": 164.95683812513377
+            "value": 33.47324239244492
           },
           {
             "workload": "Async::HTTP",
             "concurrency": 50,
             "processes": "1 proc",
-            "value": 206.23121741796996
+            "value": 33.600802407221664
           },
           {
             "workload": "Async::HTTP",
             "concurrency": 5,
             "processes": "2 proc",
-            "value": 32.96860133206469
+            "value": 7.829181494661914
           },
           {
             "workload": "Async::HTTP",
             "concurrency": 10,
             "processes": "2 proc",
-            "value": 77.94871794871796
+            "value": 16.25615763546798
           },
           {
             "workload": "Async::HTTP",
             "concurrency": 25,
             "processes": "2 proc",
-            "value": 150.91094707083397
+            "value": 34.4735435595938
           },
           {
             "workload": "Async::HTTP",
             "concurrency": 5,
             "processes": "6 proc",
-            "value": 21.614446673869438
+            "value": 9.104046242774572
           },
           {
             "workload": "Async::HTTP",
             "concurrency": 10,
             "processes": "6 proc",
-            "value": 46.263615826791025
+            "value": 12.867956265769548
           },
           {
             "workload": "RubyLLM Stream",
             "concurrency": 5,
             "processes": "1 proc",
-            "value": 134.01360544217687
+            "value": 12.57928118393234
           },
           {
             "workload": "RubyLLM Stream",
             "concurrency": 10,
             "processes": "1 proc",
-            "value": 207.09677419354838
+            "value": 18.11949069539667
           },
           {
             "workload": "RubyLLM Stream",
             "concurrency": 25,
             "processes": "1 proc",
-            "value": 249.375
+            "value": 20.01953125
           },
           {
             "workload": "RubyLLM Stream",
             "concurrency": 50,
             "processes": "1 proc",
-            "value": 264.1975308641976
+            "value": 20.723362658846533
           },
           {
             "workload": "RubyLLM Stream",
             "concurrency": 5,
             "processes": "2 proc",
-            "value": 116.91729323308269
+            "value": 14.324034334763958
           },
           {
             "workload": "RubyLLM Stream",
             "concurrency": 10,
             "processes": "2 proc",
-            "value": 206.83453237410072
+            "value": 19.773733398917862
           },
           {
             "workload": "RubyLLM Stream",
             "concurrency": 25,
             "processes": "2 proc",
-            "value": 295.3237410071943
+            "value": 10.675752413401467
           },
           {
             "workload": "RubyLLM Stream",
             "concurrency": 5,
             "processes": "6 proc",
-            "value": 51.53846153846153
+            "value": 9.542557180352453
           },
           {
             "workload": "RubyLLM Stream",
             "concurrency": 10,
             "processes": "6 proc",
-            "value": 226.3056092843327
+            "value": 11.67883211678832
           },
           {
             "workload": "CPU",
             "concurrency": 5,
             "processes": "1 proc",
-            "value": 13.526570048309186
+            "value": 2.051282051282051
           },
           {
             "workload": "CPU",
             "concurrency": 10,
             "processes": "1 proc",
-            "value": 10.648346930012883
+            "value": 3.316582914572862
           },
           {
             "workload": "CPU",
             "concurrency": 25,
             "processes": "1 proc",
-            "value": 9.291472210437002
+            "value": 3.718592964824124
           },
           {
             "workload": "CPU",
             "concurrency": 50,
             "processes": "1 proc",
-            "value": 8.207070707070702
+            "value": 3.8229376257545384
           },
           {
             "workload": "CPU",
             "concurrency": 5,
             "processes": "2 proc",
-            "value": 13.4646962233169
+            "value": 1.9597730789066587
           },
           {
             "workload": "CPU",
             "concurrency": 10,
             "processes": "2 proc",
-            "value": 9.082631459139545
+            "value": 2.5980641874681725
           },
           {
             "workload": "CPU",
             "concurrency": 25,
             "processes": "2 proc",
-            "value": 6.970935513169846
+            "value": 4.200819672131142
           },
           {
             "workload": "CPU",
             "concurrency": 5,
             "processes": "6 proc",
-            "value": 13.462990936555897
+            "value": 1.6043723554301872
           },
           {
             "workload": "CPU",
             "concurrency": 10,
             "processes": "6 proc",
-            "value": 8.49342770475227
+            "value": 1.5425065731814118
           }
         ]
       },
@@ -354,7 +354,7 @@
         "x": {
           "field": "value",
           "type": "quantitative",
-          "title": "Async::Job throughput advantage over Solid Queue fiber (%)",
+          "title": "Fiber CPU advantage over thread (%)",
           "scale": {
             "zero": true,
             "nice": true
@@ -407,34 +407,34 @@
         "values": [
           {
             "workload": "Sleep",
-            "min": 9.819018404907972,
-            "max": 228.6163902675221,
-            "average": 89.37450970358357,
-            "average_label": "avg +89.4%",
+            "min": 4.789719626168228,
+            "max": 36.656596173212485,
+            "average": 18.696226043077374,
+            "average_label": "avg +18.7%",
             "cells": 9
           },
           {
             "workload": "Async::HTTP",
-            "min": 21.614446673869438,
-            "max": 206.23121741796996,
-            "average": 90.3392959406782,
-            "average_label": "avg +90.3%",
+            "min": 7.389162561576354,
+            "max": 34.4735435595938,
+            "average": 18.995608790459176,
+            "average_label": "avg +19.0%",
             "cells": 9
           },
           {
             "workload": "RubyLLM Stream",
-            "min": 51.53846153846153,
-            "max": 295.3237410071943,
-            "average": 194.62250532634388,
-            "average_label": "avg +194.6%",
+            "min": 9.542557180352453,
+            "max": 20.723362658846533,
+            "average": 15.270730581377734,
+            "average_label": "avg +15.3%",
             "cells": 9
           },
           {
             "workload": "CPU",
-            "min": 6.970935513169846,
-            "max": 13.526570048309186,
-            "average": 10.349793525862692,
-            "average_label": "avg +10.3%",
+            "min": 1.5425065731814118,
+            "max": 4.200819672131142,
+            "average": 2.757214602616794,
+            "average_label": "avg +2.8%",
             "cells": 9
           }
         ]
@@ -450,7 +450,7 @@
         "x": {
           "field": "average",
           "type": "quantitative",
-          "title": "Async::Job throughput advantage over Solid Queue fiber (%)",
+          "title": "Fiber CPU advantage over thread (%)",
           "scale": {
             "zero": true,
             "nice": true
@@ -499,34 +499,34 @@
         "values": [
           {
             "workload": "Sleep",
-            "min": 9.819018404907972,
-            "max": 228.6163902675221,
-            "average": 89.37450970358357,
-            "average_label": "avg +89.4%",
+            "min": 4.789719626168228,
+            "max": 36.656596173212485,
+            "average": 18.696226043077374,
+            "average_label": "avg +18.7%",
             "cells": 9
           },
           {
             "workload": "Async::HTTP",
-            "min": 21.614446673869438,
-            "max": 206.23121741796996,
-            "average": 90.3392959406782,
-            "average_label": "avg +90.3%",
+            "min": 7.389162561576354,
+            "max": 34.4735435595938,
+            "average": 18.995608790459176,
+            "average_label": "avg +19.0%",
             "cells": 9
           },
           {
             "workload": "RubyLLM Stream",
-            "min": 51.53846153846153,
-            "max": 295.3237410071943,
-            "average": 194.62250532634388,
-            "average_label": "avg +194.6%",
+            "min": 9.542557180352453,
+            "max": 20.723362658846533,
+            "average": 15.270730581377734,
+            "average_label": "avg +15.3%",
             "cells": 9
           },
           {
             "workload": "CPU",
-            "min": 6.970935513169846,
-            "max": 13.526570048309186,
-            "average": 10.349793525862692,
-            "average_label": "avg +10.3%",
+            "min": 1.5425065731814118,
+            "max": 4.200819672131142,
+            "average": 2.757214602616794,
+            "average_label": "avg +2.8%",
             "cells": 9
           }
         ]
@@ -544,7 +544,7 @@
         "x": {
           "field": "average",
           "type": "quantitative",
-          "title": "Async::Job throughput advantage over Solid Queue fiber (%)",
+          "title": "Fiber CPU advantage over thread (%)",
           "scale": {
             "zero": true,
             "nice": true

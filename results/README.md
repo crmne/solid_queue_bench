@@ -12,8 +12,6 @@ Solid Queue commit under test: `305bf4018352e099019f9f24502a18ee4794e64e`
 
 ## Headline Charts
 
-- [Headline Solid Queue Fiber Vs Thread](charts/headline-solid-queue-fiber-vs-thread.svg)
-- [Headline Async Job Vs Solid Queue Fiber](charts/headline-async-job-vs-solid-queue-fiber.svg)
 
 ## Stress Charts
 
