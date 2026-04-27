@@ -146,7 +146,7 @@ namespace :sweep do
   def run_suite(backend:, workloads:, profile:)
     started_at = Time.now
     workloads.each { |workload| run_workload(backend:, workload:, profile:) }
-    finalize(backend:, workloads:, prune_stale: true, profile:, started_at:)
+    finalize(backend:, workloads:, prune_stale: prune_stale_results?(backend:, workloads:, profile:), profile:, started_at:)
   end
 
   def run_single_workload(backend:, workload:, profile:)
@@ -274,34 +274,42 @@ namespace :sweep do
 
     destination_dir = results_dir_for(backend, profile:)
     FileUtils.mkdir_p(destination_dir)
+    artifacts = fresh_artifacts_for(backend:, workloads:, profile:, started_at:)
+
     prune_stale_family_results!(destination_dir, keep_workloads: workloads) if prune_stale
 
-    workloads.each do |workload|
-      csv = latest_file(tmp_output_dir_for(backend, profile:), "sweep-#{backend_slug(backend)}-#{workload}-*.csv", since: started_at)
-      unless csv
-        warn "WARNING: no fresh CSV found for #{backend} #{workload} in #{tmp_output_dir_for(backend, profile:)}"
-        next
-      end
-
+    artifacts.each do |workload, artifact|
       base = workload.tr("_", "-")
-      FileUtils.cp(csv, File.join(destination_dir, "#{base}-data.csv"))
-
-      json = csv.sub(".csv", ".json")
-      if File.exist?(json)
-        FileUtils.cp(json, File.join(destination_dir, "#{base}-data.json"))
-      else
-        warn "WARNING: missing JSON companion for #{csv}"
-      end
+      FileUtils.cp(artifact.fetch(:csv), File.join(destination_dir, "#{base}-data.csv"))
+      FileUtils.cp(artifact.fetch(:json), File.join(destination_dir, "#{base}-data.json"))
 
       puts "\nGenerating charts for #{backend} #{workload}..."
       system("ruby", "bin/plot", File.join(destination_dir, "#{base}-data.csv"), "--output-dir", destination_dir) ||
         warn("WARNING: chart generation failed for #{backend} #{workload}")
     end
 
-    system("ruby", "bin/report") || warn("WARNING: report generation failed")
+    system("ruby", "bin/report") || raise("report generation failed")
     puts "\n#{"=" * 60}"
     puts "#{backend} results in #{destination_dir}"
     system("ls", "-lh", destination_dir)
+  end
+
+  def fresh_artifacts_for(backend:, workloads:, profile:, started_at:)
+    workloads.to_h do |workload|
+      dir = tmp_output_dir_for(backend, profile:)
+      csv = latest_file(dir, "sweep-#{backend_slug(backend)}-#{workload}-*.csv", since: started_at)
+
+      if csv
+        json = csv.sub(".csv", ".json")
+        if File.exist?(json)
+          [ workload, { csv:, json: } ]
+        else
+          raise "Missing JSON companion for #{csv}"
+        end
+      else
+        raise "No fresh CSV found for #{backend} #{workload} in #{dir}"
+      end
+    end
   end
 
   desc "Regenerate all plots and report from existing results"
@@ -358,18 +366,28 @@ namespace :sweep do
 
   def replot_report
     puts "\nRegenerating report..."
-    system("ruby", "bin/report")
+    system("ruby", "bin/report") || raise("report generation failed")
   end
 
   def prune_stale_family_results!(destination_dir, keep_workloads:)
     keep_slugs = keep_workloads.map { |workload| workload.tr("_", "-") }
-    stale_slugs = (PUBLISH_WORKLOADS + SYNTHETIC_WORKLOADS).map { |workload| workload.tr("_", "-") } - keep_slugs
+    stale_slugs = (PUBLISH_WORKLOADS + SYNTHETIC_WORKLOADS + DB_PRESSURE_WORKLOADS).map { |workload| workload.tr("_", "-") } - keep_slugs
 
     stale_slugs.each do |slug|
       Dir.glob(File.join(destination_dir, "#{slug}-*")).each do |path|
         FileUtils.rm_f(path)
       end
     end
+  end
+
+  def prune_stale_results?(backend:, workloads:, profile:)
+    profile == :full ||
+      profile == :stress ||
+      (backend == "async_job" && same_workloads?(workloads, HEADLINE_WORKLOADS))
+  end
+
+  def same_workloads?(left, right)
+    left.map(&:to_s).sort == right.map(&:to_s).sort
   end
 
   def backend_slug(backend)

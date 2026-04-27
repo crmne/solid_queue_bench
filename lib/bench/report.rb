@@ -40,6 +40,11 @@ module Bench
     SUPPLEMENTARY_WORKLOADS = CONTROL_WORKLOADS + DB_WORKLOADS
     PUBLIC_SOLID_QUEUE_WORKLOADS = HEADLINE_WORKLOADS + SUPPLEMENTARY_WORKLOADS
     STRESS_WORKLOADS = %w[sleep async_http ruby_llm_stream].freeze
+    PUBLIC_RESULT_WORKLOADS = {
+      "solid-queue" => PUBLIC_SOLID_QUEUE_WORKLOADS,
+      "async-job" => HEADLINE_WORKLOADS,
+      "solid-queue-stress" => STRESS_WORKLOADS
+    }.freeze
 
     FAMILY_SUMMARIES = {
       "solid-queue" => "Same backend, different executor. This is the direct Solid Queue thread-vs-fiber comparison.",
@@ -102,16 +107,19 @@ module Bench
     end
 
     def call
+      datasets = datasets_by_family
+      validate_public_datasets(datasets)
+
       FileUtils.mkdir_p(@charts_dir)
-      datasets_by_family.each do |family, datasets|
-        datasets.each { |dataset| write_workload_charts(dataset) }
-        write_family_readme(family, datasets)
+      datasets.each do |family, family_datasets|
+        family_datasets.each { |dataset| write_workload_charts(dataset) }
+        write_family_readme(family, family_datasets)
       end
-      headline_charts = write_headline_charts
-      stress_charts = write_stress_charts
-      narrative = write_narrative
-      write_root_readme(headline_charts:, stress_charts:, narrative:)
-      write_project_readme(headline_charts:, stress_charts:, narrative:)
+      headline_charts = write_headline_charts(datasets)
+      stress_charts = write_stress_charts(datasets)
+      narrative = write_narrative(datasets)
+      write_root_readme(datasets, headline_charts:, stress_charts:, narrative:)
+      write_project_readme(datasets, headline_charts:, stress_charts:, narrative:)
     end
 
     private
@@ -134,7 +142,7 @@ module Bench
       end
 
       def successful_rows
-        rows.select { |row| row["successful_jobs"].to_i.positive? }
+        rows.select { |row| successful_row?(row) }
       end
 
       def generated_at
@@ -158,8 +166,29 @@ module Bench
       end
 
       def completed_cells
-        rows.size
+        successful_rows.size
       end
+
+      def successful_row?(row)
+        row.fetch("jobs").to_i == row.fetch("successful_jobs").to_i &&
+          row.fetch("failed_jobs").to_i.zero?
+      end
+    end
+
+    def validate_public_datasets(datasets)
+      missing = PUBLIC_RESULT_WORKLOADS.flat_map do |family, workloads|
+        workloads.filter_map do |workload|
+          dataset = datasets.fetch(family).find { |candidate| candidate.workload == workload }
+
+          if dataset.nil?
+            "#{family}/#{workload}"
+          elsif dataset.successful_rows.empty?
+            "#{family}/#{workload} (no fully successful cells)"
+          end
+        end
+      end
+
+      raise "Cannot generate report; missing public result datasets: #{missing.join(', ')}" if missing.any?
     end
 
     def datasets_by_family
@@ -375,14 +404,14 @@ module Bench
       [ order.index(workload) || order.length, workload ]
     end
 
-    def write_root_readme(headline_charts:, stress_charts:, narrative:)
+    def write_root_readme(datasets, headline_charts:, stress_charts:, narrative:)
       lines = []
-      family_dirs = datasets_by_family.select { |_family, datasets| datasets.any? }.keys
+      family_dirs = datasets.select { |_family, family_datasets| family_datasets.any? }.keys
       lines << "# Benchmark Results"
       lines << ""
       lines << "Benchmark outputs live in the per-family directories below. The generated narrative is in #{relative_link(@results_root, narrative, 'narrative.md')}."
       lines << ""
-      revision = solid_queue_revision(datasets_by_family.values.flatten)
+      revision = solid_queue_revision(datasets.values.flatten)
       lines << "Solid Queue commit under test: `#{revision}`" if revision
       lines << ""
       lines << "| Family | What It Shows | Summary |"
@@ -403,24 +432,19 @@ module Bench
       File.write(File.join(@results_root, "README.md"), lines.join("\n") + "\n")
     end
 
-    def write_project_readme(headline_charts:, stress_charts:, narrative:)
+    def write_project_readme(datasets, headline_charts:, stress_charts:, narrative:)
       return unless project_root
 
       prompt_path = File.expand_path("readme_prompt.md", __dir__)
-      facts = public_report_facts(headline_charts:, stress_charts:, narrative:)
+      facts = public_report_facts(datasets, headline_charts:, stress_charts:, narrative:)
       readme = generate_markdown(prompt_path, facts) || deterministic_project_readme(facts)
       readme = readme.sub(/\A<!--.*?-->\s*/m, "")
       File.write(File.join(project_root, "README.md"), generated_file_header + readme.strip + "\n")
     end
 
-    def public_report_facts(headline_charts:, stress_charts:, narrative:)
-      datasets = datasets_by_family
+    def public_report_facts(datasets, headline_charts:, stress_charts:, narrative:)
       all_datasets = datasets.values.flatten
-      public_results = filtered_report_facts(
-        "solid-queue" => PUBLIC_SOLID_QUEUE_WORKLOADS,
-        "async-job" => HEADLINE_WORKLOADS,
-        "solid-queue-stress" => STRESS_WORKLOADS
-      )
+      public_results = filtered_report_facts(datasets, PUBLIC_RESULT_WORKLOADS)
 
       {
         title: "Solid Queue Bench",
@@ -455,7 +479,7 @@ module Bench
           async_job_results: "results/async-job/README.md",
           stress_results: "results/solid-queue-stress/README.md"
         },
-        setup: setup_facts,
+        setup: setup_facts(all_datasets),
         running: running_facts,
         caveats: caveats
       }
@@ -802,8 +826,8 @@ module Bench
       families
     end
 
-    def filtered_report_facts(workloads_by_family)
-      report_facts.each_with_object({}) do |(family, rows), filtered|
+    def filtered_report_facts(datasets, workloads_by_family)
+      report_facts(datasets).each_with_object({}) do |(family, rows), filtered|
         allowed = Array(workloads_by_family[family])
         filtered[family] = rows.select { |row| allowed.include?(row[:workload]) }
       end
@@ -813,7 +837,7 @@ module Bench
       datasets.sort_by { |dataset| workload_sort_key(dataset.workload) }.map do |dataset|
         planned_per_mode = Array(dataset.data["concurrencies"]).size * Array(dataset.data["processes"]).size
         modes = Array(dataset.data["modes"]).to_h do |mode|
-          completed = dataset.rows.count { |row| row["mode"] == mode }
+          completed = dataset.successful_rows.count { |row| row["mode"] == mode }
           [ mode, { completed:, planned: planned_per_mode } ]
         end
         { workload: dataset.workload, label: label_for_workload(dataset.workload), modes: }
@@ -857,10 +881,10 @@ module Bench
       }
     end
 
-    def setup_facts
+    def setup_facts(datasets)
       {
         requirements: [
-          ruby_requirement,
+          ruby_requirement(datasets),
           "PostgreSQL",
           "Redis, either local on 127.0.0.1:6379 or auto-started through Docker for Async::Job"
         ],
@@ -888,13 +912,13 @@ module Bench
       ]
     end
 
-    def ruby_requirement
+    def ruby_requirement(datasets)
       version_path = project_root && File.join(project_root, ".ruby-version")
       version =
         if version_path && File.exist?(version_path)
           File.read(version_path).strip
         else
-          shared_dataset_value(datasets_by_family.values.flatten, "ruby_version")
+          shared_dataset_value(datasets, "ruby_version")
         end
 
       version && !version.empty? ? "Ruby #{version}" : "Ruby 4.0+"
@@ -1175,8 +1199,7 @@ module Bench
       }
     end
 
-    def write_headline_charts
-      datasets = datasets_by_family
+    def write_headline_charts(datasets)
       solid_queue = datasets.fetch("solid-queue")
       async_job = datasets.fetch("async-job")
       HEADLINE_CHART_SPECS.filter_map do |spec|
@@ -1336,8 +1359,8 @@ module Bench
       HEADLINE_WORKLOADS.map { |workload| label_for_workload(workload) }
     end
 
-    def write_stress_charts
-      stress = datasets_by_family.fetch("solid-queue-stress")
+    def write_stress_charts(datasets)
+      stress = datasets.fetch("solid-queue-stress")
       return [] if stress.empty?
 
       [ write_chart("stress-cell-status", stress_status_spec(stress)) ].compact
@@ -1348,7 +1371,7 @@ module Bench
         concurrencies = Array(dataset.data["concurrencies"])
         processes = Array(dataset.data["processes"])
         modes = Array(dataset.data["modes"])
-        completed = dataset.rows.to_h { |row| [ [ row["mode"], row["concurrency"], row["processes"] ], true ] }
+        completed = dataset.successful_rows.to_h { |row| [ [ row["mode"], row["concurrency"], row["processes"] ], true ] }
 
         modes.flat_map do |mode|
           processes.flat_map do |process|
@@ -1537,18 +1560,18 @@ module Bench
       ENV.fetch("PATH", "").split(File::PATH_SEPARATOR).any? { |dir| File.executable?(File.join(dir, name)) }
     end
 
-    def write_narrative
+    def write_narrative(datasets)
       path = File.join(@results_root, "narrative.md")
       prompt_path = File.expand_path("report_prompt.md", __dir__)
-      summary = public_report_facts(headline_charts: [], stress_charts: [], narrative: path)
+      summary = public_report_facts(datasets, headline_charts: [], stress_charts: [], narrative: path)
       narrative = generate_markdown(prompt_path, summary) || deterministic_narrative(summary)
       File.write(path, narrative.strip + "\n")
       path
     end
 
-    def report_facts
-      datasets_by_family.transform_values do |datasets|
-        datasets.map do |dataset|
+    def report_facts(datasets)
+      datasets.transform_values do |family_datasets|
+        family_datasets.map do |dataset|
           summary = dataset_summary(dataset)
           {
             workload: dataset.workload,
@@ -1574,7 +1597,7 @@ module Bench
     end
 
     def generate_markdown(prompt_path, facts)
-      return unless ENV["OPENAI_API_KEY"]
+      return if ENV["OPENAI_API_KEY"].to_s.empty?
 
       begin
         configure_ruby_llm
