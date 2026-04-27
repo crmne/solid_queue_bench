@@ -1,0 +1,1062 @@
+{
+  "generated_at": "2026-04-24T15:31:45Z",
+  "ruby_version": "4.0.2",
+  "isolation_level": "fiber",
+  "backend": "solid_queue",
+  "workload": "sleep",
+  "payload": {
+    "duration_ms": 50
+  },
+  "jobs_per_cell": 1000,
+  "concurrencies": [
+    5,
+    10,
+    25,
+    50,
+    100
+  ],
+  "processes": [
+    1,
+    2,
+    6
+  ],
+  "modes": [
+    "thread",
+    "fiber"
+  ],
+  "repeat": 3,
+  "db_pool": null,
+  "max_total_concurrency": 60,
+  "planned_cells": 18,
+  "successful_cells": 18,
+  "failed_cells": 0,
+  "results": [
+    {
+      "backend": "solid_queue",
+      "mode": "thread",
+      "workload": "sleep",
+      "jobs": 1000,
+      "concurrency": 5,
+      "processes": 1,
+      "db_pool": 10,
+      "completed_jobs": 1000,
+      "successful_jobs": 1000,
+      "finished_jobs": 1000,
+      "failed_jobs": 0,
+      "child_jobs_enqueued": 0,
+      "child_jobs_finished": 0,
+      "child_jobs_failed": 0,
+      "benchmark_finished_at": "2026-04-24 15:25:03 UTC",
+      "wall_time_s": 13.843,
+      "enqueue_time_s": 0.245,
+      "drain_time_s": 13.598,
+      "execution_window_s": 13.554,
+      "jobs_per_second": 72.24,
+      "finished_jobs_per_second": 72.24,
+      "drain_jobs_per_second": 73.54,
+      "execution_jobs_per_second": 73.78,
+      "peak_rss_kb": 137156,
+      "avg_rss_kb": 135817,
+      "avg_cpu_pct": 38.8,
+      "peak_cpu_pct": 69.0,
+      "queue_delay_ms": {
+        "p50": 7026.11,
+        "p95": 13112.26,
+        "p99": 13653.82,
+        "max": 13787.65
+      },
+      "service_time_ms": {
+        "p50": 50.08,
+        "p95": 50.35,
+        "p99": 50.6,
+        "max": 55.16
+      },
+      "total_latency_ms": {
+        "p50": 7076.44,
+        "p95": 13162.34,
+        "p99": 13703.89,
+        "max": 13837.73
+      },
+      "repeat_jobs_per_second_values": [
+        72.22,
+        72.24,
+        72.3
+      ],
+      "repeat_successful_jobs_values": [
+        1000,
+        1000,
+        1000
+      ]
+    },
+    {
+      "backend": "solid_queue",
+      "mode": "thread",
+      "workload": "sleep",
+      "jobs": 1000,
+      "concurrency": 10,
+      "processes": 1,
+      "db_pool": 15,
+      "completed_jobs": 1000,
+      "successful_jobs": 1000,
+      "finished_jobs": 1000,
+      "failed_jobs": 0,
+      "child_jobs_enqueued": 0,
+      "child_jobs_finished": 0,
+      "child_jobs_failed": 0,
+      "benchmark_finished_at": "2026-04-24 15:25:15 UTC",
+      "wall_time_s": 9.889,
+      "enqueue_time_s": 0.248,
+      "drain_time_s": 9.641,
+      "execution_window_s": 9.571,
+      "jobs_per_second": 101.12,
+      "finished_jobs_per_second": 101.12,
+      "drain_jobs_per_second": 103.72,
+      "execution_jobs_per_second": 104.48,
+      "peak_rss_kb": 139496,
+      "avg_rss_kb": 137694,
+      "avg_cpu_pct": 57.4,
+      "peak_cpu_pct": 89.2,
+      "queue_delay_ms": {
+        "p50": 5068.52,
+        "p95": 9309.9,
+        "p99": 9735.26,
+        "max": 9833.55
+      },
+      "service_time_ms": {
+        "p50": 50.08,
+        "p95": 50.49,
+        "p99": 51.02,
+        "max": 67.02
+      },
+      "total_latency_ms": {
+        "p50": 5118.6,
+        "p95": 9360.11,
+        "p99": 9785.34,
+        "max": 9883.63
+      },
+      "repeat_jobs_per_second_values": [
+        100.37,
+        101.12,
+        101.37
+      ],
+      "repeat_successful_jobs_values": [
+        1000,
+        1000,
+        1000
+      ]
+    },
+    {
+      "backend": "solid_queue",
+      "mode": "thread",
+      "workload": "sleep",
+      "jobs": 1000,
+      "concurrency": 25,
+      "processes": 1,
+      "db_pool": 30,
+      "completed_jobs": 1000,
+      "successful_jobs": 1000,
+      "finished_jobs": 1000,
+      "failed_jobs": 0,
+      "child_jobs_enqueued": 0,
+      "child_jobs_finished": 0,
+      "child_jobs_failed": 0,
+      "benchmark_finished_at": "2026-04-24 15:26:04 UTC",
+      "wall_time_s": 6.054,
+      "enqueue_time_s": 0.243,
+      "drain_time_s": 5.811,
+      "execution_window_s": 5.664,
+      "jobs_per_second": 165.18,
+      "finished_jobs_per_second": 165.18,
+      "drain_jobs_per_second": 172.09,
+      "execution_jobs_per_second": 176.55,
+      "peak_rss_kb": 144576,
+      "avg_rss_kb": 140334,
+      "avg_cpu_pct": 93.4,
+      "peak_cpu_pct": 109.3,
+      "queue_delay_ms": {
+        "p50": 3216.44,
+        "p95": 5697.83,
+        "p99": 5957.16,
+        "max": 5997.38
+      },
+      "service_time_ms": {
+        "p50": 50.26,
+        "p95": 50.99,
+        "p99": 51.6,
+        "max": 57.47
+      },
+      "total_latency_ms": {
+        "p50": 3267.14,
+        "p95": 5748.04,
+        "p99": 6007.67,
+        "max": 6047.91
+      },
+      "repeat_jobs_per_second_values": [
+        158.06,
+        165.18,
+        165.84
+      ],
+      "repeat_successful_jobs_values": [
+        1000,
+        1000,
+        1000
+      ]
+    },
+    {
+      "backend": "solid_queue",
+      "mode": "thread",
+      "workload": "sleep",
+      "jobs": 1000,
+      "concurrency": 50,
+      "processes": 1,
+      "db_pool": 55,
+      "completed_jobs": 1000,
+      "successful_jobs": 1000,
+      "finished_jobs": 1000,
+      "failed_jobs": 0,
+      "child_jobs_enqueued": 0,
+      "child_jobs_finished": 0,
+      "child_jobs_failed": 0,
+      "benchmark_finished_at": "2026-04-24 15:26:19 UTC",
+      "wall_time_s": 5.718,
+      "enqueue_time_s": 0.283,
+      "drain_time_s": 5.435,
+      "execution_window_s": 5.212,
+      "jobs_per_second": 174.89,
+      "finished_jobs_per_second": 174.89,
+      "drain_jobs_per_second": 184.01,
+      "execution_jobs_per_second": 191.86,
+      "peak_rss_kb": 141252,
+      "avg_rss_kb": 137187,
+      "avg_cpu_pct": 98.1,
+      "peak_cpu_pct": 119.1,
+      "queue_delay_ms": {
+        "p50": 2971.96,
+        "p95": 5350.07,
+        "p99": 5640.45,
+        "max": 5662.19
+      },
+      "service_time_ms": {
+        "p50": 50.32,
+        "p95": 51.55,
+        "p99": 52.55,
+        "max": 55.31
+      },
+      "total_latency_ms": {
+        "p50": 3022.11,
+        "p95": 5400.23,
+        "p99": 5690.62,
+        "max": 5712.44
+      },
+      "repeat_jobs_per_second_values": [
+        174.21,
+        174.89,
+        176.37
+      ],
+      "repeat_successful_jobs_values": [
+        1000,
+        1000,
+        1000
+      ]
+    },
+    {
+      "backend": "solid_queue",
+      "mode": "thread",
+      "workload": "sleep",
+      "jobs": 1000,
+      "concurrency": 5,
+      "processes": 2,
+      "db_pool": 10,
+      "completed_jobs": 1000,
+      "successful_jobs": 1000,
+      "finished_jobs": 1000,
+      "failed_jobs": 0,
+      "child_jobs_enqueued": 0,
+      "child_jobs_finished": 0,
+      "child_jobs_failed": 0,
+      "benchmark_finished_at": "2026-04-24 15:26:37 UTC",
+      "wall_time_s": 7.648,
+      "enqueue_time_s": 0.268,
+      "drain_time_s": 7.38,
+      "execution_window_s": 7.335,
+      "jobs_per_second": 130.75,
+      "finished_jobs_per_second": 130.75,
+      "drain_jobs_per_second": 135.5,
+      "execution_jobs_per_second": 136.33,
+      "peak_rss_kb": 273140,
+      "avg_rss_kb": 268945,
+      "avg_cpu_pct": 80.2,
+      "peak_cpu_pct": 129.0,
+      "queue_delay_ms": {
+        "p50": 3991.84,
+        "p95": 7219.5,
+        "p99": 7517.69,
+        "max": 7592.45
+      },
+      "service_time_ms": {
+        "p50": 50.08,
+        "p95": 50.44,
+        "p99": 50.88,
+        "max": 58.85
+      },
+      "total_latency_ms": {
+        "p50": 4042.04,
+        "p95": 7269.67,
+        "p99": 7567.77,
+        "max": 7642.53
+      },
+      "repeat_jobs_per_second_values": [
+        130.26,
+        130.75,
+        130.9
+      ],
+      "repeat_successful_jobs_values": [
+        1000,
+        1000,
+        1000
+      ]
+    },
+    {
+      "backend": "solid_queue",
+      "mode": "thread",
+      "workload": "sleep",
+      "jobs": 1000,
+      "concurrency": 10,
+      "processes": 2,
+      "db_pool": 15,
+      "completed_jobs": 1000,
+      "successful_jobs": 1000,
+      "finished_jobs": 1000,
+      "failed_jobs": 0,
+      "child_jobs_enqueued": 0,
+      "child_jobs_finished": 0,
+      "child_jobs_failed": 0,
+      "benchmark_finished_at": "2026-04-24 15:27:10 UTC",
+      "wall_time_s": 5.35,
+      "enqueue_time_s": 0.252,
+      "drain_time_s": 5.098,
+      "execution_window_s": 5.022,
+      "jobs_per_second": 186.93,
+      "finished_jobs_per_second": 186.93,
+      "drain_jobs_per_second": 196.16,
+      "execution_jobs_per_second": 199.12,
+      "peak_rss_kb": 276452,
+      "avg_rss_kb": 270943,
+      "avg_cpu_pct": 115.7,
+      "peak_cpu_pct": 178.0,
+      "queue_delay_ms": {
+        "p50": 2818.34,
+        "p95": 5061.32,
+        "p99": 5273.13,
+        "max": 5294.37
+      },
+      "service_time_ms": {
+        "p50": 50.08,
+        "p95": 50.59,
+        "p99": 51.93,
+        "max": 67.39
+      },
+      "total_latency_ms": {
+        "p50": 2868.42,
+        "p95": 5111.45,
+        "p99": 5323.21,
+        "max": 5344.46
+      },
+      "repeat_jobs_per_second_values": [
+        186.9,
+        186.93,
+        187.47
+      ],
+      "repeat_successful_jobs_values": [
+        1000,
+        1000,
+        1000
+      ]
+    },
+    {
+      "backend": "solid_queue",
+      "mode": "thread",
+      "workload": "sleep",
+      "jobs": 1000,
+      "concurrency": 25,
+      "processes": 2,
+      "db_pool": 30,
+      "completed_jobs": 1000,
+      "successful_jobs": 1000,
+      "finished_jobs": 1000,
+      "failed_jobs": 0,
+      "child_jobs_enqueued": 0,
+      "child_jobs_finished": 0,
+      "child_jobs_failed": 0,
+      "benchmark_finished_at": "2026-04-24 15:27:35 UTC",
+      "wall_time_s": 3.484,
+      "enqueue_time_s": 0.239,
+      "drain_time_s": 3.245,
+      "execution_window_s": 3.119,
+      "jobs_per_second": 286.99,
+      "finished_jobs_per_second": 286.99,
+      "drain_jobs_per_second": 308.17,
+      "execution_jobs_per_second": 320.63,
+      "peak_rss_kb": 286636,
+      "avg_rss_kb": 275081,
+      "avg_cpu_pct": 176.4,
+      "peak_cpu_pct": 208.5,
+      "queue_delay_ms": {
+        "p50": 1900.42,
+        "p95": 3273.6,
+        "p99": 3336.95,
+        "max": 3428.86
+      },
+      "service_time_ms": {
+        "p50": 50.25,
+        "p95": 50.93,
+        "p99": 51.54,
+        "max": 69.23
+      },
+      "total_latency_ms": {
+        "p50": 1950.5,
+        "p95": 3323.84,
+        "p99": 3387.61,
+        "max": 3478.95
+      },
+      "repeat_jobs_per_second_values": [
+        284.25,
+        286.99,
+        287.3
+      ],
+      "repeat_successful_jobs_values": [
+        1000,
+        1000,
+        1000
+      ]
+    },
+    {
+      "backend": "solid_queue",
+      "mode": "thread",
+      "workload": "sleep",
+      "jobs": 1000,
+      "concurrency": 5,
+      "processes": 6,
+      "db_pool": 10,
+      "completed_jobs": 1000,
+      "successful_jobs": 1000,
+      "finished_jobs": 1000,
+      "failed_jobs": 0,
+      "child_jobs_enqueued": 0,
+      "child_jobs_finished": 0,
+      "child_jobs_failed": 0,
+      "benchmark_finished_at": "2026-04-24 15:27:40 UTC",
+      "wall_time_s": 2.954,
+      "enqueue_time_s": 0.263,
+      "drain_time_s": 2.691,
+      "execution_window_s": 2.635,
+      "jobs_per_second": 338.54,
+      "finished_jobs_per_second": 338.54,
+      "drain_jobs_per_second": 371.56,
+      "execution_jobs_per_second": 379.55,
+      "peak_rss_kb": 814744,
+      "avg_rss_kb": 785819,
+      "avg_cpu_pct": 262.4,
+      "peak_cpu_pct": 444.6,
+      "queue_delay_ms": {
+        "p50": 1638.36,
+        "p95": 2759.64,
+        "p99": 2878.48,
+        "max": 2897.34
+      },
+      "service_time_ms": {
+        "p50": 50.09,
+        "p95": 50.65,
+        "p99": 53.05,
+        "max": 65.07
+      },
+      "total_latency_ms": {
+        "p50": 1688.69,
+        "p95": 2809.73,
+        "p99": 2928.58,
+        "max": 2947.43
+      },
+      "repeat_jobs_per_second_values": [
+        330.97,
+        338.54,
+        341.49
+      ],
+      "repeat_successful_jobs_values": [
+        1000,
+        1000,
+        1000
+      ]
+    },
+    {
+      "backend": "solid_queue",
+      "mode": "thread",
+      "workload": "sleep",
+      "jobs": 1000,
+      "concurrency": 10,
+      "processes": 6,
+      "db_pool": 15,
+      "completed_jobs": 1000,
+      "successful_jobs": 1000,
+      "finished_jobs": 1000,
+      "failed_jobs": 0,
+      "child_jobs_enqueued": 0,
+      "child_jobs_finished": 0,
+      "child_jobs_failed": 0,
+      "benchmark_finished_at": "2026-04-24 15:27:54 UTC",
+      "wall_time_s": 2.155,
+      "enqueue_time_s": 0.25,
+      "drain_time_s": 1.905,
+      "execution_window_s": 1.804,
+      "jobs_per_second": 464.07,
+      "finished_jobs_per_second": 464.07,
+      "drain_jobs_per_second": 525.0,
+      "execution_jobs_per_second": 554.19,
+      "peak_rss_kb": 826144,
+      "avg_rss_kb": 787153,
+      "avg_cpu_pct": 343.9,
+      "peak_cpu_pct": 444.7,
+      "queue_delay_ms": {
+        "p50": 1243.85,
+        "p95": 2018.3,
+        "p99": 2094.97,
+        "max": 2099.59
+      },
+      "service_time_ms": {
+        "p50": 50.09,
+        "p95": 50.64,
+        "p99": 52.33,
+        "max": 71.43
+      },
+      "total_latency_ms": {
+        "p50": 1293.93,
+        "p95": 2068.39,
+        "p99": 2145.35,
+        "max": 2149.67
+      },
+      "repeat_jobs_per_second_values": [
+        461.84,
+        464.07,
+        474.26
+      ],
+      "repeat_successful_jobs_values": [
+        1000,
+        1000,
+        1000
+      ]
+    },
+    {
+      "backend": "solid_queue",
+      "mode": "fiber",
+      "workload": "sleep",
+      "jobs": 1000,
+      "concurrency": 5,
+      "processes": 1,
+      "db_pool": 5,
+      "completed_jobs": 1000,
+      "successful_jobs": 1000,
+      "finished_jobs": 1000,
+      "failed_jobs": 0,
+      "child_jobs_enqueued": 0,
+      "child_jobs_finished": 0,
+      "child_jobs_failed": 0,
+      "benchmark_finished_at": "2026-04-24 15:28:36 UTC",
+      "wall_time_s": 14.792,
+      "enqueue_time_s": 0.239,
+      "drain_time_s": 14.554,
+      "execution_window_s": 14.535,
+      "jobs_per_second": 67.6,
+      "finished_jobs_per_second": 67.6,
+      "drain_jobs_per_second": 68.71,
+      "execution_jobs_per_second": 68.8,
+      "peak_rss_kb": 138304,
+      "avg_rss_kb": 137030,
+      "avg_cpu_pct": 36.5,
+      "peak_cpu_pct": 79.3,
+      "queue_delay_ms": {
+        "p50": 7514.24,
+        "p95": 14007.92,
+        "p99": 14593.59,
+        "max": 14736.69
+      },
+      "service_time_ms": {
+        "p50": 50.07,
+        "p95": 50.91,
+        "p99": 51.46,
+        "max": 54.64
+      },
+      "total_latency_ms": {
+        "p50": 7564.88,
+        "p95": 14057.95,
+        "p99": 14643.62,
+        "max": 14787.05
+      },
+      "repeat_jobs_per_second_values": [
+        67.42,
+        67.6,
+        67.64
+      ],
+      "repeat_successful_jobs_values": [
+        1000,
+        1000,
+        1000
+      ]
+    },
+    {
+      "backend": "solid_queue",
+      "mode": "fiber",
+      "workload": "sleep",
+      "jobs": 1000,
+      "concurrency": 10,
+      "processes": 1,
+      "db_pool": 5,
+      "completed_jobs": 1000,
+      "successful_jobs": 1000,
+      "finished_jobs": 1000,
+      "failed_jobs": 0,
+      "child_jobs_enqueued": 0,
+      "child_jobs_finished": 0,
+      "child_jobs_failed": 0,
+      "benchmark_finished_at": "2026-04-24 15:29:04 UTC",
+      "wall_time_s": 9.232,
+      "enqueue_time_s": 0.232,
+      "drain_time_s": 9.001,
+      "execution_window_s": 8.967,
+      "jobs_per_second": 108.31,
+      "finished_jobs_per_second": 108.31,
+      "drain_jobs_per_second": 111.1,
+      "execution_jobs_per_second": 111.52,
+      "peak_rss_kb": 137376,
+      "avg_rss_kb": 135740,
+      "avg_cpu_pct": 54.3,
+      "peak_cpu_pct": 79.3,
+      "queue_delay_ms": {
+        "p50": 4717.78,
+        "p95": 8728.64,
+        "p99": 9104.16,
+        "max": 9177.18
+      },
+      "service_time_ms": {
+        "p50": 50.04,
+        "p95": 50.64,
+        "p99": 51.23,
+        "max": 52.06
+      },
+      "total_latency_ms": {
+        "p50": 4767.81,
+        "p95": 8778.68,
+        "p99": 9154.18,
+        "max": 9227.21
+      },
+      "repeat_jobs_per_second_values": [
+        107.37,
+        108.31,
+        109.17
+      ],
+      "repeat_successful_jobs_values": [
+        1000,
+        1000,
+        1000
+      ]
+    },
+    {
+      "backend": "solid_queue",
+      "mode": "fiber",
+      "workload": "sleep",
+      "jobs": 1000,
+      "concurrency": 25,
+      "processes": 1,
+      "db_pool": 5,
+      "completed_jobs": 1000,
+      "successful_jobs": 1000,
+      "finished_jobs": 1000,
+      "failed_jobs": 0,
+      "child_jobs_enqueued": 0,
+      "child_jobs_finished": 0,
+      "child_jobs_failed": 0,
+      "benchmark_finished_at": "2026-04-24 15:29:52 UTC",
+      "wall_time_s": 5.883,
+      "enqueue_time_s": 0.243,
+      "drain_time_s": 5.64,
+      "execution_window_s": 5.602,
+      "jobs_per_second": 169.97,
+      "finished_jobs_per_second": 169.97,
+      "drain_jobs_per_second": 177.3,
+      "execution_jobs_per_second": 178.5,
+      "peak_rss_kb": 139024,
+      "avg_rss_kb": 136797,
+      "avg_cpu_pct": 72.9,
+      "peak_cpu_pct": 89.4,
+      "queue_delay_ms": {
+        "p50": 2989.87,
+        "p95": 5610.6,
+        "p99": 5786.69,
+        "max": 5827.25
+      },
+      "service_time_ms": {
+        "p50": 50.09,
+        "p95": 50.56,
+        "p99": 51.36,
+        "max": 59.95
+      },
+      "total_latency_ms": {
+        "p50": 3039.89,
+        "p95": 5660.86,
+        "p99": 5836.71,
+        "max": 5877.54
+      },
+      "repeat_jobs_per_second_values": [
+        169.7,
+        169.97,
+        174.26
+      ],
+      "repeat_successful_jobs_values": [
+        1000,
+        1000,
+        1000
+      ]
+    },
+    {
+      "backend": "solid_queue",
+      "mode": "fiber",
+      "workload": "sleep",
+      "jobs": 1000,
+      "concurrency": 50,
+      "processes": 1,
+      "db_pool": 5,
+      "completed_jobs": 1000,
+      "successful_jobs": 1000,
+      "finished_jobs": 1000,
+      "failed_jobs": 0,
+      "child_jobs_enqueued": 0,
+      "child_jobs_finished": 0,
+      "child_jobs_failed": 0,
+      "benchmark_finished_at": "2026-04-24 15:30:05 UTC",
+      "wall_time_s": 4.748,
+      "enqueue_time_s": 0.234,
+      "drain_time_s": 4.514,
+      "execution_window_s": 4.481,
+      "jobs_per_second": 210.61,
+      "finished_jobs_per_second": 210.61,
+      "drain_jobs_per_second": 221.53,
+      "execution_jobs_per_second": 223.18,
+      "peak_rss_kb": 139880,
+      "avg_rss_kb": 137344,
+      "avg_cpu_pct": 80.7,
+      "peak_cpu_pct": 109.0,
+      "queue_delay_ms": {
+        "p50": 2422.32,
+        "p95": 4469.64,
+        "p99": 4687.76,
+        "max": 4691.92
+      },
+      "service_time_ms": {
+        "p50": 50.12,
+        "p95": 50.51,
+        "p99": 50.88,
+        "max": 51.8
+      },
+      "total_latency_ms": {
+        "p50": 2472.57,
+        "p95": 4519.76,
+        "p99": 4737.78,
+        "max": 4742.54
+      },
+      "repeat_jobs_per_second_values": [
+        205.88,
+        210.61,
+        211.2
+      ],
+      "repeat_successful_jobs_values": [
+        1000,
+        1000,
+        1000
+      ]
+    },
+    {
+      "backend": "solid_queue",
+      "mode": "fiber",
+      "workload": "sleep",
+      "jobs": 1000,
+      "concurrency": 5,
+      "processes": 2,
+      "db_pool": 6,
+      "completed_jobs": 1000,
+      "successful_jobs": 1000,
+      "finished_jobs": 1000,
+      "failed_jobs": 0,
+      "child_jobs_enqueued": 0,
+      "child_jobs_finished": 0,
+      "child_jobs_failed": 0,
+      "benchmark_finished_at": "2026-04-24 15:30:32 UTC",
+      "wall_time_s": 7.749,
+      "enqueue_time_s": 0.239,
+      "drain_time_s": 7.51,
+      "execution_window_s": 7.488,
+      "jobs_per_second": 129.05,
+      "finished_jobs_per_second": 129.05,
+      "drain_jobs_per_second": 133.16,
+      "execution_jobs_per_second": 133.55,
+      "peak_rss_kb": 274476,
+      "avg_rss_kb": 269866,
+      "avg_cpu_pct": 75.5,
+      "peak_cpu_pct": 118.9,
+      "queue_delay_ms": {
+        "p50": 3982.42,
+        "p95": 7331.01,
+        "p99": 7622.18,
+        "max": 7693.57
+      },
+      "service_time_ms": {
+        "p50": 50.07,
+        "p95": 50.74,
+        "p99": 51.38,
+        "max": 67.94
+      },
+      "total_latency_ms": {
+        "p50": 4032.62,
+        "p95": 7381.05,
+        "p99": 7672.26,
+        "max": 7743.62
+      },
+      "repeat_jobs_per_second_values": [
+        128.59,
+        129.05,
+        129.61
+      ],
+      "repeat_successful_jobs_values": [
+        1000,
+        1000,
+        1000
+      ]
+    },
+    {
+      "backend": "solid_queue",
+      "mode": "fiber",
+      "workload": "sleep",
+      "jobs": 1000,
+      "concurrency": 10,
+      "processes": 2,
+      "db_pool": 6,
+      "completed_jobs": 1000,
+      "successful_jobs": 1000,
+      "finished_jobs": 1000,
+      "failed_jobs": 0,
+      "child_jobs_enqueued": 0,
+      "child_jobs_finished": 0,
+      "child_jobs_failed": 0,
+      "benchmark_finished_at": "2026-04-24 15:30:56 UTC",
+      "wall_time_s": 4.89,
+      "enqueue_time_s": 0.242,
+      "drain_time_s": 4.648,
+      "execution_window_s": 4.621,
+      "jobs_per_second": 204.49,
+      "finished_jobs_per_second": 204.49,
+      "drain_jobs_per_second": 215.15,
+      "execution_jobs_per_second": 216.41,
+      "peak_rss_kb": 272448,
+      "avg_rss_kb": 267671,
+      "avg_cpu_pct": 114.5,
+      "peak_cpu_pct": 158.3,
+      "queue_delay_ms": {
+        "p50": 2639.12,
+        "p95": 4600.0,
+        "p99": 4772.38,
+        "max": 4834.69
+      },
+      "service_time_ms": {
+        "p50": 50.05,
+        "p95": 50.74,
+        "p99": 51.35,
+        "max": 65.0
+      },
+      "total_latency_ms": {
+        "p50": 2689.33,
+        "p95": 4650.32,
+        "p99": 4822.42,
+        "max": 4884.71
+      },
+      "repeat_jobs_per_second_values": [
+        202.87,
+        204.49,
+        205.42
+      ],
+      "repeat_successful_jobs_values": [
+        1000,
+        1000,
+        1000
+      ]
+    },
+    {
+      "backend": "solid_queue",
+      "mode": "fiber",
+      "workload": "sleep",
+      "jobs": 1000,
+      "concurrency": 25,
+      "processes": 2,
+      "db_pool": 6,
+      "completed_jobs": 1000,
+      "successful_jobs": 1000,
+      "finished_jobs": 1000,
+      "failed_jobs": 0,
+      "child_jobs_enqueued": 0,
+      "child_jobs_finished": 0,
+      "child_jobs_failed": 0,
+      "benchmark_finished_at": "2026-04-24 15:31:08 UTC",
+      "wall_time_s": 3.09,
+      "enqueue_time_s": 0.232,
+      "drain_time_s": 2.858,
+      "execution_window_s": 2.83,
+      "jobs_per_second": 323.65,
+      "finished_jobs_per_second": 323.65,
+      "drain_jobs_per_second": 349.96,
+      "execution_jobs_per_second": 353.31,
+      "peak_rss_kb": 274268,
+      "avg_rss_kb": 267031,
+      "avg_cpu_pct": 153.2,
+      "peak_cpu_pct": 188.2,
+      "queue_delay_ms": {
+        "p50": 1617.29,
+        "p95": 2863.59,
+        "p99": 2983.21,
+        "max": 3034.42
+      },
+      "service_time_ms": {
+        "p50": 50.13,
+        "p95": 50.71,
+        "p99": 51.32,
+        "max": 63.5
+      },
+      "total_latency_ms": {
+        "p50": 1667.49,
+        "p95": 2913.65,
+        "p99": 3033.25,
+        "max": 3084.46
+      },
+      "repeat_jobs_per_second_values": [
+        322.52,
+        323.65,
+        323.68
+      ],
+      "repeat_successful_jobs_values": [
+        1000,
+        1000,
+        1000
+      ]
+    },
+    {
+      "backend": "solid_queue",
+      "mode": "fiber",
+      "workload": "sleep",
+      "jobs": 1000,
+      "concurrency": 5,
+      "processes": 6,
+      "db_pool": 10,
+      "completed_jobs": 1000,
+      "successful_jobs": 1000,
+      "finished_jobs": 1000,
+      "failed_jobs": 0,
+      "child_jobs_enqueued": 0,
+      "child_jobs_finished": 0,
+      "child_jobs_failed": 0,
+      "benchmark_finished_at": "2026-04-24 15:31:28 UTC",
+      "wall_time_s": 3.007,
+      "enqueue_time_s": 0.263,
+      "drain_time_s": 2.744,
+      "execution_window_s": 2.713,
+      "jobs_per_second": 332.61,
+      "finished_jobs_per_second": 332.61,
+      "drain_jobs_per_second": 364.48,
+      "execution_jobs_per_second": 368.53,
+      "peak_rss_kb": 813472,
+      "avg_rss_kb": 783956,
+      "avg_cpu_pct": 244.9,
+      "peak_cpu_pct": 355.7,
+      "queue_delay_ms": {
+        "p50": 1647.09,
+        "p95": 2816.59,
+        "p99": 2924.68,
+        "max": 2951.06
+      },
+      "service_time_ms": {
+        "p50": 50.06,
+        "p95": 51.01,
+        "p99": 55.14,
+        "max": 72.71
+      },
+      "total_latency_ms": {
+        "p50": 1697.13,
+        "p95": 2866.87,
+        "p99": 2974.72,
+        "max": 3001.11
+      },
+      "repeat_jobs_per_second_values": [
+        326.06,
+        332.61,
+        334.05
+      ],
+      "repeat_successful_jobs_values": [
+        1000,
+        1000,
+        1000
+      ]
+    },
+    {
+      "backend": "solid_queue",
+      "mode": "fiber",
+      "workload": "sleep",
+      "jobs": 1000,
+      "concurrency": 10,
+      "processes": 6,
+      "db_pool": 10,
+      "completed_jobs": 1000,
+      "successful_jobs": 1000,
+      "finished_jobs": 1000,
+      "failed_jobs": 0,
+      "child_jobs_enqueued": 0,
+      "child_jobs_finished": 0,
+      "child_jobs_failed": 0,
+      "benchmark_finished_at": "2026-04-24 15:31:45 UTC",
+      "wall_time_s": 1.955,
+      "enqueue_time_s": 0.232,
+      "drain_time_s": 1.722,
+      "execution_window_s": 1.67,
+      "jobs_per_second": 511.58,
+      "finished_jobs_per_second": 511.58,
+      "drain_jobs_per_second": 580.61,
+      "execution_jobs_per_second": 598.79,
+      "peak_rss_kb": 817160,
+      "avg_rss_kb": 782594,
+      "avg_cpu_pct": 361.7,
+      "peak_cpu_pct": 474.2,
+      "queue_delay_ms": {
+        "p50": 1126.98,
+        "p95": 1825.77,
+        "p99": 1875.16,
+        "max": 1898.82
+      },
+      "service_time_ms": {
+        "p50": 50.09,
+        "p95": 51.2,
+        "p99": 57.37,
+        "max": 63.59
+      },
+      "total_latency_ms": {
+        "p50": 1177.7,
+        "p95": 1875.81,
+        "p99": 1925.21,
+        "max": 1949.16
+      },
+      "repeat_jobs_per_second_values": [
+        503.85,
+        511.58,
+        511.83
+      ],
+      "repeat_successful_jobs_values": [
+        1000,
+        1000,
+        1000
+      ]
+    }
+  ],
+  "solid_queue_revision": "305bf4018352e099019f9f24502a18ee4794e64e"
+}
