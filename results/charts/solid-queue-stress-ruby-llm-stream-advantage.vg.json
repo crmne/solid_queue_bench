@@ -7,7 +7,7 @@
         "concurrency": 25,
         "processes": "2 proc",
         "metric": "Throughput",
-        "value": 7.817589576547239
+        "value": 8.169934640522875
       },
       {
         "concurrency": 25,
@@ -19,13 +19,13 @@
         "concurrency": 25,
         "processes": "2 proc",
         "metric": "Avg CPU",
-        "value": 15.238558909444992
+        "value": 15.873786407766985
       },
       {
         "concurrency": 25,
         "processes": "2 proc",
         "metric": "p50 latency",
-        "value": 8.093097126851378
+        "value": 8.155334151792747
       }
     ]
   },

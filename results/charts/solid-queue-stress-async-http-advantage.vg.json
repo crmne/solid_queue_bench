@@ -7,25 +7,25 @@
         "concurrency": 25,
         "processes": "2 proc",
         "metric": "Throughput",
-        "value": 10.298246945435222
+        "value": 8.37878787878788
       },
       {
         "concurrency": 25,
         "processes": "2 proc",
         "metric": "Peak RSS",
-        "value": -0.0
+        "value": 100.0
       },
       {
         "concurrency": 25,
         "processes": "2 proc",
         "metric": "Avg CPU",
-        "value": 12.51325556733828
+        "value": 14.43736730360935
       },
       {
         "concurrency": 25,
         "processes": "2 proc",
         "metric": "p50 latency",
-        "value": 10.628021685251001
+        "value": 13.137591386727468
       }
     ]
   },

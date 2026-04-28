@@ -7,7 +7,7 @@
         "concurrency": 5,
         "processes": "1 proc",
         "metric": "Throughput",
-        "value": -2.0137103684661475
+        "value": -2.059202059202061
       },
       {
         "concurrency": 5,
@@ -19,19 +19,19 @@
         "concurrency": 5,
         "processes": "1 proc",
         "metric": "Avg CPU",
-        "value": 2.7720739219712556
+        "value": 2.3662551440329187
       },
       {
         "concurrency": 5,
         "processes": "1 proc",
         "metric": "p50 latency",
-        "value": -0.9568911073754495
+        "value": -0.8121279741356404
       },
       {
         "concurrency": 10,
         "processes": "1 proc",
         "metric": "Throughput",
-        "value": -0.21088148460565462
+        "value": 0.0845665961945164
       },
       {
         "concurrency": 10,
@@ -43,19 +43,19 @@
         "concurrency": 10,
         "processes": "1 proc",
         "metric": "Avg CPU",
-        "value": 1.812688821752263
+        "value": 1.9114688128772692
       },
       {
         "concurrency": 10,
         "processes": "1 proc",
         "metric": "p50 latency",
-        "value": 1.2713855725011503
+        "value": 0.8455174932232296
       },
       {
         "concurrency": 25,
         "processes": "1 proc",
         "metric": "Throughput",
-        "value": 2.023608768971334
+        "value": 1.2189995796553137
       },
       {
         "concurrency": 25,
@@ -67,19 +67,19 @@
         "concurrency": 25,
         "processes": "1 proc",
         "metric": "Avg CPU",
-        "value": 1.4070351758794029
+        "value": 0.7021063189568734
       },
       {
         "concurrency": 25,
         "processes": "1 proc",
         "metric": "p50 latency",
-        "value": 3.2137808477459937
+        "value": 2.1681261502848574
       },
       {
         "concurrency": 50,
         "processes": "1 proc",
         "metric": "Throughput",
-        "value": 3.8805970149253737
+        "value": 1.44927536231884
       },
       {
         "concurrency": 50,
@@ -91,19 +91,19 @@
         "concurrency": 50,
         "processes": "1 proc",
         "metric": "Avg CPU",
-        "value": 1.708542713567842
+        "value": 0.5030181086519114
       },
       {
         "concurrency": 50,
         "processes": "1 proc",
         "metric": "p50 latency",
-        "value": 5.300903928346808
+        "value": 2.2500230308613522
       },
       {
         "concurrency": 5,
         "processes": "2 proc",
         "metric": "Throughput",
-        "value": -3.318837262531462
+        "value": -0.7123161764705934
       },
       {
         "concurrency": 5,
@@ -115,19 +115,19 @@
         "concurrency": 5,
         "processes": "2 proc",
         "metric": "Avg CPU",
-        "value": 2.316006176016469
+        "value": 2.4264326277749038
       },
       {
         "concurrency": 5,
         "processes": "2 proc",
         "metric": "p50 latency",
-        "value": -2.768798991847544
+        "value": -1.4965630204771885
       },
       {
         "concurrency": 10,
         "processes": "2 proc",
         "metric": "Throughput",
-        "value": 1.835070231082923
+        "value": 1.5678254942058731
       },
       {
         "concurrency": 10,
@@ -139,19 +139,19 @@
         "concurrency": 10,
         "processes": "2 proc",
         "metric": "Avg CPU",
-        "value": 1.5736040609137025
+        "value": 2.0366598778004072
       },
       {
         "concurrency": 10,
         "processes": "2 proc",
         "metric": "p50 latency",
-        "value": 1.681550413476051
+        "value": 1.9766827027261378
       },
       {
         "concurrency": 25,
         "processes": "2 proc",
         "metric": "Throughput",
-        "value": 4.1220678660897345
+        "value": 1.9279320633463308
       },
       {
         "concurrency": 25,
@@ -163,19 +163,19 @@
         "concurrency": 25,
         "processes": "2 proc",
         "metric": "Avg CPU",
-        "value": 1.370558375634512
+        "value": -0.3573251659009641
       },
       {
         "concurrency": 25,
         "processes": "2 proc",
         "metric": "p50 latency",
-        "value": 5.055732277723149
+        "value": 2.1867890956522325
       },
       {
         "concurrency": 5,
         "processes": "6 proc",
         "metric": "Throughput",
-        "value": -0.5094007594702206
+        "value": -0.1503053076561734
       },
       {
         "concurrency": 5,
@@ -187,19 +187,19 @@
         "concurrency": 5,
         "processes": "6 proc",
         "metric": "Avg CPU",
-        "value": 3.785103785103774
+        "value": 1.6885216454104706
       },
       {
         "concurrency": 5,
         "processes": "6 proc",
         "metric": "p50 latency",
-        "value": 0.48700696724858217
+        "value": 0.45174135048179676
       },
       {
         "concurrency": 10,
         "processes": "6 proc",
         "metric": "Throughput",
-        "value": 4.277628282453373
+        "value": 2.3727551874941817
       },
       {
         "concurrency": 10,
@@ -211,13 +211,13 @@
         "concurrency": 10,
         "processes": "6 proc",
         "metric": "Avg CPU",
-        "value": 3.594486128075383
+        "value": 0.9517095523440214
       },
       {
         "concurrency": 10,
         "processes": "6 proc",
         "metric": "p50 latency",
-        "value": 6.167349715442445
+        "value": 4.587020102921023
       }
     ]
   },

@@ -34,34 +34,34 @@
         "values": [
           {
             "workload": "Sleep",
-            "min": -6.947513812154697,
-            "max": 19.219710210294867,
-            "average": 5.714941221265764,
-            "average_label": "avg +5.7%",
+            "min": -7.149812213103353,
+            "max": 15.924860382467415,
+            "average": 7.407247023844048,
+            "average_label": "avg +7.4%",
             "cells": 9
           },
           {
             "workload": "Async::HTTP",
-            "min": -6.3458856345885595,
-            "max": 22.17499544598944,
-            "average": 7.644639481803143,
-            "average_label": "avg +7.6%",
+            "min": -6.01482724856623,
+            "max": 25.463723164872594,
+            "average": 9.46727924959807,
+            "average_label": "avg +9.5%",
             "cells": 9
           },
           {
             "workload": "RubyLLM Stream",
-            "min": 3.2786885245901587,
-            "max": 29.411764705882355,
-            "average": 12.663606648074008,
-            "average_label": "avg +12.7%",
+            "min": 3.085299455535389,
+            "max": 21.818181818181813,
+            "average": 11.929841972046646,
+            "average_label": "avg +11.9%",
             "cells": 9
           },
           {
             "workload": "CPU",
-            "min": -3.318837262531462,
-            "max": 4.277628282453373,
-            "average": 1.1206824764943615,
-            "average_label": "avg +1.1%",
+            "min": -2.059202059202061,
+            "max": 2.3727551874941817,
+            "average": 0.633281193320692,
+            "average_label": "avg +0.6%",
             "cells": 9
           }
         ]
@@ -130,217 +130,217 @@
             "workload": "Sleep",
             "concurrency": 5,
             "processes": "1 proc",
-            "value": -6.947513812154697
+            "value": -7.149812213103353
           },
           {
             "workload": "Sleep",
             "concurrency": 10,
             "processes": "1 proc",
-            "value": 7.221724858251273
+            "value": 7.652758552501478
           },
           {
             "workload": "Sleep",
             "concurrency": 25,
             "processes": "1 proc",
-            "value": 3.5073998315485575
+            "value": 14.011880703043664
           },
           {
             "workload": "Sleep",
             "concurrency": 50,
             "processes": "1 proc",
-            "value": 19.219710210294867
+            "value": 15.924860382467415
           },
           {
             "workload": "Sleep",
             "concurrency": 5,
             "processes": "2 proc",
-            "value": -3.3711285290312705
+            "value": -2.0826905276149255
           },
           {
             "workload": "Sleep",
             "concurrency": 10,
             "processes": "2 proc",
-            "value": 10.103668689907076
+            "value": 12.71373414230556
           },
           {
             "workload": "Sleep",
             "concurrency": 25,
             "processes": "2 proc",
-            "value": 13.759502418797531
+            "value": 15.715961189892303
           },
           {
             "workload": "Sleep",
             "concurrency": 5,
             "processes": "6 proc",
-            "value": -1.4618681383197374
+            "value": -2.6591314693634733
           },
           {
             "workload": "Sleep",
             "concurrency": 10,
             "processes": "6 proc",
-            "value": 9.402975462098283
+            "value": 12.537662454467776
           },
           {
             "workload": "Async::HTTP",
             "concurrency": 5,
             "processes": "1 proc",
-            "value": -6.3458856345885595
+            "value": -6.01482724856623
           },
           {
             "workload": "Async::HTTP",
             "concurrency": 10,
             "processes": "1 proc",
-            "value": 9.067959204281536
+            "value": 12.197824335213536
           },
           {
             "workload": "Async::HTTP",
             "concurrency": 25,
             "processes": "1 proc",
-            "value": 7.574149235092098
+            "value": 17.383411580594686
           },
           {
             "workload": "Async::HTTP",
             "concurrency": 50,
             "processes": "1 proc",
-            "value": 22.17499544598944
+            "value": 25.463723164872594
           },
           {
             "workload": "Async::HTTP",
             "concurrency": 5,
             "processes": "2 proc",
-            "value": -1.7739561546208122
+            "value": -1.623951358423777
           },
           {
             "workload": "Async::HTTP",
             "concurrency": 10,
             "processes": "2 proc",
-            "value": 12.088820320678824
+            "value": 12.353133159268934
           },
           {
             "workload": "Async::HTTP",
             "concurrency": 25,
             "processes": "2 proc",
-            "value": 15.046728971962622
+            "value": 19.203670918090847
           },
           {
             "workload": "Async::HTTP",
             "concurrency": 5,
             "processes": "6 proc",
-            "value": -2.4195232554670527
+            "value": -2.766739370761
           },
           {
             "workload": "Async::HTTP",
             "concurrency": 10,
             "processes": "6 proc",
-            "value": 13.388467202900186
+            "value": 9.009268066093039
           },
           {
             "workload": "RubyLLM Stream",
             "concurrency": 5,
             "processes": "1 proc",
-            "value": 6.5789473684210575
+            "value": 7.947019867549661
           },
           {
             "workload": "RubyLLM Stream",
             "concurrency": 10,
             "processes": "1 proc",
-            "value": 12.96296296296296
+            "value": 16.25
           },
           {
             "workload": "RubyLLM Stream",
             "concurrency": 25,
             "processes": "1 proc",
-            "value": 19.496855345911936
+            "value": 19.62025316455695
           },
           {
             "workload": "RubyLLM Stream",
             "concurrency": 50,
             "processes": "1 proc",
-            "value": 14.457831325301203
+            "value": 21.818181818181813
           },
           {
             "workload": "RubyLLM Stream",
             "concurrency": 5,
             "processes": "2 proc",
-            "value": 8.029197080291961
+            "value": 6.1594202898550865
           },
           {
             "workload": "RubyLLM Stream",
             "concurrency": 10,
             "processes": "2 proc",
-            "value": 16.09589041095891
+            "value": 15.986394557823136
           },
           {
             "workload": "RubyLLM Stream",
             "concurrency": 25,
             "processes": "2 proc",
-            "value": 29.411764705882355
+            "value": 11.718749999999993
           },
           {
             "workload": "RubyLLM Stream",
             "concurrency": 5,
             "processes": "6 proc",
-            "value": 3.6603221083455346
+            "value": 4.783258594917778
           },
           {
             "workload": "RubyLLM Stream",
             "concurrency": 10,
             "processes": "6 proc",
-            "value": 3.2786885245901587
+            "value": 3.085299455535389
           },
           {
             "workload": "CPU",
             "concurrency": 5,
             "processes": "1 proc",
-            "value": -2.0137103684661475
+            "value": -2.059202059202061
           },
           {
             "workload": "CPU",
             "concurrency": 10,
             "processes": "1 proc",
-            "value": -0.21088148460565462
+            "value": 0.0845665961945164
           },
           {
             "workload": "CPU",
             "concurrency": 25,
             "processes": "1 proc",
-            "value": 2.023608768971334
+            "value": 1.2189995796553137
           },
           {
             "workload": "CPU",
             "concurrency": 50,
             "processes": "1 proc",
-            "value": 3.8805970149253737
+            "value": 1.44927536231884
           },
           {
             "workload": "CPU",
             "concurrency": 5,
             "processes": "2 proc",
-            "value": -3.318837262531462
+            "value": -0.7123161764705934
           },
           {
             "workload": "CPU",
             "concurrency": 10,
             "processes": "2 proc",
-            "value": 1.835070231082923
+            "value": 1.5678254942058731
           },
           {
             "workload": "CPU",
             "concurrency": 25,
             "processes": "2 proc",
-            "value": 4.1220678660897345
+            "value": 1.9279320633463308
           },
           {
             "workload": "CPU",
             "concurrency": 5,
             "processes": "6 proc",
-            "value": -0.5094007594702206
+            "value": -0.1503053076561734
           },
           {
             "workload": "CPU",
             "concurrency": 10,
             "processes": "6 proc",
-            "value": 4.277628282453373
+            "value": 2.3727551874941817
           }
         ]
       },
@@ -407,34 +407,34 @@
         "values": [
           {
             "workload": "Sleep",
-            "min": -6.947513812154697,
-            "max": 19.219710210294867,
-            "average": 5.714941221265764,
-            "average_label": "avg +5.7%",
+            "min": -7.149812213103353,
+            "max": 15.924860382467415,
+            "average": 7.407247023844048,
+            "average_label": "avg +7.4%",
             "cells": 9
           },
           {
             "workload": "Async::HTTP",
-            "min": -6.3458856345885595,
-            "max": 22.17499544598944,
-            "average": 7.644639481803143,
-            "average_label": "avg +7.6%",
+            "min": -6.01482724856623,
+            "max": 25.463723164872594,
+            "average": 9.46727924959807,
+            "average_label": "avg +9.5%",
             "cells": 9
           },
           {
             "workload": "RubyLLM Stream",
-            "min": 3.2786885245901587,
-            "max": 29.411764705882355,
-            "average": 12.663606648074008,
-            "average_label": "avg +12.7%",
+            "min": 3.085299455535389,
+            "max": 21.818181818181813,
+            "average": 11.929841972046646,
+            "average_label": "avg +11.9%",
             "cells": 9
           },
           {
             "workload": "CPU",
-            "min": -3.318837262531462,
-            "max": 4.277628282453373,
-            "average": 1.1206824764943615,
-            "average_label": "avg +1.1%",
+            "min": -2.059202059202061,
+            "max": 2.3727551874941817,
+            "average": 0.633281193320692,
+            "average_label": "avg +0.6%",
             "cells": 9
           }
         ]
@@ -499,34 +499,34 @@
         "values": [
           {
             "workload": "Sleep",
-            "min": -6.947513812154697,
-            "max": 19.219710210294867,
-            "average": 5.714941221265764,
-            "average_label": "avg +5.7%",
+            "min": -7.149812213103353,
+            "max": 15.924860382467415,
+            "average": 7.407247023844048,
+            "average_label": "avg +7.4%",
             "cells": 9
           },
           {
             "workload": "Async::HTTP",
-            "min": -6.3458856345885595,
-            "max": 22.17499544598944,
-            "average": 7.644639481803143,
-            "average_label": "avg +7.6%",
+            "min": -6.01482724856623,
+            "max": 25.463723164872594,
+            "average": 9.46727924959807,
+            "average_label": "avg +9.5%",
             "cells": 9
           },
           {
             "workload": "RubyLLM Stream",
-            "min": 3.2786885245901587,
-            "max": 29.411764705882355,
-            "average": 12.663606648074008,
-            "average_label": "avg +12.7%",
+            "min": 3.085299455535389,
+            "max": 21.818181818181813,
+            "average": 11.929841972046646,
+            "average_label": "avg +11.9%",
             "cells": 9
           },
           {
             "workload": "CPU",
-            "min": -3.318837262531462,
-            "max": 4.277628282453373,
-            "average": 1.1206824764943615,
-            "average_label": "avg +1.1%",
+            "min": -2.059202059202061,
+            "max": 2.3727551874941817,
+            "average": 0.633281193320692,
+            "average_label": "avg +0.6%",
             "cells": 9
           }
         ]
