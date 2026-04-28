@@ -30,9 +30,21 @@ workload = basename
 family = File.basename(File.expand_path(output_dir))
 family = rows.first&.fetch("backend", "solid_queue").to_s.tr("_", "-") unless %w[solid-queue async-job solid-queue-stress].include?(family)
 json_path = File.join(output_dir, "#{workload.tr('_', '-')}-data.json")
+source_json_path = csv_path.sub(/\.csv\z/, ".json")
+source_data = File.exist?(source_json_path) ? JSON.parse(File.read(source_json_path)) : {}
+source_rows = source_data["results"] || []
+jobs_per_cell = source_data["jobs_per_cell"]
+
+rows.each_with_index do |row, index|
+  source_row = source_rows[index] || {}
+  row["jobs"] ||= source_row["jobs"] || jobs_per_cell || row["successful_jobs"].to_i + row["failed_jobs"].to_i
+  row["workload"] ||= source_row["workload"] || workload
+end
 
 data = {
   "workload" => workload,
+  "jobs_per_cell" => jobs_per_cell,
+  "planned_cells" => source_data["planned_cells"] || rows.size,
   "results" => rows.map do |row|
     row.merge(
       "total_latency_ms" => {
@@ -48,9 +60,12 @@ data = {
 tmp_json = File.join(output_dir, ".#{File.basename(json_path)}")
 File.write(tmp_json, JSON.pretty_generate(data))
 
-require_relative "../lib/bench/report"
+begin
+  require_relative "../lib/bench/report"
 
-report = Bench::Report.new(File.expand_path("..", output_dir))
-dataset = Bench::Report::Dataset.new(family:, json_path: tmp_json, data:)
-report.send(:write_workload_charts, dataset)
-FileUtils.rm_f(tmp_json)
+  report = Bench::Report.new(File.expand_path("..", output_dir))
+  dataset = Bench::Report::Dataset.new(family:, json_path: tmp_json, data:)
+  report.send(:write_workload_charts, dataset)
+ensure
+  FileUtils.rm_f(tmp_json)
+end

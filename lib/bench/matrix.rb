@@ -21,6 +21,7 @@ module Bench
       http_port: 9393,
       name: nil,
       repeat: 1,
+      failure_repeat_limit: nil,
       max_total_concurrency: nil
     }.freeze
 
@@ -51,7 +52,7 @@ module Bench
           parser.on("--modes LIST", "Comma-separated modes (default: thread,fiber)") { |v| options[:modes] = v.split(",") }
           parser.on("--duration-ms N", Integer, "Sleep, HTTP, mixed HTTP, or DB slow-query delay in ms") { |v| options[:payload][:duration_ms] = v }
           parser.on("--duration-s N", Integer, "Long wait duration in seconds") { |v| options[:payload][:duration_s] = v }
-          parser.on("--db-pool VALUE", "DB pool policy: default, matched, or a positive integer") { |v| options[:db_pool] = v }
+          parser.on("--db-pool VALUE", "DB pool policy: default, minimum, matched, or a positive integer") { |v| options[:db_pool] = v }
           parser.on("--iterations N", Integer, "CPU workload iterations") { |v| options[:payload][:iterations] = v }
           parser.on("--reads N", Integer, "Sequential SELECT queries per DB-heavy job") { |v| options[:payload][:reads] = v }
           parser.on("--writes N", Integer, "Write queries per DB-heavy job") { |v| options[:payload][:writes] = v }
@@ -65,6 +66,7 @@ module Bench
           parser.on("--output-dir PATH", "Output directory") { |v| options[:output_dir] = v }
           parser.on("--name NAME", "Run name prefix for output files") { |v| options[:name] = v }
           parser.on("--repeat N", Integer, "Runs per cell, report median (default: 1)") { |v| options[:repeat] = v }
+          parser.on("--failure-repeat-limit N", Integer, "Stop retrying an all-failed repeated cell after N failed runs") { |v| options[:failure_repeat_limit] = v }
           parser.on("--max-total-concurrency N", Integer, "Skip cells where concurrency * processes exceeds N") { |v| options[:max_total_concurrency] = v }
         end.parse!(argv)
 
@@ -131,12 +133,14 @@ module Bench
         value = options[:db_pool].to_s.strip.downcase
         options[:db_pool] = if value == "default"
           :default
+        elsif value == "minimum"
+          :minimum
         elsif value == "matched"
           :matched
         elsif value.match?(/\A\d+\z/) && Integer(value).positive?
           Integer(value)
         else
-          raise ArgumentError, "--db-pool must be default, matched, or a positive integer"
+          raise ArgumentError, "--db-pool must be default, minimum, matched, or a positive integer"
         end
       end
 
@@ -155,6 +159,7 @@ module Bench
         puts "  Workload:   #{options[:workload]} (#{options[:payload].map { |k, v| "#{k}=#{v}" }.join(", ")})"
         puts "  Jobs/cell:  #{options[:jobs]}"
         puts "  Repeat:     #{options[:repeat]}x (median)" if options[:repeat] > 1
+        puts "  Fail limit: #{options[:failure_repeat_limit]} failed run(s) per all-failed cell" if options[:failure_repeat_limit]
         puts "-" * 72
 
         cells.each_with_index.map do |cell, index|
@@ -206,15 +211,23 @@ module Bench
         repeats = options[:repeat]
         return Bench::Runner.new(runner_opts).run_single(mode) if repeats <= 1
 
-        runs = repeats.times.filter_map do |i|
+        runs = []
+        failed_runs = 0
+
+        repeats.times do |i|
           puts "    run #{i + 1}/#{repeats}..." if repeats > 1
-          Bench::Runner.new(runner_opts).run_single(mode)
+          runs << Bench::Runner.new(runner_opts).run_single(mode)
         rescue => error
+          failed_runs += 1
           puts "    run #{i + 1} failed: #{error.message.lines.first&.strip}"
-          nil
+
+          if runs.empty? && options[:failure_repeat_limit] && failed_runs >= options[:failure_repeat_limit]
+            puts "    stopping cell after #{failed_runs} failed run(s)"
+            break
+          end
         end
 
-        raise "All #{repeats} runs failed" if runs.empty?
+        raise "No successful runs (#{failed_runs}/#{repeats} attempted)" if runs.empty?
 
         median_result(runs)
       end
@@ -299,7 +312,7 @@ module Bench
 
       def csv_headers
         %w[
-          backend mode concurrency processes db_pool
+          backend mode workload jobs concurrency processes db_pool
           jobs_per_second finished_jobs_per_second drain_jobs_per_second execution_jobs_per_second
           wall_time_s enqueue_time_s drain_time_s execution_window_s
           completed_jobs successful_jobs finished_jobs failed_jobs
@@ -313,7 +326,7 @@ module Bench
 
       def csv_row(r)
         [
-          r[:backend], r[:mode], r[:concurrency], r[:processes], r[:db_pool],
+          r[:backend], r[:mode], r[:workload], r[:jobs], r[:concurrency], r[:processes], r[:db_pool],
           r[:jobs_per_second], r[:finished_jobs_per_second], r[:drain_jobs_per_second], r[:execution_jobs_per_second],
           r[:wall_time_s], r[:enqueue_time_s], r[:drain_time_s], r[:execution_window_s],
           r[:completed_jobs], r[:successful_jobs], r[:finished_jobs], r[:failed_jobs],

@@ -6,7 +6,7 @@ This repo benchmarks Solid Queue `fiber` and `thread` execution modes across Rai
 
 Here, `concurrency = N` is per worker process: Solid Queue runs `threads: N` in thread mode or `fibers: N` in fiber mode, and `processes` is the number of worker OS processes. For example, `concurrency = 10` and `processes = 6` means `60` total execution slots.
 
-Latest checked-in results: **April 24-25, 2026**.
+Latest checked-in results: **April 28, 2026**.
 Checked-in datasets were produced with Ruby `4.0.2` and Active Support isolated execution `fiber`.
 Solid Queue commit under test: `305bf4018352e099019f9f24502a18ee4794e64e`.
 
@@ -53,7 +53,7 @@ Database pool policy used by the benchmark:
 - Benchmark workers set `DB_POOL` explicitly, so the published results use benchmark pool policy rather than passive Rails defaults.
 - For most Solid Queue `thread` rows, `DB_POOL = concurrency + 5` per worker process.
 - For most Solid Queue `fiber` rows, `DB_POOL = max(5, processes + 4)` per worker process.
-- Async::Job uses the same fiber-side policy unless `ASYNC_JOB_DB_POOL` is set.
+- Async::Job keeps its own benchmark-specific pool policy unless `ASYNC_JOB_DB_POOL` is set.
 - `db_transaction` overrides that and matches both modes at `DB_POOL = concurrency + 5`.
 - `db_transaction_pool_pressure` keeps the benchmark default pool policy and is excluded from the public README because it answers a different question.
 
@@ -63,20 +63,28 @@ Database pool policy used by the benchmark:
 
 This section is the direct same-backend comparison: same Rails app, same jobs, same Solid Queue backend, same capped matrix, only the worker execution mode changes. It uses workloads `sleep`, `async_http`, `ruby_llm_stream`, `cpu`; concurrencies `5`, `10`, `25`, `50`, `100`; processes `1`, `2`, `6`; modes `thread`, `fiber`; 3 representative runs per cell; cells above total concurrency `60` are omitted.
 
+For the Solid Queue comparison charts below, positive percentages always mean movement in fiber's favor: higher throughput or lower RSS, CPU, or p50 latency.
+
 ![Headline Solid Queue Fiber Vs Thread](results/charts/headline-solid-queue-fiber-vs-thread.svg)
+
+![Headline Solid Queue Fiber Vs Thread RSS](results/charts/headline-solid-queue-fiber-vs-thread-rss.svg)
+
+![Headline Solid Queue Fiber Vs Thread CPU](results/charts/headline-solid-queue-fiber-vs-thread-cpu.svg)
+
+![Headline Solid Queue Fiber Vs Thread Latency](results/charts/headline-solid-queue-fiber-vs-thread-latency.svg)
 
 ![Headline Async Job Vs Solid Queue Fiber](results/charts/headline-async-job-vs-solid-queue-fiber.svg)
 
 | Workload | Tests | Best Throughput | Lowest RSS | Lowest CPU | Lowest p50 Latency | Avg Fiber Throughput Delta | Best Fiber Throughput Delta |
 |---|---:|---|---|---|---|---:|---:|
-| Sleep | 18/18 | fiber, c=10, proc=6, 511.58 jobs/s | thread, c=5, proc=1, 133.94 MB | fiber, c=5, proc=1, 36.50% | fiber, c=10, proc=6, 1177.70 ms | +5.9% across 9 cells | +20.4% at c=50, proc=1 |
-| Async::HTTP | 18/18 | fiber, c=10, proc=6, 498.99 jobs/s | fiber, c=10, proc=1, 135.14 MB | fiber, c=5, proc=1, 37.90% | fiber, c=10, proc=6, 1210.55 ms | +7.0% across 9 cells | +21.2% at c=50, proc=1 |
-| RubyLLM Stream | 18/18 | fiber, c=5, proc=6, 7.04 jobs/s | fiber, c=25, proc=1, 141.79 MB | fiber, c=5, proc=1, 86.60% | fiber, c=5, proc=6, 2789.42 ms | +13.2% across 9 cells | +28.0% at c=25, proc=2 |
-| CPU | 18/18 | fiber, c=10, proc=6, 109.80 jobs/s | fiber, c=5, proc=1, 134.34 MB | fiber, c=5, proc=1, 95.20% | fiber, c=10, proc=6, 2303.85 ms | +1.7% across 9 cells | +5.0% at c=10, proc=6 |
+| Sleep | 18/18 | fiber, c=10, proc=6, 509.61 jobs/s | thread, c=5, proc=1, 133.70 MB | fiber, c=5, proc=1, 36.10% | fiber, c=10, proc=6, 1184.38 ms | +5.7% across 9 cells | +19.2% at c=50, proc=1 |
+| Async::HTTP | 18/18 | fiber, c=10, proc=6, 500.44 jobs/s | fiber, c=10, proc=1, 135.30 MB | fiber, c=5, proc=1, 37.80% | fiber, c=10, proc=6, 1186.51 ms | +7.6% across 9 cells | +22.2% at c=50, proc=1 |
+| RubyLLM Stream | 18/18 | fiber, c=5, proc=6, 7.08 jobs/s | fiber, c=10, proc=1, 141.38 MB | fiber, c=5, proc=1, 85.50% | fiber, c=5, proc=6, 2759.11 ms | +12.7% across 9 cells | +29.4% at c=25, proc=2 |
+| CPU | 18/18 | fiber, c=10, proc=6, 112.38 jobs/s | fiber, c=5, proc=1, 135.57 MB | fiber, c=5, proc=1, 94.70% | fiber, c=10, proc=6, 2262.08 ms | +1.1% across 9 cells | +4.3% at c=10, proc=6 |
 
 ### Interpretation
 
-The best observed throughput point landed on `fiber` for all four headline workloads, but the paired-cell win rates are the more useful reading: `sleep` won `6/9` paired cells, `async_http` won `6/9` paired cells, `ruby_llm_stream` won `9/9` paired cells, and `cpu` won `6/9` paired cells. The gains are largest on cooperative wait and streaming work, while the CPU control stays close.
+Average fiber throughput deltas across the headline workloads were Sleep +5.7% across 9 cells, Async::HTTP +7.6% across 9 cells, RubyLLM Stream +12.7% across 9 cells, CPU +1.1% across 9 cells. The table shows the best observed point and the lowest resource rows; the paired-cell averages are the steadier signal than any single best cell.
 
 Full supplementary Solid Queue results, including `http`, `db_queries`, `db_mixed`, and `db_transaction`, are in [results/solid-queue/README.md](results/solid-queue/README.md).
 
@@ -88,9 +96,9 @@ This section uses the same capped Solid Queue matrix as the headline suite, but 
 
 | Workload | Shape | Best Throughput | Lowest RSS | Lowest CPU | Lowest p50 Latency | Avg Fiber Throughput Delta | Best Fiber Throughput Delta |
 |---|---|---|---|---|---|---:|---:|
-| DB Queries | 10 reads, 2 writes, no external delay | fiber, c=10, proc=6, 393.07 jobs/s | fiber, c=5, proc=1, 134.71 MB | fiber, c=5, proc=1, 80.20% | fiber, c=10, proc=6, 748.48 ms | +8.8% across 9 cells | +13.9% at c=10, proc=6 |
-| DB Mixed | 10 reads, 50 ms delayed HTTP call, 2 writes | fiber, c=10, proc=6, 334.75 jobs/s | fiber, c=5, proc=1, 135.35 MB | fiber, c=5, proc=1, 49.90% | fiber, c=10, proc=6, 899.22 ms | +2.4% across 9 cells | +13.1% at c=50, proc=1 |
-| DB Transaction | 10 reads and 2 writes in one transaction, 20 ms duration | fiber, c=10, proc=6, 195.27 jobs/s | fiber, c=25, proc=1, 133.30 MB | fiber, c=5, proc=1, 21.70% | fiber, c=10, proc=6, 1533.01 ms | +3.9% across 9 cells | +19.7% at c=50, proc=1 |
+| DB Queries | 10 reads, 2 writes, no external delay | fiber, c=10, proc=6, 392.41 jobs/s | fiber, c=5, proc=1, 134.05 MB | fiber, c=5, proc=1, 80.70% | fiber, c=10, proc=6, 756.48 ms | +8.2% across 9 cells | +17.0% at c=25, proc=2 |
+| DB Mixed | 10 reads, 50 ms delayed HTTP call, 2 writes | fiber, c=10, proc=6, 335.65 jobs/s | fiber, c=5, proc=1, 135.48 MB | fiber, c=5, proc=1, 48.80% | fiber, c=10, proc=6, 886.57 ms | +2.0% across 9 cells | +12.0% at c=50, proc=1 |
+| DB Transaction | 10 reads and 2 writes in one transaction, 20 ms duration | fiber, c=10, proc=6, 195.35 jobs/s | fiber, c=25, proc=1, 133.02 MB | fiber, c=5, proc=1, 21.60% | fiber, c=10, proc=6, 1522.12 ms | +3.8% across 9 cells | +19.5% at c=50, proc=1 |
 
 `DB Transaction` uses a matched pool (`concurrency + 5` per process for both modes), so it is the fair executor comparison. The public README intentionally excludes the old default-pool transaction pressure variant because it is not an apples-to-apples executor comparison.
 
@@ -102,7 +110,7 @@ This section uses the same capped Solid Queue matrix as the headline suite, but 
 
 ### Interpretation
 
-`db_queries` is the cleanest short-burst database case and favored `fiber` in `9/9` paired cells. `db_mixed` still leaned `fiber`, but less strongly, because the job shape mixes database work with a delayed HTTP call. `db_transaction` is separated from those two because the job pins a connection for the lifetime of the transaction; with matched pools, it is the executor comparison rather than a pool-policy comparison.
+Average fiber throughput deltas across the DB workloads were DB Queries +8.2% across 9 cells, DB Mixed +2.0% across 9 cells, DB Transaction +3.8% across 9 cells. `db_transaction` is separated from the short DB-burst workloads because each job pins a connection for the lifetime of the transaction; with matched pools, it is the executor comparison rather than a pool-policy comparison.
 
 ## Stress Suite
 
@@ -116,7 +124,7 @@ This section removes the headline cap and pushes higher connection demand. It us
 |---|---:|---:|
 | Sleep | 10/10 | 1/10 |
 | Async::HTTP | 10/10 | 1/10 |
-| RubyLLM Stream | 10/10 | 1/10 |
+| RubyLLM Stream | 10/10 | 0/10 |
 
 ### Interpretation
 
@@ -130,10 +138,10 @@ This section reuses the headline workload matrix, but changes the backend to Asy
 
 | Workload | Solid Queue Fiber Best | Async::Job Best | Async::Job Delta |
 |---|---:|---:|---:|
-| Sleep | 511.58 jobs/s | 635.94 jobs/s | +24.3% |
-| Async::HTTP | 498.99 jobs/s | 653.93 jobs/s | +31.1% |
-| RubyLLM Stream | 7.04 jobs/s | 16.87 jobs/s | +139.6% |
-| CPU | 109.80 jobs/s | 120.18 jobs/s | +9.5% |
+| Sleep | 509.61 jobs/s | 628.53 jobs/s | +23.3% |
+| Async::HTTP | 500.44 jobs/s | 630.29 jobs/s | +25.9% |
+| RubyLLM Stream | 7.08 jobs/s | 16.68 jobs/s | +135.6% |
+| CPU | 112.38 jobs/s | 123.66 jobs/s | +10.0% |
 
 ### Interpretation
 

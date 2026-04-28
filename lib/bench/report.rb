@@ -170,8 +170,12 @@ module Bench
       end
 
       def successful_row?(row)
-        row.fetch("jobs").to_i == row.fetch("successful_jobs").to_i &&
+        jobs_for(row).to_i == row.fetch("successful_jobs").to_i &&
           row.fetch("failed_jobs").to_i.zero?
+      end
+
+      def jobs_for(row)
+        row["jobs"] || data["jobs_per_cell"] || row.fetch("successful_jobs").to_i + row.fetch("failed_jobs").to_i
       end
     end
 
@@ -437,9 +441,53 @@ module Bench
 
       prompt_path = File.expand_path("readme_prompt.md", __dir__)
       facts = public_report_facts(datasets, headline_charts:, stress_charts:, narrative:)
-      readme = generate_markdown(prompt_path, facts) || deterministic_project_readme(facts)
+      readme = generate_markdown(prompt_path, facts)
+      unless valid_project_readme?(readme)
+        warn "Markdown generation skipped: generated README did not match the required structure" if readme
+        readme = deterministic_project_readme(facts)
+      end
       readme = readme.sub(/\A<!--.*?-->\s*/m, "")
       File.write(File.join(project_root, "README.md"), generated_file_header + readme.strip + "\n")
+    end
+
+    def valid_project_readme?(readme)
+      return false if readme.to_s.strip.empty?
+
+      required = [
+        "# Solid Queue Bench",
+        "Here, `concurrency = N` is per worker process",
+        "Latest checked-in results:",
+        "Full generated artifacts:",
+        "## Research Questions",
+        "## Methodology",
+        "The public README covers four views of the same benchmark app",
+        "Checked-in datasets report",
+        "Benchmark matrices:",
+        "| Suite | Workloads | Concurrencies | Processes | Modes | Repeat | Max total concurrency |",
+        "Database pool policy used by the benchmark:",
+        "## Headline Results",
+        "This section is the direct same-backend comparison:",
+        "| Workload | Tests | Best Throughput | Lowest RSS | Lowest CPU | Lowest p50 Latency | Avg Fiber Throughput Delta | Best Fiber Throughput Delta |",
+        "## DB Workloads",
+        "This section uses the same capped Solid Queue matrix as the headline suite",
+        "| Workload | Shape | Best Throughput | Lowest RSS | Lowest CPU | Lowest p50 Latency | Avg Fiber Throughput Delta | Best Fiber Throughput Delta |",
+        "## Stress Suite",
+        "This section removes the headline cap and pushes higher connection demand",
+        "| Workload | Fiber Cells | Thread Cells |",
+        "## Async::Job Comparison",
+        "This section reuses the headline workload matrix",
+        "| Workload | Solid Queue Fiber Best | Async::Job Best | Async::Job Delta |",
+        "## Workloads",
+        "| Workload | Shape | Purpose |",
+        "| `sleep` |",
+        "## Setup",
+        "## Running",
+        "## Caveats"
+      ]
+
+      required.all? { |text| readme.include?(text) } &&
+        readme.match?(/\|\s*Sleep\s*\|\s*\d+\/\d+\s*\|\s*\d+\/\d+\s*\|/) &&
+        readme.match?(/\|\s*Sleep\s*\|[^|\n]*jobs\/s[^|\n]*\|[^|\n]*jobs\/s[^|\n]*\|[^|\n]*%[^|\n]*\|/)
     end
 
     def public_report_facts(datasets, headline_charts:, stress_charts:, narrative:)
@@ -543,7 +591,7 @@ module Bench
       lines << ""
       lines << "### Interpretation"
       lines << ""
-      lines << "The best observed throughput point landed on `fiber` for all four headline workloads, but the paired-cell win rates are the more useful reading: `sleep` won #{win_rate_text(result_for(facts, 'solid-queue', 'sleep'))}, `async_http` won #{win_rate_text(result_for(facts, 'solid-queue', 'async_http'))}, `ruby_llm_stream` won #{win_rate_text(result_for(facts, 'solid-queue', 'ruby_llm_stream'))}, and `cpu` won #{win_rate_text(result_for(facts, 'solid-queue', 'cpu'))}. The gains are largest on cooperative wait and streaming work, while the CPU control stays close."
+      lines << "Average fiber throughput deltas across the headline workloads were #{average_delta_sentence(facts, 'solid-queue', HEADLINE_WORKLOADS)}. The table shows the best observed point and the lowest resource rows; the paired-cell averages are the steadier signal than any single best cell."
       lines << ""
       lines << "Full supplementary Solid Queue results, including `http`, `db_queries`, `db_mixed`, and `db_transaction`, are in [results/solid-queue/README.md](#{facts[:links][:solid_queue_results]})."
       lines << ""
@@ -551,17 +599,17 @@ module Bench
       lines << ""
       lines << "### Method"
       lines << ""
-      lines << "This section uses the same capped Solid Queue matrix as the headline suite, but focuses on #{code_literals(DB_WORKLOADS)}. The benchmark workers set `DB_POOL` explicitly, so these rows use benchmark pool policy rather than passive Rails defaults: `thread` uses `concurrency + 2`, `fiber` uses #{solid_queue_fiber_minimum_db_pool_text}, and `db_transaction` overrides that with a matched pool of `concurrency + 2` in both modes."
+      lines << "This section uses the same capped Solid Queue matrix as the headline suite, but focuses on #{code_literals(DB_WORKLOADS)}. The benchmark workers set `DB_POOL` explicitly, so these rows use benchmark pool policy rather than passive Rails defaults: `thread` uses `concurrency + 5`, `fiber` uses #{solid_queue_fiber_minimum_db_pool_text}, and `db_transaction` overrides that with a matched pool of `concurrency + 5` in both modes."
       lines << ""
       lines.concat(db_workload_summary_table(facts))
       lines << ""
-      lines << "`DB Transaction` uses a matched pool (`concurrency + 2` per process for both modes), so it is the fair executor comparison. The public README intentionally excludes the old default-pool transaction pressure variant because it is not an apples-to-apples executor comparison."
+      lines << "`DB Transaction` uses a matched pool (`concurrency + 5` per process for both modes), so it is the fair executor comparison. The public README intentionally excludes the old default-pool transaction pressure variant because it is not an apples-to-apples executor comparison."
       lines << ""
       lines.concat(chart_embeds(facts[:charts][:db]))
       lines << ""
       lines << "### Interpretation"
       lines << ""
-      lines << "`db_queries` is the cleanest short-burst database case and favored `fiber` in #{win_rate_text(result_for(facts, 'solid-queue', 'db_queries'))}. `db_mixed` still leaned `fiber`, but less strongly, because the job shape mixes database work with a delayed HTTP call. `db_transaction` is separated from those two because the job pins a connection for the lifetime of the transaction; with matched pools, it is the executor comparison rather than a pool-policy comparison."
+      lines << "Average fiber throughput deltas across the DB workloads were #{average_delta_sentence(facts, 'solid-queue', DB_WORKLOADS)}. `db_transaction` is separated from the short DB-burst workloads because each job pins a connection for the lifetime of the transaction; with matched pools, it is the executor comparison rather than a pool-policy comparison."
       lines << ""
       lines << "## Stress Suite"
       lines << ""
@@ -699,19 +747,13 @@ module Bench
     end
 
     def db_pool_policy_facts
-      fiber_policy = if fiber_query_scoped_connections?
-        "For Solid Queue `fiber` rows on this app's Active Record version, the minimum accepted queue DB pool is `3` per worker process (`1` execution connection + `2` for polling and heartbeat)."
-      else
-        "For Solid Queue `fiber` rows on older Active Record behavior, the minimum accepted queue DB pool falls back to `concurrency + 2` per worker process."
-      end
-
       {
         database_yml_default: '`config/database.yml` uses `ENV.fetch("DB_POOL", ENV.fetch("RAILS_MAX_THREADS", 5))`.',
         benchmark_override: "Benchmark workers set `DB_POOL` explicitly, so the published results use benchmark pool policy rather than passive Rails defaults.",
-        solid_queue_thread: "For Solid Queue `thread` rows, the minimum accepted queue DB pool is `concurrency + 2` per worker process.",
-        solid_queue_fiber: fiber_policy,
+        solid_queue_thread: "For most Solid Queue `thread` rows, `DB_POOL = concurrency + 5` per worker process.",
+        solid_queue_fiber: "For most Solid Queue `fiber` rows, `DB_POOL = max(5, processes + 4)` per worker process.",
         async_job_fiber: "Async::Job keeps its own benchmark-specific pool policy unless `ASYNC_JOB_DB_POOL` is set.",
-        db_transaction_matched: "`db_transaction` overrides the mode-specific defaults and matches both modes at the Solid Queue thread minimum: `DB_POOL = concurrency + 2`.",
+        db_transaction_matched: "`db_transaction` overrides that and matches both modes at `DB_POOL = concurrency + 5`.",
         db_transaction_pool_pressure: "`db_transaction_pool_pressure` keeps the benchmark default pool policy and is excluded from the public README because it answers a different question."
       }
     end
@@ -721,7 +763,7 @@ module Bench
     end
 
     def solid_queue_fiber_minimum_db_pool_text
-      fiber_query_scoped_connections? ? "`3`" : "`concurrency + 2`"
+      "`max(5, processes + 4)`"
     end
 
     def research_questions
@@ -989,6 +1031,15 @@ module Bench
       return "n/a" unless win_rate
 
       "`#{win_rate[:wins]}/#{win_rate[:pairs]}` paired cells"
+    end
+
+    def average_delta_sentence(facts, family, workloads)
+      workloads.filter_map do |workload|
+        result = result_for(facts, family, workload)
+        next unless result
+
+        "#{result[:label]} #{average_delta_text(result[:average_fiber_delta])}"
+      end.join(", ")
     end
 
     def chart_embeds(charts)
@@ -1602,7 +1653,7 @@ module Bench
       begin
         configure_ruby_llm
         prompt = File.read(prompt_path)
-        response = RubyLLM.chat(model: ENV.fetch("BENCH_REPORT_MODEL", "gpt-5.5"))
+        response = RubyLLM.chat(model: ENV.fetch("BENCH_REPORT_MODEL", "gpt-5.4"))
           .with_instructions(prompt)
           .ask(JSON.pretty_generate(facts))
         strip_markdown_fence(response.content.to_s)

@@ -148,7 +148,7 @@
         "mode": "thread",
         "concurrency": 25,
         "processes": 2,
-        "status": "completed"
+        "status": "failed"
       },
       {
         "workload": "RubyLLM Stream",

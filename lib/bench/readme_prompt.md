@@ -2,48 +2,145 @@ You are writing the root README for a Rails benchmark repository.
 
 Audience: Rails developers deciding whether Solid Queue fiber execution mode is a good fit.
 
-Write a polished, human-readable Markdown README from the facts provided. Return only Markdown, with no code fences around the whole document.
+Return only Markdown. Do not wrap the whole document in a code fence.
 
-Style:
+The README is generated repeatedly, so structure stability matters. Keep the generated README in the same compact shape as the existing project README. Update facts and interpretation from the supplied JSON, but do not redesign the document.
 
-- Direct, clear, and pragmatic.
-- Same spirit as a strong Rails README: research question first, then methodology, then results, then how to run it.
-- No hype and no claims beyond the supplied facts.
-- Use exact numbers from the facts. Round percentages and numeric metrics to one decimal or two decimals where that reads better.
-- Use the exact setup and running facts as supplied. Do not assume a local checkout, a path-based Gemfile entry, or any command that is not present in the facts.
-- Define the benchmark terms clearly: in Solid Queue, `concurrency = N` means `threads: N` in thread mode or `fibers: N` in fiber mode; `processes` is the number of worker OS processes.
-- Report both average fiber throughput delta and best fiber throughput delta when both are available.
-- The `## Headline Results` section is only for the headline workloads: `sleep`, `async_http`, `ruby_llm_stream`, and `cpu`.
-- Keep the DB transaction framing precise: `db_transaction` is the fair executor/runtime comparison because the DB pool is matched for both modes.
-- Do not use `db_transaction_pool_pressure` in the public README headline or DB sections. Ignore it in the public README even if it appears elsewhere in the facts.
-- Be explicit that Async::Job changes the backend, so it is a throughput-ceiling reference, not the same comparison as Solid Queue fiber vs thread.
-- Treat the stress suite as a current Solid Queue implementation/design failure-envelope test under high connection demand, not as a fundamental thread-vs-fiber law.
-- When relevant, note that the capped suites intentionally omit cells above the max total concurrency cap, so higher concurrencies may show only `1 proc` results.
-- If `environment.ruby_version`, `environment.isolation_level`, or `environment.representative_run` are supplied, use them once where they help reproducibility, preferably in the introduction or methodology.
-- If `db_pool_policies` are supplied, explain them plainly. Be explicit when the benchmark sets `DB_POOL` itself instead of relying on passive Rails defaults.
-- Each result section should be understandable from the previous context alone. Prefer a short `### Method` paragraph before charts/tables and a short `### Interpretation` paragraph after them.
-- For the stress section, explain what the status chart means and why completion matters more than throughput there.
-- If multiple headline chart facts are supplied, use them. When the Solid Queue fiber-vs-thread charts include RSS, CPU, or latency deltas, make clear that positive percentages mean movement in fiber's favor.
+Hard formatting contract:
 
-Required structure:
+- Use exactly the top-level sections listed below, in this order.
+- Use only the listed `###` subsections. Do not add `### Requirements`, `### Commands`, `### Reports`, `### DB pool policy`, or other new subsections.
+- Keep the compact benchmark-report style: short intro, bullet methodology, fixed tables, short interpretation paragraphs.
+- Do not turn compact lists into long tutorial prose.
+- Do not add extra columns to the fixed tables.
+- Do not rename the fixed table headers.
+- Do not include DB pool values inside result table cells unless the table header explicitly asks for pool data.
+- Do not include p95/p99 latency in root README tables. Use p50 only.
+- Use workload display labels in public tables, for example `Sleep`, `Async::HTTP`, `RubyLLM Stream`, `CPU`, `DB Queries`, `DB Mixed`, `DB Transaction`.
+- Preserve code fence language as `bash` for shell commands and `ruby` for the Gemfile snippet.
+- `## Methodology` must include the `Benchmark matrices:` table.
+- `## Methodology` must include the `Database pool policy used by the benchmark:` list.
+- `## Workloads` must be a Markdown table, not bullets.
+- Stress completion cells must be written as completed/planned fractions such as `10/10`, not bare counts.
+- Async::Job table throughput cells must include the ` jobs/s` unit.
+
+Required document skeleton:
 
 1. `# Solid Queue Bench`
-2. A short introduction explaining the benchmark and latest checked-in result date.
+2. Short introduction:
+   - One paragraph: "This repo benchmarks Solid Queue `fiber` and `thread` execution modes across Rails job shapes that wait, stream, talk to the database, and burn CPU."
+   - One paragraph defining `concurrency = N` and `processes`, including the 10 x 6 = 60 example.
+   - Result date, Ruby version, isolation level, and Solid Queue revision when supplied.
+   - Artifact links in one sentence using these link labels: `results`, `Solid Queue`, `Async::Job`, `stress`.
 3. `## Research Questions`
 4. `## Methodology`
-5. `## Headline Results`, with the headline chart links or image links from the facts.
-6. A headline Solid Queue results table covering only the headline workloads and covering throughput, memory, latency, average fiber throughput delta, and best fiber throughput delta.
-7. `## DB Workloads`, covering `db_queries`, `db_mixed`, and `db_transaction`, with the DB-specific interpretation and the DB chart links if available.
-8. `## Stress Suite`, explaining the completion/failure-envelope test and showing only the stress status chart when available.
-9. `## Async::Job Comparison`
-10. `## Workloads`
-11. `## Setup`
-12. `## Running`
-13. `## Caveats`
+   - One opening paragraph describing the four public views.
+   - The supplied methodology bullets.
+   - One representative-run sentence.
+   - `Benchmark matrices:` followed by the fixed benchmark matrix table.
+   - `Database pool policy used by the benchmark:` followed by the supplied DB pool policy bullets.
+5. `## Headline Results`
+   - `### Method`
+   - Headline chart embeds/links from the facts.
+   - Fixed headline table.
+   - `### Interpretation`
+6. `## DB Workloads`
+   - `### Method`
+   - Fixed DB table.
+   - One precise DB transaction matched-pool note.
+   - DB chart embeds/links from the facts.
+   - `### Interpretation`
+7. `## Stress Suite`
+   - `### Method`
+   - Stress status chart only.
+   - Fixed stress completion table.
+   - `### Interpretation`
+8. `## Async::Job Comparison`
+   - `### Method`
+   - Fixed Async::Job table.
+   - `### Interpretation`
+9. `## Workloads`
+10. `## Setup`
+11. `## Running`
+12. `## Caveats`
 
-In `## Running`, include the supplied `bin/report` command and the supplied note about single-workload sweeps when those facts are present.
+Fixed headline table schema:
 
-Include these links exactly where useful:
+| Workload | Tests | Best Throughput | Lowest RSS | Lowest CPU | Lowest p50 Latency | Avg Fiber Throughput Delta | Best Fiber Throughput Delta |
+|---|---:|---|---|---|---|---:|---:|
+
+For cells in that table, use the established compact style:
+
+- Best Throughput: `fiber, c=10, proc=6, 511.58 jobs/s`
+- Lowest RSS: `fiber, c=5, proc=1, 134.34 MB`
+- Lowest CPU: `fiber, c=5, proc=1, 95.20%`
+- Lowest p50 Latency: `fiber, c=10, proc=6, 2303.85 ms`
+- Avg Fiber Throughput Delta: `+5.9% across 9 cells`
+- Best Fiber Throughput Delta: `+20.4% at c=50, proc=1`
+
+Fixed DB table schema:
+
+| Workload | Shape | Best Throughput | Lowest RSS | Lowest CPU | Lowest p50 Latency | Avg Fiber Throughput Delta | Best Fiber Throughput Delta |
+|---|---|---|---|---|---|---:|---:|
+
+Use the workload shape from the supplied workload facts. Cover only `db_queries`, `db_mixed`, and `db_transaction`. Do not include `db_transaction_pool_pressure`.
+
+Fixed benchmark matrix table schema:
+
+| Suite | Workloads | Concurrencies | Processes | Modes | Repeat | Max total concurrency |
+|---|---|---|---|---|---:|---|
+
+Fixed workloads table schema:
+
+| Workload | Shape | Purpose |
+|---|---|---|
+
+Fixed stress table schema:
+
+| Workload | Fiber Cells | Thread Cells |
+|---|---:|---:|
+
+Each stress row must use completed/planned values, for example:
+
+| Sleep | 10/10 | 1/10 |
+
+Fixed Async::Job table schema:
+
+| Workload | Solid Queue Fiber Best | Async::Job Best | Async::Job Delta |
+|---|---:|---:|---:|
+
+The first two numeric cells must include ` jobs/s`, for example:
+
+| Sleep | 511.58 jobs/s | 635.94 jobs/s | +24.3% |
+
+Content rules:
+
+- No hype and no claims beyond the supplied facts.
+- Use exact numbers from the facts. Round percentages and numeric metrics to one decimal or two decimals where that reads better.
+- Report both average fiber throughput delta and best fiber throughput delta when both are available.
+- The `## Headline Results` section is only for `sleep`, `async_http`, `ruby_llm_stream`, and `cpu`.
+- Keep the DB transaction framing precise: `db_transaction` is the fair executor/runtime comparison because the DB pool is matched for both modes.
+- Do not use `db_transaction_pool_pressure` in the public README headline, DB, workload, or caveat sections. Ignore it even if it appears elsewhere in the facts.
+- Be explicit that Async::Job changes the backend, so it is a throughput-ceiling reference, not the same comparison as Solid Queue fiber vs thread.
+- Treat the stress suite as a current Solid Queue implementation/design failure-envelope test under high connection demand, not as a fundamental thread-vs-fiber law.
+- When relevant, note that capped suites intentionally omit cells above the max total concurrency cap, so higher concurrencies may show only `1 proc` results.
+- If multiple headline chart facts are supplied, include them in the Headline Results method section, but keep the section shape unchanged.
+- When Solid Queue fiber-vs-thread charts include RSS, CPU, or latency deltas, mention once that positive percentages mean movement in fiber's favor.
+- For the stress section, explain what the status chart means and why completion matters more than throughput there.
+- In `## Running`, include the supplied `bin/report` command and the supplied note about single-workload sweeps when present.
+- Mention that `bin/report` uses RubyLLM for the public README and narrative when `OPENAI_API_KEY` is set.
+
+Setup and Running shape:
+
+- `## Setup` starts with one `Requirements:` sentence.
+- Then include "The Gemfile currently pins Solid Queue as:" followed by a `ruby` code fence containing the supplied Gemfile line.
+- Then include one `bash` code fence with the supplied setup commands.
+- Then include the supplied setup notes as plain paragraphs.
+- `## Running` starts with one `bash` code fence with the supplied sweep commands.
+- Then include the single-workload note.
+- Then include "Regenerate the public README, result summaries, charts, and narrative from existing artifacts:" followed by one `bash` code fence with the supplied report command.
+
+Use these links exactly where useful:
 
 - `results/README.md`
 - `results/solid-queue/README.md`
@@ -51,7 +148,3 @@ Include these links exactly where useful:
 - `results/solid-queue-stress/README.md`
 
 For charts, prefer Markdown image embeds when a chart fact has `embeddable: true`, using the provided `path` exactly. Otherwise use a normal Markdown link.
-
-Use the supplied `setup` and `running` facts for setup and command sections. Do not invent prerequisites or commands.
-
-Mention that `bin/report` uses RubyLLM for the public README and narrative when `OPENAI_API_KEY` is set.

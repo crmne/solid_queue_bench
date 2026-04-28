@@ -7,6 +7,7 @@ namespace :sweep do
   STRESS_SOLID_QUEUE_PROCESSES = ENV.fetch("STRESS_SOLID_QUEUE_PROCESSES", "2,6")
   REPEAT = ENV.fetch("REPEAT", "3")
   STRESS_REPEAT = ENV.fetch("STRESS_REPEAT", REPEAT)
+  STRESS_FAILURE_REPEAT_LIMIT = ENV.fetch("STRESS_FAILURE_REPEAT_LIMIT", "1")
 
   HEADLINE_WORKLOADS = %w[sleep async_http ruby_llm_stream cpu]
   DB_WORKLOADS = %w[db_queries db_mixed db_transaction]
@@ -170,7 +171,8 @@ namespace :sweep do
       processes: processes_for(backend, profile:),
       repeat: repeat_for(profile:),
       output_dir: tmp_output_dir_for(backend, profile:),
-      max_total_concurrency: max_total_concurrency_for(profile:)
+      max_total_concurrency: max_total_concurrency_for(profile:),
+      failure_repeat_limit: failure_repeat_limit_for(profile:)
     )
   end
 
@@ -192,7 +194,7 @@ namespace :sweep do
       when "ruby_llm_stream"
         return {
           jobs: Integer(ENV.fetch("STRESS_RUBY_LLM_STREAM_JOBS", "240")),
-          timeout: Integer(ENV.fetch("STRESS_RUBY_LLM_STREAM_TIMEOUT_S", "600")),
+          timeout: Integer(ENV.fetch("STRESS_RUBY_LLM_STREAM_TIMEOUT_S", "180")),
           extra: "--token-count #{ENV.fetch("STRESS_RUBY_LLM_TOKEN_COUNT", "40")} --token-delay-ms #{ENV.fetch("STRESS_RUBY_LLM_TOKEN_DELAY_MS", "20")} --llm-model gpt-4.1-mini"
         }
       else
@@ -244,7 +246,7 @@ namespace :sweep do
     end
   end
 
-  def run_matrix(backend:, workload:, jobs:, timeout:, extra:, concurrencies:, processes:, repeat:, output_dir:, max_total_concurrency: nil)
+  def run_matrix(backend:, workload:, jobs:, timeout:, extra:, concurrencies:, processes:, repeat:, output_dir:, max_total_concurrency: nil, failure_repeat_limit: nil)
     cmd = [
       "bin/matrix",
       "--backend", backend,
@@ -260,6 +262,7 @@ namespace :sweep do
       *extra.split.reject(&:empty?)
     ]
     cmd += [ "--max-total-concurrency", max_total_concurrency.to_s ] if max_total_concurrency
+    cmd += [ "--failure-repeat-limit", failure_repeat_limit.to_s ] if failure_repeat_limit
 
     puts "\n#{"=" * 60}"
     puts "Starting #{backend} #{workload} sweep..."
@@ -419,6 +422,13 @@ namespace :sweep do
 
   def repeat_for(profile:)
     profile == :stress ? STRESS_REPEAT : REPEAT
+  end
+
+  def failure_repeat_limit_for(profile:)
+    return unless profile == :stress
+    return if STRESS_FAILURE_REPEAT_LIMIT.to_s.empty?
+
+    STRESS_FAILURE_REPEAT_LIMIT
   end
 
   def max_total_concurrency_for(profile:)

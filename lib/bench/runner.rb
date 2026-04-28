@@ -446,6 +446,7 @@ module Bench
     def db_pool_for(mode)
       if (override = options[:db_pool])
         return default_db_pool_for(mode) if override == :default
+        return minimum_db_pool_for(mode) if override == :minimum
         return matched_db_pool if override == :matched
         return override
       end
@@ -462,11 +463,17 @@ module Bench
         return [ 5, options.fetch(:processes) + 4 ].max
       end
 
-      solid_queue_minimum_db_pool_for(mode)
+      solid_queue_default_db_pool_for(mode)
     end
 
     def matched_db_pool
-      solid_queue_minimum_db_pool_for("thread")
+      default_db_pool_for("thread")
+    end
+
+    def minimum_db_pool_for(mode)
+      return default_db_pool_for(mode) if backend == "async_job"
+
+      solid_queue_minimum_db_pool_for(mode)
     end
 
     def solid_queue_minimum_db_pool_for(mode)
@@ -476,6 +483,14 @@ module Bench
         3
       else
         options.fetch(:concurrency) + 2
+      end
+    end
+
+    def solid_queue_default_db_pool_for(mode)
+      if mode.to_s == "thread"
+        options.fetch(:concurrency) + 5
+      else
+        [ 5, options.fetch(:processes) + 4 ].max
       end
     end
 
@@ -605,7 +620,7 @@ module Bench
     def current_rss_kb(pid)
       status = File.read("/proc/#{pid}/status")
       status[/^VmRSS:\s+(\d+)\s+kB$/m, 1].to_i
-    rescue Errno::ENOENT
+    rescue Errno::ENOENT, Errno::ESRCH
       0
     end
 
