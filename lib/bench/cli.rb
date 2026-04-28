@@ -45,7 +45,7 @@ module Bench
           parser.on("--jobs N", Integer, "Number of jobs to enqueue") { |value| options[:jobs] = value }
           parser.on("--duration-ms N", Integer, "Sleep, HTTP, mixed HTTP, or DB slow-query delay in ms") { |value| options[:payload][:duration_ms] = value }
           parser.on("--duration-s N", Integer, "Long wait duration in seconds") { |value| options[:payload][:duration_s] = value }
-          parser.on("--db-pool VALUE", "DB pool policy: default, minimum, matched, or a positive integer") { |value| options[:db_pool] = value }
+          parser.on("--db-pool VALUE", "DB pool policy: default, matched, mode_specific, minimum, or a positive integer") { |value| options[:db_pool] = value }
           parser.on("--iterations N", Integer, "CPU workload iterations per job") { |value| options[:payload][:iterations] = value }
           parser.on("--reads N", Integer, "Sequential SELECT queries per DB-heavy job") { |value| options[:payload][:reads] = value }
           parser.on("--writes N", Integer, "Write queries per DB-heavy job") { |value| options[:payload][:writes] = value }
@@ -104,7 +104,7 @@ module Bench
             duration_ms: options[:payload][:duration_ms] || 0
           }
           options[:db_pool] ||= :matched if options[:workload] == "db_transaction"
-          options[:db_pool] ||= :default if options[:workload] == "db_transaction_pool_pressure"
+          options[:db_pool] ||= :mode_specific if options[:workload] == "db_transaction_pool_pressure"
         when "db_mixed"
           options[:payload] = {
             reads: options[:payload][:reads] || 10,
@@ -126,10 +126,12 @@ module Bench
           :minimum
         elsif value == "matched"
           :matched
+        elsif %w[mode_specific mode-specific modespecific].include?(value)
+          :mode_specific
         elsif value.match?(/\A\d+\z/) && Integer(value).positive?
           Integer(value)
         else
-          raise ArgumentError, "--db-pool must be default, minimum, matched, or a positive integer"
+          raise ArgumentError, "--db-pool must be default, matched, mode_specific, minimum, or a positive integer"
         end
       end
   end

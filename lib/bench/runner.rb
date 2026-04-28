@@ -448,6 +448,7 @@ module Bench
         return default_db_pool_for(mode) if override == :default
         return minimum_db_pool_for(mode) if override == :minimum
         return matched_db_pool if override == :matched
+        return mode_specific_db_pool_for(mode) if override == :mode_specific
         return override
       end
 
@@ -460,14 +461,22 @@ module Bench
 
         # Redis-backed async workers should not be forced into a thread-sized
         # Active Record pool; that mostly benchmarks Postgres saturation.
-        return [ 5, options.fetch(:processes) + 4 ].max
+        return async_job_default_db_pool
       end
 
-      solid_queue_default_db_pool_for(mode)
+      matched_db_pool
     end
 
     def matched_db_pool
-      default_db_pool_for("thread")
+      return async_job_default_db_pool if backend == "async_job"
+
+      solid_queue_thread_db_pool
+    end
+
+    def mode_specific_db_pool_for(mode)
+      return default_db_pool_for(mode) if backend == "async_job"
+
+      solid_queue_mode_specific_db_pool_for(mode)
     end
 
     def minimum_db_pool_for(mode)
@@ -486,12 +495,20 @@ module Bench
       end
     end
 
-    def solid_queue_default_db_pool_for(mode)
+    def solid_queue_mode_specific_db_pool_for(mode)
       if mode.to_s == "thread"
-        options.fetch(:concurrency) + 5
+        solid_queue_thread_db_pool
       else
         [ 5, options.fetch(:processes) + 4 ].max
       end
+    end
+
+    def solid_queue_thread_db_pool
+      options.fetch(:concurrency) + 5
+    end
+
+    def async_job_default_db_pool
+      [ 5, options.fetch(:processes) + 4 ].max
     end
 
     def solid_queue_fiber_jobs_release_connections_between_queries?

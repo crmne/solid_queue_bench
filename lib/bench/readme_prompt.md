@@ -34,7 +34,7 @@ Required document skeleton:
    - Artifact links in one sentence using these link labels: `results`, `Solid Queue`, `Async::Job`, `stress`.
 3. `## Research Questions`
 4. `## Methodology`
-   - One opening paragraph describing the four public views.
+   - One opening paragraph describing the four public views and, if supplied, the separate pool-policy suite.
    - The supplied methodology bullets.
    - One representative-run sentence.
    - `Benchmark matrices:` followed by the fixed benchmark matrix table.
@@ -119,7 +119,8 @@ Content rules:
 - Use exact numbers from the facts. Round percentages and numeric metrics to one decimal or two decimals where that reads better.
 - Report both average fiber throughput delta and best fiber throughput delta when both are available.
 - The `## Headline Results` section is only for `sleep`, `async_http`, `ruby_llm_stream`, and `cpu`.
-- Keep the DB transaction framing precise: `db_transaction` is the fair executor/runtime comparison because the DB pool is matched for both modes.
+- Keep the DB workload framing precise: primary Solid Queue DB results are the fair executor/runtime comparison when the DB pool is matched for both modes.
+- Treat mode-specific or mismatched DB pool runs as a separate pool-sizing question, not as the primary executor comparison.
 - Do not use `db_transaction_pool_pressure` in the public README headline, DB, workload, or caveat sections. Ignore it even if it appears elsewhere in the facts.
 - Be explicit that Async::Job changes the backend, so it is a throughput-ceiling reference, not the same comparison as Solid Queue fiber vs thread.
 - Treat the stress suite as a current Solid Queue implementation/design failure-envelope test under high connection demand, not as a fundamental thread-vs-fiber law.

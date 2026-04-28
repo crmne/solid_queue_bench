@@ -5,7 +5,7 @@ Auto-generated from the benchmark artifacts in this directory.
 Latest dataset timestamp: `2026-04-28T01:16:07Z`
 Solid Queue commit under test: `305bf4018352e099019f9f24502a18ee4794e64e`
 
-Same backend, different executor. This is the direct Solid Queue thread-vs-fiber comparison.
+Same backend, different executor. Primary sweep tasks use matched DB pools for the direct Solid Queue thread-vs-fiber comparison.
 
 | Workload | Tests | Best Throughput | Lowest RSS | Lowest p50 Latency | Avg Fiber Throughput Delta | Best Fiber Throughput Delta | Artifacts |
 |---|---|---|---|---|---|---|---|

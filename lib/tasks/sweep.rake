@@ -18,9 +18,11 @@ namespace :sweep do
   SUPPLEMENTARY_WORKLOADS = CONTROL_WORKLOADS + DB_WORKLOADS
   ALL_WORKLOADS = HEADLINE_WORKLOADS + SUPPLEMENTARY_WORKLOADS
   PUBLISH_WORKLOADS = ALL_WORKLOADS
+  POOL_POLICY_WORKLOADS = ALL_WORKLOADS
 
   BACKEND_LABELS = {
     "solid_queue" => "solid-queue",
+    "solid_queue_pool_policy" => "solid-queue-pool-policy",
     "async_job" => "async-job",
     "solid_queue_stress" => "solid-queue-stress"
   }.freeze
@@ -82,6 +84,19 @@ namespace :sweep do
   desc "Run the Solid Queue stress suite focused on high-concurrency I/O and failure envelope"
   task solid_queue_stress: :environment do
     run_suite(backend: "solid_queue", workloads: STRESS_WORKLOADS, profile: :stress)
+  end
+
+  desc "Run the Solid Queue mode-specific DB pool policy suite"
+  task solid_queue_pool_policy: :environment do
+    run_suite(backend: "solid_queue", workloads: POOL_POLICY_WORKLOADS, profile: :pool_policy)
+  end
+
+  desc "Run the public report suite plus the Solid Queue pool policy suite"
+  task publish_with_pool_policy: :environment do
+    run_suite(backend: "solid_queue", workloads: PUBLISH_WORKLOADS, profile: :full)
+    run_suite(backend: "async_job", workloads: HEADLINE_WORKLOADS, profile: :headline)
+    run_suite(backend: "solid_queue", workloads: STRESS_WORKLOADS, profile: :stress)
+    run_suite(backend: "solid_queue", workloads: POOL_POLICY_WORKLOADS, profile: :pool_policy)
   end
 
   desc "Run only the Solid Queue sleep sweep"
@@ -172,7 +187,8 @@ namespace :sweep do
       repeat: repeat_for(profile:),
       output_dir: tmp_output_dir_for(backend, profile:),
       max_total_concurrency: max_total_concurrency_for(profile:),
-      failure_repeat_limit: failure_repeat_limit_for(profile:)
+      failure_repeat_limit: failure_repeat_limit_for(profile:),
+      db_pool: db_pool_for_profile(backend:, profile:, workload:)
     )
   end
 
@@ -233,7 +249,7 @@ namespace :sweep do
       {
         jobs: Integer(ENV.fetch("DB_TRANSACTION_POOL_PRESSURE_JOBS", ENV.fetch("DB_TRANSACTION_JOBS", "500"))),
         timeout: Integer(ENV.fetch("DB_TRANSACTION_POOL_PRESSURE_TIMEOUT_S", ENV.fetch("DB_TRANSACTION_TIMEOUT_S", "240"))),
-        extra: "--reads #{ENV.fetch("DB_TRANSACTION_POOL_PRESSURE_READS", ENV.fetch("DB_TRANSACTION_READS", "10"))} --writes #{ENV.fetch("DB_TRANSACTION_POOL_PRESSURE_WRITES", ENV.fetch("DB_TRANSACTION_WRITES", "2"))} --duration-ms #{ENV.fetch("DB_TRANSACTION_POOL_PRESSURE_DURATION_MS", ENV.fetch("DB_TRANSACTION_DURATION_MS", "20"))} --db-pool default"
+        extra: "--reads #{ENV.fetch("DB_TRANSACTION_POOL_PRESSURE_READS", ENV.fetch("DB_TRANSACTION_READS", "10"))} --writes #{ENV.fetch("DB_TRANSACTION_POOL_PRESSURE_WRITES", ENV.fetch("DB_TRANSACTION_WRITES", "2"))} --duration-ms #{ENV.fetch("DB_TRANSACTION_POOL_PRESSURE_DURATION_MS", ENV.fetch("DB_TRANSACTION_DURATION_MS", "20"))} --db-pool mode_specific"
       }
     when "db_mixed"
       {
@@ -246,7 +262,7 @@ namespace :sweep do
     end
   end
 
-  def run_matrix(backend:, workload:, jobs:, timeout:, extra:, concurrencies:, processes:, repeat:, output_dir:, max_total_concurrency: nil, failure_repeat_limit: nil)
+  def run_matrix(backend:, workload:, jobs:, timeout:, extra:, concurrencies:, processes:, repeat:, output_dir:, max_total_concurrency: nil, failure_repeat_limit: nil, db_pool: nil)
     cmd = [
       "bin/matrix",
       "--backend", backend,
@@ -261,6 +277,7 @@ namespace :sweep do
       "--name", "sweep",
       *extra.split.reject(&:empty?)
     ]
+    cmd += [ "--db-pool", db_pool.to_s ] if db_pool
     cmd += [ "--max-total-concurrency", max_total_concurrency.to_s ] if max_total_concurrency
     cmd += [ "--failure-repeat-limit", failure_repeat_limit.to_s ] if failure_repeat_limit
 
@@ -386,6 +403,7 @@ namespace :sweep do
   def prune_stale_results?(backend:, workloads:, profile:)
     profile == :full ||
       profile == :stress ||
+      profile == :pool_policy ||
       (backend == "async_job" && same_workloads?(workloads, HEADLINE_WORKLOADS))
   end
 
@@ -409,7 +427,7 @@ namespace :sweep do
 
   def concurrencies_for(backend:, profile:)
     case profile
-    when :headline, :full
+    when :headline, :full, :pool_policy
       HEADLINE_CONCURRENCIES
     when :stress
       raise ArgumentError, "stress suite is only supported for solid_queue" unless backend == "solid_queue"
@@ -438,6 +456,18 @@ namespace :sweep do
     HEADLINE_MAX_TOTAL_CONCURRENCY
   end
 
+  def db_pool_for_profile(backend:, profile:, workload:)
+    return unless backend == "solid_queue"
+    return "mode_specific" if workload == "db_transaction_pool_pressure"
+
+    case profile
+    when :headline, :full
+      "matched"
+    when :pool_policy, :stress
+      "mode_specific"
+    end
+  end
+
   def tmp_output_dir_for(backend, profile:)
     File.join("tmp/benchmarks", results_slug_for(backend, profile:))
   end
@@ -448,6 +478,7 @@ namespace :sweep do
 
   def results_slug_for(backend, profile:)
     return backend_slug("solid_queue_stress") if profile == :stress
+    return backend_slug("solid_queue_pool_policy") if profile == :pool_policy
 
     backend_slug(backend)
   end

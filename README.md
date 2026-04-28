@@ -15,14 +15,14 @@ Full generated artifacts: [results](results/README.md), [Solid Queue](results/so
 ## Research Questions
 
 - Is Solid Queue `fiber` faster than Solid Queue `thread` for the same workload?
-- Does `fiber` reduce memory, CPU, latency, or database connection pressure?
-- Do short DB bursts still work well with a smaller shared fiber pool?
+- With matched DB pools, does `fiber` reduce memory, CPU, or latency?
+- In the separate pool-policy suite, do short DB bursts still work well with a smaller shared fiber pool?
 - What happens when jobs pin database connections for a whole transaction?
 - How much faster is Async::Job + Redis when the backend changes too?
 
 ## Methodology
 
-The public README covers four views of the same benchmark app: a capped Solid Queue headline suite, capped DB-focused supplementary runs, an uncapped Solid Queue stress suite, and an Async::Job + Redis reference run on the headline workloads.
+The public README covers four views of the same benchmark app: a capped Solid Queue headline suite, capped DB-focused supplementary runs, an uncapped Solid Queue stress suite, and an Async::Job + Redis reference run on the headline workloads. A separate Solid Queue pool-policy suite can be generated for mode-specific DB pool sizing, but it is not part of the primary executor comparison.
 
 - Timing starts after workers are ready.
 - `jobs_per_second` counts successful jobs only.
@@ -31,6 +31,8 @@ The public README covers four views of the same benchmark app: a capped Solid Qu
 - In Solid Queue, `concurrency = N` means `threads: N` in thread mode or `fibers: N` in fiber mode. `Processes` is the number of worker OS processes.
 - The headline suite is limited to `sleep`, `async_http`, `ruby_llm_stream`, and `cpu`.
 - Supplementary Solid Queue runs add `http`, `db_queries`, `db_mixed`, and `db_transaction`.
+- Primary Solid Queue headline and supplementary sweep tasks are configured for matched DB pools for `thread` and `fiber`.
+- The optional pool-policy sweep keeps the mode-specific DB pools and answers a separate operational question.
 - The headline and supplementary suites cap total concurrency at `60` so high process counts do not turn the main comparison into a pool-exhaustion test.
 - Cells above that cap are intentionally omitted from the capped suites, so higher concurrencies may show only `1 proc` results.
 - The stress suite removes that cap and is best read as a current Solid Queue failure-envelope test, not as a fundamental thread-vs-fiber law.
@@ -51,11 +53,11 @@ Database pool policy used by the benchmark:
 
 - `config/database.yml` uses `ENV.fetch("DB_POOL", ENV.fetch("RAILS_MAX_THREADS", 5))`.
 - Benchmark workers set `DB_POOL` explicitly, so the published results use benchmark pool policy rather than passive Rails defaults.
-- For most Solid Queue `thread` rows, `DB_POOL = concurrency + 5` per worker process.
-- For most Solid Queue `fiber` rows, `DB_POOL = max(5, processes + 4)` per worker process.
+- The checked-in primary Solid Queue rows use the older mode-specific pool policy; rerun `sweep:publish` with this harness to regenerate them with matched pools.
+- The optional Solid Queue pool-policy suite keeps the mode-specific policy: `thread` uses `DB_POOL = concurrency + 5`; `fiber` uses `DB_POOL = max(5, processes + 4)`.
+- The stress suite uses the mode-specific pool policy unless `DB_POOL` is overridden for the run.
 - Async::Job keeps its own benchmark-specific pool policy unless `ASYNC_JOB_DB_POOL` is set.
-- `db_transaction` overrides that and matches both modes at `DB_POOL = concurrency + 5`.
-- `db_transaction_pool_pressure` keeps the benchmark default pool policy and is excluded from the public README because it answers a different question.
+- `db_transaction_pool_pressure` is kept only as a backwards-compatible exploratory workload; the separate pool-policy suite is the preferred way to study mismatched DB pools.
 
 ## Headline Results
 
@@ -92,7 +94,7 @@ Full supplementary Solid Queue results, including `http`, `db_queries`, `db_mixe
 
 ### Method
 
-This section uses the same capped Solid Queue matrix as the headline suite, but focuses on `db_queries`, `db_mixed`, `db_transaction`. The benchmark workers set `DB_POOL` explicitly, so these rows use benchmark pool policy rather than passive Rails defaults: `thread` uses `concurrency + 5`, `fiber` uses `max(5, processes + 4)`, and `db_transaction` overrides that with a matched pool of `concurrency + 5` in both modes.
+This section uses the same capped Solid Queue matrix as the headline suite, but focuses on `db_queries`, `db_mixed`, `db_transaction`. The checked-in primary Solid Queue rows use the older mode-specific pool policy; rerun `sweep:publish` with this harness to regenerate them with matched pools.
 
 | Workload | Shape | Best Throughput | Lowest RSS | Lowest CPU | Lowest p50 Latency | Avg Fiber Throughput Delta | Best Fiber Throughput Delta |
 |---|---|---|---|---|---|---:|---:|
@@ -100,7 +102,7 @@ This section uses the same capped Solid Queue matrix as the headline suite, but 
 | DB Mixed | 10 reads, 50 ms delayed HTTP call, 2 writes | fiber, c=10, proc=6, 335.65 jobs/s | fiber, c=5, proc=1, 135.48 MB | fiber, c=5, proc=1, 48.80% | fiber, c=10, proc=6, 886.57 ms | +2.0% across 9 cells | +12.0% at c=50, proc=1 |
 | DB Transaction | 10 reads and 2 writes in one transaction, 20 ms duration | fiber, c=10, proc=6, 195.35 jobs/s | fiber, c=25, proc=1, 133.02 MB | fiber, c=5, proc=1, 21.60% | fiber, c=10, proc=6, 1522.12 ms | +3.8% across 9 cells | +19.5% at c=50, proc=1 |
 
-`DB Transaction` uses a matched pool (`concurrency + 5` per process for both modes), so it is the fair executor comparison. The public README intentionally excludes the old default-pool transaction pressure variant because it is not an apples-to-apples executor comparison.
+`DB Transaction` uses the same matched pool (`concurrency + 5` per process for both modes), so it stays an executor comparison rather than a pool-policy comparison.
 
 ![Solid Queue DB Queries Advantage](results/charts/solid-queue-db-queries-advantage.svg)
 
@@ -110,7 +112,7 @@ This section uses the same capped Solid Queue matrix as the headline suite, but 
 
 ### Interpretation
 
-Average fiber throughput deltas across the DB workloads were DB Queries +8.2% across 9 cells, DB Mixed +2.0% across 9 cells, DB Transaction +3.8% across 9 cells. `db_transaction` is separated from the short DB-burst workloads because each job pins a connection for the lifetime of the transaction; with matched pools, it is the executor comparison rather than a pool-policy comparison.
+Average fiber throughput deltas across the DB workloads were DB Queries +8.2% across 9 cells, DB Mixed +2.0% across 9 cells, DB Transaction +3.8% across 9 cells. `db_transaction` is separated from the short DB-burst workloads because each job pins a connection for the lifetime of the transaction; the matched pool keeps that result focused on executor behavior.
 
 ## Stress Suite
 
@@ -185,10 +187,12 @@ bin/setup
 ```bash
 bundle exec rake sweep:solid_queue_headline   # Headline Solid Queue
 bundle exec rake sweep:solid_queue_stress      # Stress suite
+bundle exec rake sweep:solid_queue_pool_policy # Mode-specific DB pool suite
 bundle exec rake sweep:async_job_headline      # Headline Async::Job
 bundle exec rake sweep:families                # Both headline families
 bundle exec rake sweep:full                    # Headline + HTTP control + DB
 bundle exec rake sweep:publish                 # Public README/report suite
+bundle exec rake sweep:publish_with_pool_policy # Public suite + pool policy
 ```
 
 Single-workload sweeps are available too, including `sweep:sleep`, `sweep:db_queries`, `sweep:db_transaction`, `sweep:db_mixed`, `sweep:ruby_llm_stream`, and the `sweep:async_job_*` tasks.
@@ -205,6 +209,6 @@ When `OPENAI_API_KEY` is set, `bin/report` asks RubyLLM to write the public READ
 
 - The data shows best and lowest observed results from this tested matrix; it does not prove fiber wins at every concurrency, process count, or pool size.
 - Async::Job changes the backend, so those numbers are a backend comparison rather than a Solid Queue mode comparison.
-- `db_transaction` is the fair transaction comparison because the DB pool is matched for both modes.
+- Primary Solid Queue comparisons should be read from matched-pool datasets; the pool-policy suite answers the separate question about smaller fiber DB pools.
 - Stress results reflect the current Solid Queue implementation under high connection demand and should not be read as a permanent thread-vs-fiber law.
 - The harness uses aggressive queue polling, so these numbers reflect execution behavior under a low-latency benchmark configuration, not default production settings.

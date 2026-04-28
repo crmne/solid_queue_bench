@@ -52,7 +52,7 @@ module Bench
           parser.on("--modes LIST", "Comma-separated modes (default: thread,fiber)") { |v| options[:modes] = v.split(",") }
           parser.on("--duration-ms N", Integer, "Sleep, HTTP, mixed HTTP, or DB slow-query delay in ms") { |v| options[:payload][:duration_ms] = v }
           parser.on("--duration-s N", Integer, "Long wait duration in seconds") { |v| options[:payload][:duration_s] = v }
-          parser.on("--db-pool VALUE", "DB pool policy: default, minimum, matched, or a positive integer") { |v| options[:db_pool] = v }
+          parser.on("--db-pool VALUE", "DB pool policy: default, matched, mode_specific, minimum, or a positive integer") { |v| options[:db_pool] = v }
           parser.on("--iterations N", Integer, "CPU workload iterations") { |v| options[:payload][:iterations] = v }
           parser.on("--reads N", Integer, "Sequential SELECT queries per DB-heavy job") { |v| options[:payload][:reads] = v }
           parser.on("--writes N", Integer, "Write queries per DB-heavy job") { |v| options[:payload][:writes] = v }
@@ -115,7 +115,7 @@ module Bench
             duration_ms: options[:payload][:duration_ms] || 0
           }
           options[:db_pool] ||= :matched if options[:workload] == "db_transaction"
-          options[:db_pool] ||= :default if options[:workload] == "db_transaction_pool_pressure"
+          options[:db_pool] ||= :mode_specific if options[:workload] == "db_transaction_pool_pressure"
         when "db_mixed"
           options[:payload] = {
             reads: options[:payload][:reads] || 10,
@@ -137,10 +137,12 @@ module Bench
           :minimum
         elsif value == "matched"
           :matched
+        elsif %w[mode_specific mode-specific modespecific].include?(value)
+          :mode_specific
         elsif value.match?(/\A\d+\z/) && Integer(value).positive?
           Integer(value)
         else
-          raise ArgumentError, "--db-pool must be default, minimum, matched, or a positive integer"
+          raise ArgumentError, "--db-pool must be default, matched, mode_specific, minimum, or a positive integer"
         end
       end
 
@@ -346,6 +348,7 @@ module Bench
       def serialize_db_pool_option(value)
         case value
         when :matched then "matched"
+        when :mode_specific then "mode_specific"
         when :default then "default"
         else value
         end
