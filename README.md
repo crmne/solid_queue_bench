@@ -169,7 +169,7 @@ Requirements: Ruby 4.0.2, PostgreSQL, Redis, either local on 127.0.0.1:6379 or a
 The Gemfile currently pins Solid Queue as:
 
 ```ruby
-gem "solid_queue", git: "https://github.com/crmne/solid_queue.git", branch: "async-worker-execution-mode"
+gem "solid_queue", "~> 1.6.0"
 ```
 
 ```bash
