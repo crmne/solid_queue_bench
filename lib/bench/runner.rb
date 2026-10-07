@@ -22,6 +22,7 @@ module Bench
       output = {
         generated_at: Time.current.iso8601,
         ruby_version: RUBY_VERSION,
+        environment: Bench::Environment.metadata,
         isolation_level: ActiveSupport::IsolatedExecutionState.isolation_level,
         modes: results
       }
@@ -49,6 +50,7 @@ module Bench
       cleanup_benchmark_tables
       prepare_workload_data!
       support_server_pid = start_support_server_if_needed
+      prepare_llm_history!
       set_active_job_queue_adapter!
 
       run = BenchmarkRun.create!(
@@ -73,6 +75,9 @@ module Bench
       stop_resource_sampler(sampler)
 
       summary = summarize(run, sampler)
+      if %w[ruby_llm_stream ruby_llm_stream_only ruby_llm_requests].include?(options[:workload])
+        summary[:http_connections] = JSON.parse(Net::HTTP.get(URI("http://127.0.0.1:#{options[:http_port]}/stats")))
+      end
       run.update!(
         completed_at: summary[:benchmark_finished_at] || Time.current,
         wall_time_s: summary[:wall_time_s],
@@ -305,6 +310,8 @@ module Bench
         backend: run.backend,
         mode: run.concurrency_model,
         workload: run.workload,
+        llm_adapter: ENV.fetch("BENCH_LLM_ADAPTER", "net_http") == "recommended" ?
+          (run.concurrency_model == "fiber" ? "async_http" : "net_http_persistent") : ENV.fetch("BENCH_LLM_ADAPTER", "net_http"),
         jobs: run.jobs_count,
         concurrency: run.concurrency,
         processes: run.processes,
@@ -435,7 +442,7 @@ module Bench
     end
 
     def support_server_env
-      return {} unless options[:workload] == "ruby_llm_stream"
+      return {} unless options[:workload].start_with?("ruby_llm_")
 
       {
         "BENCH_FAKE_LLM_TOKEN_COUNT" => options.dig(:payload, :token_count).to_s,
@@ -661,13 +668,14 @@ module Bench
       tables = ActiveRecord::Base.connection.tables
       truncate_tables!(
         tables.grep(/\Asolid_queue_/) +
-        tables.grep(/\A(chats|messages|tool_calls|benchmark_write_events)\z/)
+        tables.grep(/\A(chats|messages|tool_calls|benchmark_write_events)\z/) +
+        tables.grep(/\Aruby_llm_(usages|tool_calls|batches|batch_requests|provider_files)\z/)
       )
       cleanup_async_job_state
     end
 
     def support_server_needed?
-      %w[http async_http ruby_llm_stream db_mixed].include?(options[:workload])
+      %w[http async_http ruby_llm_stream ruby_llm_stream_only ruby_llm_requests ruby_llm_history db_mixed].include?(options[:workload])
     end
 
     def workload_has_child_jobs?(workload)
@@ -770,7 +778,7 @@ module Bench
     def required_tables
       tables = %w[benchmark_runs benchmark_executions]
       tables += %w[solid_queue_processes solid_queue_jobs] if backend == "solid_queue"
-      tables += %w[chats messages models tool_calls] if options[:workload] == "ruby_llm_stream"
+      tables += %w[chats messages ruby_llm_models ruby_llm_tool_calls ruby_llm_usages] if options[:workload].start_with?("ruby_llm_")
       tables += %w[benchmark_data_points benchmark_write_events] if db_workload?
       tables
     end
@@ -786,7 +794,7 @@ module Bench
           last_child_finished_at
         ]
       }
-      columns["chats"] = %w[benchmark_execution_id] if options[:workload] == "ruby_llm_stream"
+      columns["chats"] = %w[benchmark_execution_id] if options[:workload].start_with?("ruby_llm_")
       columns
     end
 
@@ -803,6 +811,19 @@ module Bench
     def stop_backend_processes(supervisor_pids)
       Array(supervisor_pids).each { |pid| stop_process(pid) }
       FileUtils.rm_rf(async_job_ready_dir) if backend == "async_job"
+    end
+
+    def prepare_llm_history!
+      return unless options[:workload] == "ruby_llm_history"
+
+      chat = Chat.create!(model: options[:payload].fetch(:model_id), provider: :openai)
+      chat.with_context(Bench::Workloads.llm_context(options.fetch(:http_port)))
+      Message.suppressing_turbo_broadcasts do
+        (options[:payload].fetch(:history_messages) / 2).times { |i| chat.ask("Question #{i}?") }
+      end
+      raise "History seed failed" unless chat.messages.count == options[:payload].fetch(:history_messages)
+
+      options[:payload][:chat_id] = chat.id
     end
 
     def prepare_workload_data!

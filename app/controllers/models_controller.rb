@@ -4,11 +4,11 @@ class ModelsController < ApplicationController
   end
 
   def show
-    @model = Model.find(params[:id])
+    @model = RubyLLM.models.find(params[:id], provider: params[:provider])
   end
 
   def refresh
-    Model.refresh!
+    RubyLLM.models.refresh
     redirect_to models_path, notice: "Models refreshed successfully"
   end
 end

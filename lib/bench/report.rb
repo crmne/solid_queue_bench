@@ -1,3 +1,4 @@
+require "bundler/setup"
 require "csv"
 require "fileutils"
 require "json"
@@ -5,7 +6,6 @@ require "pathname"
 require "shellwords"
 require "time"
 
-require "bundler/setup"
 require "active_model"
 require "active_record"
 require "solid_queue/configuration"
@@ -339,11 +339,7 @@ module Bench
       return revisions.first if revisions.one?
       return revisions.join(", ") if revisions.size > 1
 
-      repo = File.expand_path("../../../solid_queue", __dir__)
-      return unless Dir.exist?(repo)
 
-      sha = `git -C #{Shellwords.escape(repo)} rev-parse HEAD 2>/dev/null`.strip
-      sha.empty? ? nil : sha
     end
 
     def write_family_readme(family, datasets)
@@ -360,6 +356,10 @@ module Bench
       lines << "Latest dataset timestamp: `#{datasets.filter_map(&:generated_at).max}`"
       revision = solid_queue_revision(datasets)
       lines << "Solid Queue commit under test: `#{revision}`" if family.start_with?("solid-queue") && revision
+      lines << ""
+      datasets.filter_map { |dataset| dataset.data.dig("environment", "dependencies") }.uniq.each do |dependencies|
+        lines << "Dependencies: " + %w[rails solid_queue ruby_llm].filter_map { |name| "#{name} `#{dependencies.dig(name, 'version')}`" if dependencies[name] }.join(", ") + "."
+      end
       lines << ""
       lines << FAMILY_SUMMARIES.fetch(family)
       lines << ""
@@ -413,6 +413,8 @@ module Bench
       lines << "# Benchmark Results"
       lines << ""
       lines << "Benchmark outputs live in the per-family directories below. The generated narrative is in #{relative_link(@results_root, narrative, 'narrative.md')}."
+      lines << ""
+      lines << "RubyLLM 2.0 versus main, with connection reuse: [comparison](ruby-llm/README.md)." if File.exist?(File.join(@results_root, "ruby-llm/README.md"))
       lines << ""
       revision = solid_queue_revision(datasets.values.flatten)
       lines << "Solid Queue commit under test: `#{revision}`" if revision
@@ -553,6 +555,11 @@ module Bench
       end
       lines << "Checked-in datasets were produced with #{environment_summary.join(' and ')}." if environment_summary.any?
       lines << "Solid Queue commit under test: `#{facts[:solid_queue_revision]}`." if facts[:solid_queue_revision]
+      Array(facts.dig(:environment, :dependencies)).each do |dependencies|
+        lines << "Dependencies: " + %w[rails solid_queue ruby_llm async-job-adapter-active_job async-job-processor-redis].filter_map { |name| "#{name} `#{dependencies.dig(name, 'version')}`" if dependencies[name] }.join(", ") + "."
+      end
+      lines << ""
+      lines << "RubyLLM 2.0 versus upcoming 2.1, including recommended connection reuse: [comparison](results/ruby-llm/README.md)." if File.exist?(File.join(@results_root, "ruby-llm/README.md"))
       lines << ""
       lines << "Full generated artifacts: [results](#{facts[:links][:generated_artifacts]}), [Solid Queue](#{facts[:links][:solid_queue_results]}), [Async::Job](#{facts[:links][:async_job_results]}), and [stress](#{facts[:links][:stress_results]})."
       lines << ""
@@ -626,7 +633,10 @@ module Bench
       lines << ""
       lines << "### Interpretation"
       lines << ""
-      lines << "The headline question here is not “which completed cell is fastest?” but “which cells complete at all?” In the checked-in stress run, `thread` completed only `1/10` planned cells for each workload while `fiber` completed `10/10`. That makes the stress throughput deltas sparse and secondary; the primary result is the current failure envelope under high connection demand."
+      completion = facts[:stress_completion].map do |row|
+        "#{row[:label]}: thread #{row.dig(:modes, 'thread', :completed)}/#{row.dig(:modes, 'thread', :planned)}, fiber #{row.dig(:modes, 'fiber', :completed)}/#{row.dig(:modes, 'fiber', :planned)}"
+      end
+      lines << "Completed stress cells were #{completion.join('; ')}. Read throughput alongside these completion counts; this suite measures the current failure envelope under high connection demand."
       lines << ""
       lines << "## Async::Job Comparison"
       lines << ""
@@ -638,7 +648,7 @@ module Bench
       lines << ""
       lines << "### Interpretation"
       lines << ""
-      lines << "Async::Job is faster on these headline workloads in the checked-in data, but that answers a different question: how much headroom exists with a different backend/runtime stack. It does not change the Solid Queue same-backend result above."
+      lines << "The table compares the best observed throughput for each backend. Because Async::Job uses Redis and a different runtime stack, these differences do not isolate the effect of Solid Queue’s executor mode."
       lines << ""
       lines << "## Workloads"
       lines << ""
@@ -663,6 +673,10 @@ module Bench
       lines << "```"
       lines << ""
       facts[:setup][:notes].each { |note| lines << note }
+      lines << ""
+      lines << "Existing 1.x benchmark databases: run `bin/setup --skip-server` with the stable bundle first. It runs the archived 2.0 upgrade before the 2.1 schema additions. New databases load the checked-in schema."
+      lines << ""
+      lines << "The released bundle is `Gemfile`; `BUNDLE_GEMFILE=Gemfile.main bundle install` installs the pinned main revision. `bin/compare_rubyllm` runs both and regenerates the separate comparison, with connection reuse enabled in its main-reuse configuration. No API key is needed for benchmarks."
       lines << ""
       lines << "## Running"
       lines << ""
@@ -734,6 +748,7 @@ module Bench
       {
         ruby_version: shared_dataset_value(datasets, "ruby_version"),
         isolation_level: shared_dataset_value(datasets, "isolation_level"),
+        dependencies: datasets.filter_map { |dataset| dataset.data.dig("environment", "dependencies") }.uniq,
         representative_run: "the median real run by `jobs_per_second`; ties break on execution throughput, successful jobs, then failed jobs."
       }
     end
@@ -981,12 +996,11 @@ module Bench
         commands: [
           "export DB_USER=your_user",
           "export DB_PASSWORD=your_password",
-          "source .env",
           "bin/setup"
         ],
         notes: [
           "`bin/setup` installs gems, prepares the database, ensures the Solid Queue schema exists, and loads the RubyLLM model catalog.",
-          "`.env` is a shell-friendly `OPENAI_API_KEY` export; source it or set `OPENAI_API_KEY` another way."
+          "Benchmarks use a local fake provider and require no API key. Set `OPENAI_API_KEY` only for the optional AI-written report or real chat UI."
         ]
       }
     end
@@ -1134,7 +1148,7 @@ module Bench
       when "db_mixed"
         "#{reads} reads, #{duration_ms} ms delayed HTTP call, #{writes} writes"
       when "db_transaction"
-        "#{reads} reads and #{writes} writes in one transaction, #{duration_ms} ms duration"
+        "#{reads} reads and #{writes} writes in one transaction, #{duration_ms} ms delay per read (#{reads.to_i * duration_ms.to_i} ms total delay)"
       else
         payload_text(payload)
       end
@@ -1722,7 +1736,7 @@ module Bench
 
       require "ruby_llm"
       RubyLLM.configure { |config| config.openai_api_key = ENV.fetch("OPENAI_API_KEY") }
-      RubyLLM.models.refresh!
+      RubyLLM.models.load_from_json
       @ruby_llm_configured = true
     end
 
@@ -1745,12 +1759,13 @@ module Bench
       lines << ""
       lines << "Generated without an LLM. Set `OPENAI_API_KEY` and rerun `bin/report` to produce the prose narrative."
       lines << ""
-      lines << "On the headline Solid Queue workloads, the best-throughput point landed on `fiber` in every checked-in row. That does not mean `fiber` wins every paired cell; it means the best observed point in this same-backend comparison favored `fiber` for `sleep`, `async_http`, `ruby_llm_stream`, and `cpu`."
+      best_modes = headline.map { |dataset| "#{dataset[:label]}: `#{dataset.dig(:best_throughput, 'mode')}`" }
+      lines << "Best-throughput execution modes by headline workload: #{best_modes.join('; ')}. The paired-cell win counts below describe how consistently each mode performs across the matrix."
       lines << ""
-      lines << "The larger gains are on wait-heavy work. CPU is the control and stays much closer. The supplementary DB workloads also favor `fiber` at the best observed points in this dataset. #{primary_pool_policy.include?('older mode-specific') ? primary_pool_policy : 'The primary Solid Queue suite uses matched DB pools so these rows stay focused on executor behavior.'}"
+      lines << "CPU supplies a control for the I/O workloads. The supplementary DB workloads distinguish short queries, mixed I/O, and transactions. #{primary_pool_policy.include?('older mode-specific') ? primary_pool_policy : 'The primary Solid Queue suite uses matched DB pools so these rows stay focused on executor behavior.'}"
       lines << ""
       if async_job.any?
-        lines << "Async::Job is faster than Solid Queue fiber on the comparable headline workloads in this run, but it changes the backend to Redis. Treat that as a backend comparison, not evidence about Solid Queue `thread` vs `fiber`."
+        lines << "Async::Job changes the backend to Redis. Treat its throughput table as a backend comparison; Solid Queue’s thread-versus-fiber results remain the direct executor comparison."
         lines << ""
       end
       lines << "## What The Benchmarks Answer"

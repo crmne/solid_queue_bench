@@ -31,6 +31,7 @@ module Bench
     end
 
     def run
+      $stdout.sync = true
       parse!
       cells = build_cells
       results = sweep(cells)
@@ -45,7 +46,7 @@ module Bench
           parser.banner = "Usage: bin/matrix [options]"
 
           parser.on("--backend NAME", "solid_queue or async_job (default: solid_queue)") { |v| options[:backend] = v }
-          parser.on("--workload NAME", "sleep, cpu, http, async_http, llm_batch, llm_stream, ruby_llm_stream, db_queries, db_transaction, db_transaction_pool_pressure, or db_mixed (default: sleep)") { |v| options[:workload] = v }
+          parser.on("--workload NAME", "sleep, cpu, http, async_http, llm_batch, llm_stream, ruby_llm_stream, ruby_llm_stream_only, ruby_llm_history, ruby_llm_requests, db_queries, db_transaction, db_transaction_pool_pressure, or db_mixed (default: sleep)") { |v| options[:workload] = v }
           parser.on("--jobs N", Integer, "Jobs per cell (default: 500)") { |v| options[:jobs] = v }
           parser.on("--concurrencies LIST", "Comma-separated concurrency levels (default: 5,10,25,50,100,200)") { |v| options[:concurrencies] = v.split(",").map(&:to_i) }
           parser.on("--processes LIST", "Comma-separated process counts (default: 1,2,4)") { |v| options[:processes] = v.split(",").map(&:to_i) }
@@ -107,6 +108,16 @@ module Bench
             token_delay_ms: options[:payload][:token_delay_ms] || 20,
             model_id: options[:payload][:model_id] || "gpt-4.1-mini",
             prompt: options[:payload][:prompt] || "Respond with a concise sentence."
+          }
+        when "ruby_llm_stream_only", "ruby_llm_history", "ruby_llm_requests"
+          options[:payload] = {
+            token_count: options[:payload][:token_count] || (options[:workload] == "ruby_llm_stream_only" ? 500 : 5),
+            token_delay_ms: options[:payload][:token_delay_ms] || 0,
+            model_id: options[:payload][:model_id] || "gpt-4.1-mini",
+            prompt: options[:payload][:prompt] || "Respond with a concise sentence.",
+            calls: 20,
+            history_messages: 100,
+            rebuilds: 10
           }
         when "db_queries", "db_transaction", "db_transaction_pool_pressure"
           options[:payload] = {
@@ -244,6 +255,7 @@ module Bench
           ]
         end
         representative = Marshal.load(Marshal.dump(sorted[sorted.size / 2]))
+        representative[:repeat_runs] = runs
         representative[:repeat_jobs_per_second_values] = runs.map { |run| run[:jobs_per_second] }.sort
         representative[:repeat_successful_jobs_values] = runs.map { |run| run[:successful_jobs] }.sort
         representative
@@ -262,6 +274,7 @@ module Bench
         json_output = {
           generated_at: Time.current.iso8601,
           ruby_version: RUBY_VERSION,
+          environment: Bench::Environment.metadata,
           isolation_level: ActiveSupport::IsolatedExecutionState.isolation_level,
           backend: options[:backend],
           workload: options[:workload],
@@ -278,9 +291,6 @@ module Bench
           failed_cells: planned_cells - results.size,
           results: results
         }
-        if options[:backend] == "solid_queue" && (revision = solid_queue_revision)
-          json_output[:solid_queue_revision] = revision
-        end
 
         json_path = File.join(options[:output_dir], "#{base}.json")
         File.write(json_path, JSON.pretty_generate(json_output))
@@ -298,6 +308,8 @@ module Bench
       end
 
       def generate_charts(csv_path)
+        return if ENV["BENCH_SKIP_CHARTS"] == "1"
+
         plot_script = File.expand_path("../../bin/plot", __dir__)
         return unless File.exist?(plot_script)
 
@@ -352,14 +364,6 @@ module Bench
         when :default then "default"
         else value
         end
-      end
-
-      def solid_queue_revision
-        repo = File.expand_path("../../../solid_queue", __dir__)
-        return unless Dir.exist?(repo)
-
-        sha = `git -C #{Shellwords.escape(repo)} rev-parse HEAD 2>/dev/null`.strip
-        sha unless sha.empty?
       end
   end
 end

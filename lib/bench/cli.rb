@@ -39,7 +39,7 @@ module Bench
           parser.on("--name NAME", "Benchmark run name") { |value| options[:name] = value }
           parser.on("--backend NAME", "solid_queue or async_job (default: solid_queue)") { |value| options[:backend] = value }
           parser.on("--modes MODES", "Comma-separated list, e.g. thread,fiber") { |value| options[:modes] = value.split(",") }
-          parser.on("--workload NAME", "sleep, cpu, http, async_http, llm_batch, llm_stream, ruby_llm_stream, db_queries, db_transaction, db_transaction_pool_pressure, or db_mixed") { |value| options[:workload] = value }
+          parser.on("--workload NAME", "sleep, cpu, http, async_http, llm_batch, llm_stream, ruby_llm_stream, ruby_llm_stream_only, ruby_llm_history, ruby_llm_requests, db_queries, db_transaction, db_transaction_pool_pressure, or db_mixed") { |value| options[:workload] = value }
           parser.on("--concurrency N", Integer, "Concurrent jobs per worker process") { |value| options[:concurrency] = value }
           parser.on("--processes N", Integer, "Worker process count") { |value| options[:processes] = value }
           parser.on("--jobs N", Integer, "Number of jobs to enqueue") { |value| options[:jobs] = value }
@@ -96,6 +96,16 @@ module Bench
             token_delay_ms: options[:payload][:token_delay_ms] || 20,
             model_id: options[:payload][:model_id] || "gpt-4.1-mini",
             prompt: options[:payload][:prompt] || "Respond with a concise sentence."
+          }
+        when "ruby_llm_stream_only", "ruby_llm_history", "ruby_llm_requests"
+          options[:payload] = {
+            token_count: options[:payload][:token_count] || (options[:workload] == "ruby_llm_stream_only" ? 500 : 5),
+            token_delay_ms: options[:payload][:token_delay_ms] || 0,
+            model_id: options[:payload][:model_id] || "gpt-4.1-mini",
+            prompt: options[:payload][:prompt] || "Respond with a concise sentence.",
+            calls: 20,
+            history_messages: 100,
+            rebuilds: 10
           }
         when "db_queries", "db_transaction", "db_transaction_pool_pressure"
           options[:payload] = {

@@ -34,26 +34,26 @@
         "values": [
           {
             "workload": "Sleep",
-            "min": -0.0,
-            "max": 100.0,
-            "average": 77.77777777777777,
-            "average_label": "avg +77.8%",
-            "cells": 9
-          },
-          {
-            "workload": "Async::HTTP",
-            "min": -0.0,
-            "max": 100.0,
-            "average": 66.66666666666667,
-            "average_label": "avg +66.7%",
-            "cells": 9
-          },
-          {
-            "workload": "RubyLLM Stream",
             "min": 100.0,
             "max": 100.0,
             "average": 100.0,
             "average_label": "avg +100.0%",
+            "cells": 9
+          },
+          {
+            "workload": "Async::HTTP",
+            "min": 100.0,
+            "max": 100.0,
+            "average": 100.0,
+            "average_label": "avg +100.0%",
+            "cells": 9
+          },
+          {
+            "workload": "RubyLLM Stream",
+            "min": -0.0,
+            "max": 100.0,
+            "average": 66.66666666666667,
+            "average_label": "avg +66.7%",
             "cells": 9
           },
           {
@@ -130,7 +130,7 @@
             "workload": "Sleep",
             "concurrency": 5,
             "processes": "1 proc",
-            "value": -0.0
+            "value": 100.0
           },
           {
             "workload": "Sleep",
@@ -154,7 +154,7 @@
             "workload": "Sleep",
             "concurrency": 5,
             "processes": "2 proc",
-            "value": -0.0
+            "value": 100.0
           },
           {
             "workload": "Sleep",
@@ -184,7 +184,7 @@
             "workload": "Async::HTTP",
             "concurrency": 5,
             "processes": "1 proc",
-            "value": -0.0
+            "value": 100.0
           },
           {
             "workload": "Async::HTTP",
@@ -208,7 +208,7 @@
             "workload": "Async::HTTP",
             "concurrency": 5,
             "processes": "2 proc",
-            "value": -0.0
+            "value": 100.0
           },
           {
             "workload": "Async::HTTP",
@@ -226,7 +226,7 @@
             "workload": "Async::HTTP",
             "concurrency": 5,
             "processes": "6 proc",
-            "value": -0.0
+            "value": 100.0
           },
           {
             "workload": "Async::HTTP",
@@ -244,7 +244,7 @@
             "workload": "RubyLLM Stream",
             "concurrency": 10,
             "processes": "1 proc",
-            "value": 100.0
+            "value": -0.0
           },
           {
             "workload": "RubyLLM Stream",
@@ -262,13 +262,13 @@
             "workload": "RubyLLM Stream",
             "concurrency": 5,
             "processes": "2 proc",
-            "value": 100.0
+            "value": -0.0
           },
           {
             "workload": "RubyLLM Stream",
             "concurrency": 10,
             "processes": "2 proc",
-            "value": 100.0
+            "value": -0.0
           },
           {
             "workload": "RubyLLM Stream",
@@ -407,26 +407,26 @@
         "values": [
           {
             "workload": "Sleep",
-            "min": -0.0,
-            "max": 100.0,
-            "average": 77.77777777777777,
-            "average_label": "avg +77.8%",
-            "cells": 9
-          },
-          {
-            "workload": "Async::HTTP",
-            "min": -0.0,
-            "max": 100.0,
-            "average": 66.66666666666667,
-            "average_label": "avg +66.7%",
-            "cells": 9
-          },
-          {
-            "workload": "RubyLLM Stream",
             "min": 100.0,
             "max": 100.0,
             "average": 100.0,
             "average_label": "avg +100.0%",
+            "cells": 9
+          },
+          {
+            "workload": "Async::HTTP",
+            "min": 100.0,
+            "max": 100.0,
+            "average": 100.0,
+            "average_label": "avg +100.0%",
+            "cells": 9
+          },
+          {
+            "workload": "RubyLLM Stream",
+            "min": -0.0,
+            "max": 100.0,
+            "average": 66.66666666666667,
+            "average_label": "avg +66.7%",
             "cells": 9
           },
           {
@@ -499,26 +499,26 @@
         "values": [
           {
             "workload": "Sleep",
-            "min": -0.0,
-            "max": 100.0,
-            "average": 77.77777777777777,
-            "average_label": "avg +77.8%",
-            "cells": 9
-          },
-          {
-            "workload": "Async::HTTP",
-            "min": -0.0,
-            "max": 100.0,
-            "average": 66.66666666666667,
-            "average_label": "avg +66.7%",
-            "cells": 9
-          },
-          {
-            "workload": "RubyLLM Stream",
             "min": 100.0,
             "max": 100.0,
             "average": 100.0,
             "average_label": "avg +100.0%",
+            "cells": 9
+          },
+          {
+            "workload": "Async::HTTP",
+            "min": 100.0,
+            "max": 100.0,
+            "average": 100.0,
+            "average_label": "avg +100.0%",
+            "cells": 9
+          },
+          {
+            "workload": "RubyLLM Stream",
+            "min": -0.0,
+            "max": 100.0,
+            "average": 66.66666666666667,
+            "average_label": "avg +66.7%",
             "cells": 9
           },
           {

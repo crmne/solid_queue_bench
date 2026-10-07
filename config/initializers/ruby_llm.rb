@@ -1,6 +1,4 @@
 RubyLLM.configure do |config|
-  config.openai_api_key = ENV.fetch("OPENAI_API_KEY")
-  config.use_new_acts_as = true
+  config.openai_api_key = ENV["OPENAI_API_KEY"].presence || "benchmark-openai-key"
+  config.openai_protocol = :chat_completions
 end
-
-RubyLLM.models.refresh!

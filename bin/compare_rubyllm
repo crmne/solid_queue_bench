@@ -1,0 +1,97 @@
+#!/usr/bin/env ruby
+require "bundler"
+require "fileutils"
+require "json"
+require "digest"
+
+Dir.chdir(File.expand_path("..", __dir__))
+$stdout.sync = true
+variants = {
+  "2.0" => ["Gemfile", "net_http"],
+  "main-default" => ["Gemfile.main", "net_http"],
+  "main-reuse" => ["Gemfile.main", "recommended"]
+}
+
+# Keep the production-shaped streaming matrix identical to sweep:publish.
+# The focused cases isolate costs called out in What's New in 2.1.
+cases = [
+  ["solid_queue", "ruby_llm_stream", 20, "5,10,25,50,100", "1,2,6"],
+  ["async_job", "ruby_llm_stream", 20, "5,10,25,50,100", "1,2,6"],
+  ["solid_queue", "ruby_llm_stream_only", 50, "5,25", "1"],
+  ["solid_queue", "ruby_llm_history", 50, "5,25", "1"],
+  ["solid_queue", "ruby_llm_requests", 50, "5,25", "1"]
+]
+
+cases.each do |backend, workload, jobs, concurrencies, processes|
+  variants.each do |variant, (gemfile, adapter)|
+    destination = "results/ruby-llm/#{variant}/#{backend.tr('_', '-')}-#{workload.tr('_', '-')}-data"
+    FileUtils.mkdir_p(File.dirname(destination))
+    if ARGV.include?("--resume") && File.exist?("#{destination}.json")
+      previous = JSON.parse(File.read("#{destination}.json"))
+      unless previous.dig("environment", "lockfile_sha256") == Digest::SHA256.file("#{gemfile}.lock").hexdigest &&
+          previous.dig("environment", "llm_adapter") == adapter
+        raise "Dependencies or adapter changed for #{destination}; rerun without --resume"
+      end
+      puts "Keeping #{destination}.json"
+      next
+    end
+
+    # sweep:publish already runs this exact released-version streaming matrix.
+    # Reuse its complete, compatible baseline instead of measuring it twice.
+    published = "results/#{backend.tr('_', '-')}/ruby-llm-stream-data.json"
+    if variant == "2.0" && workload == "ruby_llm_stream" && !ARGV.include?("--fresh") && File.exist?(published)
+      baseline = JSON.parse(File.read(published))
+      compatible = baseline.dig("environment", "lockfile_sha256") == Digest::SHA256.file("#{gemfile}.lock").hexdigest &&
+        baseline.dig("environment", "llm_adapter") == adapter && baseline["ruby_version"] == RUBY_VERSION &&
+        baseline["modes"] == (backend == "solid_queue" ? %w[thread fiber] : %w[fiber]) &&
+        baseline["db_pool"] == (backend == "solid_queue" ? "matched" : nil) &&
+        baseline["planned_cells"] == (backend == "solid_queue" ? 18 : 9) &&
+        baseline.fetch("results").size == baseline["planned_cells"] &&
+        baseline["concurrencies"] == concurrencies.split(",").map(&:to_i) &&
+        baseline["processes"] == processes.split(",").map(&:to_i) && baseline["failed_cells"] == 0 &&
+        baseline["jobs_per_cell"] == jobs && baseline.dig("payload", "token_count") == 40 &&
+        baseline.dig("payload", "token_delay_ms") == 20 && baseline.dig("payload", "model_id") == "gpt-4.1-mini" && baseline["repeat"] == 3 &&
+        baseline.fetch("results").all? do |row|
+          samples = row.fetch("repeat_runs", [])
+          samples.size == 3 && samples.all? { |sample| sample.fetch("successful_jobs") == jobs && sample.fetch("failed_jobs").zero? }
+        end
+      if compatible
+        FileUtils.cp(published, "#{destination}.json")
+        FileUtils.cp(published.sub(/\.json\z/, ".csv"), "#{destination}.csv")
+        puts "Reusing #{published} (#{baseline.fetch('generated_at')})"
+        next
+      end
+    end
+
+    output = "tmp/benchmarks/ruby-llm/#{variant}/#{backend}/#{workload}"
+    FileUtils.mkdir_p(output)
+    env = {
+      "BUNDLE_GEMFILE" => File.expand_path(gemfile),
+      "BENCH_LLM_ADAPTER" => adapter,
+      "BENCH_SKIP_CHARTS" => "1"
+    }
+    command = %W[bundle exec ruby bin/matrix --backend #{backend} --workload #{workload}
+      --jobs #{jobs} --concurrencies #{concurrencies} --processes #{processes}
+      --repeat 3 --max-total-concurrency 60 --timeout-s 240 --output-dir #{output} --name compare]
+    command += %w[--db-pool matched] if backend == "solid_queue"
+    command += %w[--token-count 40 --token-delay-ms 20] if workload == "ruby_llm_stream"
+    puts "\n#{variant}: #{backend} #{workload} (#{adapter})"
+    started = Time.now
+    Bundler.with_unbundled_env { system(env, *command, exception: true) }
+    json = Dir["#{output}/*.json"].select { |path| File.mtime(path) >= started }.max_by { |path| File.mtime(path) }
+    raise "No fresh result" unless json
+    data = JSON.parse(File.read(json))
+    raise "Incomplete matrix: #{json}" unless data.fetch("failed_cells").zero?
+    data.fetch("results").each do |row|
+      samples = row.fetch("repeat_runs", [row])
+      unless samples.size == 3 && samples.all? { |sample| sample.fetch("successful_jobs") == jobs && sample.fetch("failed_jobs").zero? }
+        raise "Incomplete repetitions: #{json}"
+      end
+    end
+    FileUtils.cp(json, "#{destination}.json")
+    FileUtils.cp(json.sub(/\.json\z/, ".csv"), "#{destination}.csv")
+  end
+end
+
+require_relative "../lib/bench/llm_report"
+Bench::LlmReport.call

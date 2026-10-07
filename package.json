@@ -1,6 +1,6 @@
 {
   "devDependencies": {
-    "vega-cli": "^6.2.0",
-    "vega-lite": "^6.4.2"
+    "vega-cli": "^6.4.0",
+    "vega-lite": "^6.4.3"
   }
 }

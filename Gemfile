@@ -1,18 +1,18 @@
 source "https://rubygems.org"
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
-gem "rails", "~> 8.1.3"
+gem "rails", "~> 8.1.4"
 # The modern asset pipeline for Rails [https://github.com/rails/propshaft]
 gem "propshaft"
 # Use postgresql as the database for Active Record
 gem "pg", "~> 1.1"
 # Use the Puma web server [https://github.com/puma/puma]
 gem "puma", ">= 5.0"
-gem "solid_queue", "~> 1.6.0"
+gem "solid_queue", "~> 1.7"
 gem "async"
 gem "async-http"
-gem "async-job-adapter-active_job", git: "https://github.com/crmne/async-job-adapter-active_job.git", branch: "fix-threaded-health-signals"
-gem "async-job-processor-redis", git: "https://github.com/crmne/async-job-processor-redis.git", branch: "fix-threaded-heartbeats"
+gem "async-job-adapter-active_job"
+gem "async-job-processor-redis"
 gem "csv"
 gem "vega"
 
@@ -24,7 +24,13 @@ group :development, :test do
   gem "debug", platforms: %i[ mri windows ], require: "debug/prelude"
 end
 
-gem "ruby_llm", "~> 1.14"
+if ENV["BUNDLE_GEMFILE"]&.end_with?("Gemfile.main")
+  gem "ruby_llm", git: "https://github.com/crmne/ruby_llm.git", branch: "main"
+else
+  gem "ruby_llm", "~> 2.0.0"
+end
+gem "faraday-net_http_persistent"
+gem "async-http-faraday"
 
 gem "turbo-rails", "~> 2.0"
 

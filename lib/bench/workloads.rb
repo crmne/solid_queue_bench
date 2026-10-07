@@ -29,6 +29,24 @@ module Bench
         llm_stream_request(payload)
       when "ruby_llm_stream"
         ruby_llm_stream_request(payload)
+      when "ruby_llm_stream_only"
+        chat = llm_context(payload.fetch(:port)).chat(model: payload.fetch(:model_id), provider: :openai)
+        chunks = 0
+        response = chat.ask(payload.fetch(:prompt)) { |chunk| chunks += 1 if chunk.content && !chunk.content.empty? }
+        raise "Incomplete stream: #{chunks} chunks" unless chunks == payload.fetch(:token_count)
+        raise "Incorrect streamed usage" unless response.tokens.output == payload.fetch(:token_count)
+      when "ruby_llm_history"
+        payload.fetch(:rebuilds).times do
+          chat = Chat.find(payload.fetch(:chat_id)).to_llm
+          raise "Incomplete persisted history" unless chat.messages.size == payload.fetch(:history_messages)
+        end
+      when "ruby_llm_requests"
+        context = llm_context(payload.fetch(:port))
+        payload.fetch(:calls).times do
+          # A fresh chat each time exercises sharing between chats as well as jobs.
+          response = context.chat(model: payload.fetch(:model_id), provider: :openai).ask(payload.fetch(:prompt))
+          raise "Incomplete response" unless response.content.split.size == payload.fetch(:token_count)
+        end
       when "db_queries"
         Bench::DatabaseWorkload.db_queries(payload)
       when "db_transaction", "db_transaction_pool_pressure"
@@ -88,27 +106,28 @@ module Bench
       model_id = payload.fetch(:model_id)
       prompt = payload.fetch(:prompt)
 
-      with_fake_openai_config(port) do
-        chat = Chat.create!(
-          model: Model.find_by!(provider: "openai", model_id: model_id),
-          benchmark_execution_id: benchmark_execution_id
-        )
+      chat = Chat.create!(
+        model: model_id, provider: :openai,
+        benchmark_execution_id: benchmark_execution_id
+      )
 
-        ChatResponseJob.perform_now(chat.id, prompt)
-      end
+      ChatResponseJob.perform_now(chat.id, prompt, "http://127.0.0.1:#{port}/v1")
     end
 
-    def with_fake_openai_config(port)
-      previous_api_base = RubyLLM.config.openai_api_base
-      previous_api_key = RubyLLM.config.openai_api_key
+    def llm_adapter
+      adapter = ENV.fetch("BENCH_LLM_ADAPTER", "net_http")
+      return adapter.to_sym unless adapter == "recommended"
 
-      RubyLLM.config.openai_api_base = "http://127.0.0.1:#{port}/v1"
-      RubyLLM.config.openai_api_key = "benchmark-openai-key"
+      Fiber.scheduler ? :async_http : :net_http_persistent
+    end
 
-      yield
-    ensure
-      RubyLLM.config.openai_api_base = previous_api_base
-      RubyLLM.config.openai_api_key = previous_api_key
+    def llm_context(port)
+      RubyLLM.context do |config|
+        config.openai_api_base = "http://127.0.0.1:#{port}/v1"
+        config.openai_api_key = "benchmark-openai-key"
+        config.openai_protocol = :chat_completions
+        config.faraday_adapter = llm_adapter
+      end
     end
   end
 end

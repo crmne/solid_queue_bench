@@ -1,0 +1,40 @@
+#!/usr/bin/env ruby
+require "bundler"
+require "json"
+require "tmpdir"
+
+Dir.chdir(File.expand_path("..", __dir__))
+$stdout.sync = true
+
+Dir.mktmpdir("smoke-", "tmp") do |directory|
+  [ ["Gemfile", "net_http"], ["Gemfile.main", "recommended"] ].each do |gemfile, adapter|
+    cases = %w[ruby_llm_stream ruby_llm_stream_only ruby_llm_history ruby_llm_requests].map { |workload| ["solid_queue", workload] }
+    cases << ["async_job", "ruby_llm_requests"]
+    cases.each do |backend, workload|
+      log = File.join(directory, "#{File.basename(gemfile)}-#{backend}-#{workload}.log")
+      output = File.join(directory, "#{File.basename(gemfile)}-#{backend}-#{workload}")
+      env = { "BUNDLE_GEMFILE" => File.expand_path(gemfile), "BENCH_LLM_ADAPTER" => adapter, "OPENAI_API_KEY" => "" }
+      command = %W[bundle exec ruby bin/benchmark --backend #{backend} --workload #{workload} --jobs 4 --concurrency 2 --processes 1 --timeout-s 30 --output-dir #{output}]
+      command += %w[--modes fiber] if backend == "async_job"
+      command += %w[--token-count 5 --token-delay-ms 1] if workload == "ruby_llm_stream"
+      Bundler.with_unbundled_env do
+        raise "Smoke failed: #{File.read(log)}" unless system(env, *command, out: log, err: log)
+      end
+      data = JSON.parse(File.read(Dir["#{output}/*.json"].fetch(0)))
+      data.fetch("modes").each do |row|
+        raise "Failed jobs: #{row}" unless row.fetch("successful_jobs") == 4 && row.fetch("failed_jobs").zero?
+        if workload == "ruby_llm_stream"
+          raise "Missing broadcasts: #{row}" unless row.fetch("child_jobs_finished") == 20 && row.fetch("child_jobs_failed").zero?
+        elsif workload == "ruby_llm_requests"
+          counts = row.fetch("http_connections")
+          raise "Missing calls: #{counts}" unless counts.fetch("requests") == 80
+          # Pool lifetimes can open more sockets than the instantaneous job
+          # concurrency. Require reuse across the 20 calls in each job.
+          expected = adapter == "recommended" ? (1..4) : (80..80)
+          raise "Unexpected connections: #{counts}" unless expected.cover?(counts.fetch("connections"))
+        end
+      end
+      puts "PASS #{gemfile} #{adapter} #{backend} #{workload}: #{data.fetch("modes").map { |row| row.fetch("mode") }.join(" + ")}"
+    end
+  end
+end

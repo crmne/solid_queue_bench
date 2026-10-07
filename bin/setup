@@ -21,6 +21,23 @@ FileUtils.chdir APP_ROOT do
   # end
 
   puts "\n== Preparing database =="
+  # The 2.0 migration helpers do not ship on main. Keep these migrations
+  # outside db/migrate, and finish this one-time upgrade with the stable bundle.
+  %w[development test].each do |environment|
+    system!({ "RAILS_ENV" => environment }, "bin/rails", "runner", <<~RUBY)
+      begin
+        connection = ActiveRecord::Base.connection
+        if connection.table_exists?(:models) || connection.table_exists?(:ruby_llm_v2_backfills)
+          unless Bundler.load.specs.find { |spec| spec.name == "ruby_llm" }.source.is_a?(Bundler::Source::Rubygems)
+            abort "Run bin/setup with the released RubyLLM 2.0 bundle before using main."
+          end
+          ActiveRecord::MigrationContext.new(Rails.root.join("db/upgrade_2_0").to_s).migrate
+        end
+      rescue ActiveRecord::NoDatabaseError
+        # db:prepare below loads the current schema for new databases.
+      end
+    RUBY
+  end
   system! "bin/rails db:prepare"
   system! "bin/rails db:reset" if ARGV.include?("--reset")
   system! %(bin/rails runner 'unless ActiveRecord::Base.connection.table_exists?("solid_queue_jobs"); load Rails.root.join("db/queue_schema.rb"); end')

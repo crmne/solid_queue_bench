@@ -1,0 +1,938 @@
+[
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "async_job",
+    "mode": "fiber",
+    "cell": "fiber c=5 p=1",
+    "configuration": "2.0",
+    "jobs_per_second": 3.78
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "async_job",
+    "mode": "fiber",
+    "cell": "fiber c=5 p=1",
+    "configuration": "main, default HTTP",
+    "jobs_per_second": 3.98
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "async_job",
+    "mode": "fiber",
+    "cell": "fiber c=5 p=1",
+    "configuration": "main, connection reuse",
+    "jobs_per_second": 3.97
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "async_job",
+    "mode": "fiber",
+    "cell": "fiber c=10 p=1",
+    "configuration": "2.0",
+    "jobs_per_second": 4.61
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "async_job",
+    "mode": "fiber",
+    "cell": "fiber c=10 p=1",
+    "configuration": "main, default HTTP",
+    "jobs_per_second": 5.83
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "async_job",
+    "mode": "fiber",
+    "cell": "fiber c=10 p=1",
+    "configuration": "main, connection reuse",
+    "jobs_per_second": 5.79
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "async_job",
+    "mode": "fiber",
+    "cell": "fiber c=25 p=1",
+    "configuration": "2.0",
+    "jobs_per_second": 7.77
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "async_job",
+    "mode": "fiber",
+    "cell": "fiber c=25 p=1",
+    "configuration": "main, default HTTP",
+    "jobs_per_second": 8.58
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "async_job",
+    "mode": "fiber",
+    "cell": "fiber c=25 p=1",
+    "configuration": "main, connection reuse",
+    "jobs_per_second": 8.59
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "async_job",
+    "mode": "fiber",
+    "cell": "fiber c=50 p=1",
+    "configuration": "2.0",
+    "jobs_per_second": 7.8
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "async_job",
+    "mode": "fiber",
+    "cell": "fiber c=50 p=1",
+    "configuration": "main, default HTTP",
+    "jobs_per_second": 8.44
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "async_job",
+    "mode": "fiber",
+    "cell": "fiber c=50 p=1",
+    "configuration": "main, connection reuse",
+    "jobs_per_second": 8.47
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "async_job",
+    "mode": "fiber",
+    "cell": "fiber c=5 p=2",
+    "configuration": "2.0",
+    "jobs_per_second": 5.1
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "async_job",
+    "mode": "fiber",
+    "cell": "fiber c=5 p=2",
+    "configuration": "main, default HTTP",
+    "jobs_per_second": 6.89
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "async_job",
+    "mode": "fiber",
+    "cell": "fiber c=5 p=2",
+    "configuration": "main, connection reuse",
+    "jobs_per_second": 6.8
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "async_job",
+    "mode": "fiber",
+    "cell": "fiber c=10 p=2",
+    "configuration": "2.0",
+    "jobs_per_second": 8.14
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "async_job",
+    "mode": "fiber",
+    "cell": "fiber c=10 p=2",
+    "configuration": "main, default HTTP",
+    "jobs_per_second": 10.34
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "async_job",
+    "mode": "fiber",
+    "cell": "fiber c=10 p=2",
+    "configuration": "main, connection reuse",
+    "jobs_per_second": 9.45
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "async_job",
+    "mode": "fiber",
+    "cell": "fiber c=25 p=2",
+    "configuration": "2.0",
+    "jobs_per_second": 11.1
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "async_job",
+    "mode": "fiber",
+    "cell": "fiber c=25 p=2",
+    "configuration": "main, default HTTP",
+    "jobs_per_second": 14.05
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "async_job",
+    "mode": "fiber",
+    "cell": "fiber c=25 p=2",
+    "configuration": "main, connection reuse",
+    "jobs_per_second": 14.12
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "async_job",
+    "mode": "fiber",
+    "cell": "fiber c=5 p=6",
+    "configuration": "2.0",
+    "jobs_per_second": 8.62
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "async_job",
+    "mode": "fiber",
+    "cell": "fiber c=5 p=6",
+    "configuration": "main, default HTTP",
+    "jobs_per_second": 13.76
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "async_job",
+    "mode": "fiber",
+    "cell": "fiber c=5 p=6",
+    "configuration": "main, connection reuse",
+    "jobs_per_second": 9.49
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "async_job",
+    "mode": "fiber",
+    "cell": "fiber c=10 p=6",
+    "configuration": "2.0",
+    "jobs_per_second": 12.46
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "async_job",
+    "mode": "fiber",
+    "cell": "fiber c=10 p=6",
+    "configuration": "main, default HTTP",
+    "jobs_per_second": 16.45
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "async_job",
+    "mode": "fiber",
+    "cell": "fiber c=10 p=6",
+    "configuration": "main, connection reuse",
+    "jobs_per_second": 16.43
+  },
+  {
+    "workload": "ruby_llm_history",
+    "backend": "solid_queue",
+    "mode": "thread",
+    "cell": "thread c=5 p=1",
+    "configuration": "2.0",
+    "jobs_per_second": 7.74
+  },
+  {
+    "workload": "ruby_llm_history",
+    "backend": "solid_queue",
+    "mode": "thread",
+    "cell": "thread c=5 p=1",
+    "configuration": "main, default HTTP",
+    "jobs_per_second": 10.41
+  },
+  {
+    "workload": "ruby_llm_history",
+    "backend": "solid_queue",
+    "mode": "thread",
+    "cell": "thread c=5 p=1",
+    "configuration": "main, connection reuse",
+    "jobs_per_second": 10.54
+  },
+  {
+    "workload": "ruby_llm_history",
+    "backend": "solid_queue",
+    "mode": "thread",
+    "cell": "thread c=25 p=1",
+    "configuration": "2.0",
+    "jobs_per_second": 6.62
+  },
+  {
+    "workload": "ruby_llm_history",
+    "backend": "solid_queue",
+    "mode": "thread",
+    "cell": "thread c=25 p=1",
+    "configuration": "main, default HTTP",
+    "jobs_per_second": 9.53
+  },
+  {
+    "workload": "ruby_llm_history",
+    "backend": "solid_queue",
+    "mode": "thread",
+    "cell": "thread c=25 p=1",
+    "configuration": "main, connection reuse",
+    "jobs_per_second": 9.73
+  },
+  {
+    "workload": "ruby_llm_history",
+    "backend": "solid_queue",
+    "mode": "fiber",
+    "cell": "fiber c=5 p=1",
+    "configuration": "2.0",
+    "jobs_per_second": 8.18
+  },
+  {
+    "workload": "ruby_llm_history",
+    "backend": "solid_queue",
+    "mode": "fiber",
+    "cell": "fiber c=5 p=1",
+    "configuration": "main, default HTTP",
+    "jobs_per_second": 11.05
+  },
+  {
+    "workload": "ruby_llm_history",
+    "backend": "solid_queue",
+    "mode": "fiber",
+    "cell": "fiber c=5 p=1",
+    "configuration": "main, connection reuse",
+    "jobs_per_second": 11.21
+  },
+  {
+    "workload": "ruby_llm_history",
+    "backend": "solid_queue",
+    "mode": "fiber",
+    "cell": "fiber c=25 p=1",
+    "configuration": "2.0",
+    "jobs_per_second": 7.27
+  },
+  {
+    "workload": "ruby_llm_history",
+    "backend": "solid_queue",
+    "mode": "fiber",
+    "cell": "fiber c=25 p=1",
+    "configuration": "main, default HTTP",
+    "jobs_per_second": 10.61
+  },
+  {
+    "workload": "ruby_llm_history",
+    "backend": "solid_queue",
+    "mode": "fiber",
+    "cell": "fiber c=25 p=1",
+    "configuration": "main, connection reuse",
+    "jobs_per_second": 10.69
+  },
+  {
+    "workload": "ruby_llm_requests",
+    "backend": "solid_queue",
+    "mode": "thread",
+    "cell": "thread c=5 p=1",
+    "configuration": "2.0",
+    "jobs_per_second": 42.62
+  },
+  {
+    "workload": "ruby_llm_requests",
+    "backend": "solid_queue",
+    "mode": "thread",
+    "cell": "thread c=5 p=1",
+    "configuration": "main, default HTTP",
+    "jobs_per_second": 21.31
+  },
+  {
+    "workload": "ruby_llm_requests",
+    "backend": "solid_queue",
+    "mode": "thread",
+    "cell": "thread c=5 p=1",
+    "configuration": "main, connection reuse",
+    "jobs_per_second": 20.68
+  },
+  {
+    "workload": "ruby_llm_requests",
+    "backend": "solid_queue",
+    "mode": "thread",
+    "cell": "thread c=25 p=1",
+    "configuration": "2.0",
+    "jobs_per_second": 23.98
+  },
+  {
+    "workload": "ruby_llm_requests",
+    "backend": "solid_queue",
+    "mode": "thread",
+    "cell": "thread c=25 p=1",
+    "configuration": "main, default HTTP",
+    "jobs_per_second": 20.01
+  },
+  {
+    "workload": "ruby_llm_requests",
+    "backend": "solid_queue",
+    "mode": "thread",
+    "cell": "thread c=25 p=1",
+    "configuration": "main, connection reuse",
+    "jobs_per_second": 20.32
+  },
+  {
+    "workload": "ruby_llm_requests",
+    "backend": "solid_queue",
+    "mode": "fiber",
+    "cell": "fiber c=5 p=1",
+    "configuration": "2.0",
+    "jobs_per_second": 44.4
+  },
+  {
+    "workload": "ruby_llm_requests",
+    "backend": "solid_queue",
+    "mode": "fiber",
+    "cell": "fiber c=5 p=1",
+    "configuration": "main, default HTTP",
+    "jobs_per_second": 23.05
+  },
+  {
+    "workload": "ruby_llm_requests",
+    "backend": "solid_queue",
+    "mode": "fiber",
+    "cell": "fiber c=5 p=1",
+    "configuration": "main, connection reuse",
+    "jobs_per_second": 23.29
+  },
+  {
+    "workload": "ruby_llm_requests",
+    "backend": "solid_queue",
+    "mode": "fiber",
+    "cell": "fiber c=25 p=1",
+    "configuration": "2.0",
+    "jobs_per_second": 23.03
+  },
+  {
+    "workload": "ruby_llm_requests",
+    "backend": "solid_queue",
+    "mode": "fiber",
+    "cell": "fiber c=25 p=1",
+    "configuration": "main, default HTTP",
+    "jobs_per_second": 22.56
+  },
+  {
+    "workload": "ruby_llm_requests",
+    "backend": "solid_queue",
+    "mode": "fiber",
+    "cell": "fiber c=25 p=1",
+    "configuration": "main, connection reuse",
+    "jobs_per_second": 23.23
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "thread",
+    "cell": "thread c=5 p=1",
+    "configuration": "2.0",
+    "jobs_per_second": 2.02
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "thread",
+    "cell": "thread c=5 p=1",
+    "configuration": "main, default HTTP",
+    "jobs_per_second": 2.15
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "thread",
+    "cell": "thread c=5 p=1",
+    "configuration": "main, connection reuse",
+    "jobs_per_second": 2.13
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "thread",
+    "cell": "thread c=10 p=1",
+    "configuration": "2.0",
+    "jobs_per_second": 1.97
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "thread",
+    "cell": "thread c=10 p=1",
+    "configuration": "main, default HTTP",
+    "jobs_per_second": 2.1
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "thread",
+    "cell": "thread c=10 p=1",
+    "configuration": "main, connection reuse",
+    "jobs_per_second": 2.11
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "thread",
+    "cell": "thread c=25 p=1",
+    "configuration": "2.0",
+    "jobs_per_second": 1.75
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "thread",
+    "cell": "thread c=25 p=1",
+    "configuration": "main, default HTTP",
+    "jobs_per_second": 1.99
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "thread",
+    "cell": "thread c=25 p=1",
+    "configuration": "main, connection reuse",
+    "jobs_per_second": 2.0
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "thread",
+    "cell": "thread c=50 p=1",
+    "configuration": "2.0",
+    "jobs_per_second": 1.73
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "thread",
+    "cell": "thread c=50 p=1",
+    "configuration": "main, default HTTP",
+    "jobs_per_second": 1.92
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "thread",
+    "cell": "thread c=50 p=1",
+    "configuration": "main, connection reuse",
+    "jobs_per_second": 1.91
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "thread",
+    "cell": "thread c=5 p=2",
+    "configuration": "2.0",
+    "jobs_per_second": 3.64
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "thread",
+    "cell": "thread c=5 p=2",
+    "configuration": "main, default HTTP",
+    "jobs_per_second": 3.84
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "thread",
+    "cell": "thread c=5 p=2",
+    "configuration": "main, connection reuse",
+    "jobs_per_second": 3.83
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "thread",
+    "cell": "thread c=10 p=2",
+    "configuration": "2.0",
+    "jobs_per_second": 3.37
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "thread",
+    "cell": "thread c=10 p=2",
+    "configuration": "main, default HTTP",
+    "jobs_per_second": 3.78
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "thread",
+    "cell": "thread c=10 p=2",
+    "configuration": "main, connection reuse",
+    "jobs_per_second": 3.77
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "thread",
+    "cell": "thread c=25 p=2",
+    "configuration": "2.0",
+    "jobs_per_second": 2.69
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "thread",
+    "cell": "thread c=25 p=2",
+    "configuration": "main, default HTTP",
+    "jobs_per_second": 3.19
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "thread",
+    "cell": "thread c=25 p=2",
+    "configuration": "main, connection reuse",
+    "jobs_per_second": 3.12
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "thread",
+    "cell": "thread c=5 p=6",
+    "configuration": "2.0",
+    "jobs_per_second": 7.87
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "thread",
+    "cell": "thread c=5 p=6",
+    "configuration": "main, default HTTP",
+    "jobs_per_second": 8.93
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "thread",
+    "cell": "thread c=5 p=6",
+    "configuration": "main, connection reuse",
+    "jobs_per_second": 8.88
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "thread",
+    "cell": "thread c=10 p=6",
+    "configuration": "2.0",
+    "jobs_per_second": 5.52
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "thread",
+    "cell": "thread c=10 p=6",
+    "configuration": "main, default HTTP",
+    "jobs_per_second": 6.54
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "thread",
+    "cell": "thread c=10 p=6",
+    "configuration": "main, connection reuse",
+    "jobs_per_second": 6.66
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "fiber",
+    "cell": "fiber c=5 p=1",
+    "configuration": "2.0",
+    "jobs_per_second": 2.34
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "fiber",
+    "cell": "fiber c=5 p=1",
+    "configuration": "main, default HTTP",
+    "jobs_per_second": 2.44
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "fiber",
+    "cell": "fiber c=5 p=1",
+    "configuration": "main, connection reuse",
+    "jobs_per_second": 2.43
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "fiber",
+    "cell": "fiber c=10 p=1",
+    "configuration": "2.0",
+    "jobs_per_second": 2.22
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "fiber",
+    "cell": "fiber c=10 p=1",
+    "configuration": "main, default HTTP",
+    "jobs_per_second": 2.41
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "fiber",
+    "cell": "fiber c=10 p=1",
+    "configuration": "main, connection reuse",
+    "jobs_per_second": 2.38
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "fiber",
+    "cell": "fiber c=25 p=1",
+    "configuration": "2.0",
+    "jobs_per_second": 2.05
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "fiber",
+    "cell": "fiber c=25 p=1",
+    "configuration": "main, default HTTP",
+    "jobs_per_second": 2.32
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "fiber",
+    "cell": "fiber c=25 p=1",
+    "configuration": "main, connection reuse",
+    "jobs_per_second": 2.31
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "fiber",
+    "cell": "fiber c=50 p=1",
+    "configuration": "2.0",
+    "jobs_per_second": 2.02
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "fiber",
+    "cell": "fiber c=50 p=1",
+    "configuration": "main, default HTTP",
+    "jobs_per_second": 2.24
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "fiber",
+    "cell": "fiber c=50 p=1",
+    "configuration": "main, connection reuse",
+    "jobs_per_second": 2.22
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "fiber",
+    "cell": "fiber c=5 p=2",
+    "configuration": "2.0",
+    "jobs_per_second": 4.26
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "fiber",
+    "cell": "fiber c=5 p=2",
+    "configuration": "main, default HTTP",
+    "jobs_per_second": 4.48
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "fiber",
+    "cell": "fiber c=5 p=2",
+    "configuration": "main, connection reuse",
+    "jobs_per_second": 4.46
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "fiber",
+    "cell": "fiber c=10 p=2",
+    "configuration": "2.0",
+    "jobs_per_second": 3.87
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "fiber",
+    "cell": "fiber c=10 p=2",
+    "configuration": "main, default HTTP",
+    "jobs_per_second": 4.54
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "fiber",
+    "cell": "fiber c=10 p=2",
+    "configuration": "main, connection reuse",
+    "jobs_per_second": 4.38
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "fiber",
+    "cell": "fiber c=25 p=2",
+    "configuration": "2.0",
+    "jobs_per_second": 2.9
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "fiber",
+    "cell": "fiber c=25 p=2",
+    "configuration": "main, default HTTP",
+    "jobs_per_second": 3.49
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "fiber",
+    "cell": "fiber c=25 p=2",
+    "configuration": "main, connection reuse",
+    "jobs_per_second": 3.46
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "fiber",
+    "cell": "fiber c=5 p=6",
+    "configuration": "2.0",
+    "jobs_per_second": 8.98
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "fiber",
+    "cell": "fiber c=5 p=6",
+    "configuration": "main, default HTTP",
+    "jobs_per_second": 10.42
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "fiber",
+    "cell": "fiber c=5 p=6",
+    "configuration": "main, connection reuse",
+    "jobs_per_second": 10.33
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "fiber",
+    "cell": "fiber c=10 p=6",
+    "configuration": "2.0",
+    "jobs_per_second": 6.01
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "fiber",
+    "cell": "fiber c=10 p=6",
+    "configuration": "main, default HTTP",
+    "jobs_per_second": 7.14
+  },
+  {
+    "workload": "ruby_llm_stream",
+    "backend": "solid_queue",
+    "mode": "fiber",
+    "cell": "fiber c=10 p=6",
+    "configuration": "main, connection reuse",
+    "jobs_per_second": 7.48
+  },
+  {
+    "workload": "ruby_llm_stream_only",
+    "backend": "solid_queue",
+    "mode": "thread",
+    "cell": "thread c=5 p=1",
+    "configuration": "2.0",
+    "jobs_per_second": 38.87
+  },
+  {
+    "workload": "ruby_llm_stream_only",
+    "backend": "solid_queue",
+    "mode": "thread",
+    "cell": "thread c=5 p=1",
+    "configuration": "main, default HTTP",
+    "jobs_per_second": 59.12
+  },
+  {
+    "workload": "ruby_llm_stream_only",
+    "backend": "solid_queue",
+    "mode": "thread",
+    "cell": "thread c=5 p=1",
+    "configuration": "main, connection reuse",
+    "jobs_per_second": 58.07
+  },
+  {
+    "workload": "ruby_llm_stream_only",
+    "backend": "solid_queue",
+    "mode": "thread",
+    "cell": "thread c=25 p=1",
+    "configuration": "2.0",
+    "jobs_per_second": 22.82
+  },
+  {
+    "workload": "ruby_llm_stream_only",
+    "backend": "solid_queue",
+    "mode": "thread",
+    "cell": "thread c=25 p=1",
+    "configuration": "main, default HTTP",
+    "jobs_per_second": 56.39
+  },
+  {
+    "workload": "ruby_llm_stream_only",
+    "backend": "solid_queue",
+    "mode": "thread",
+    "cell": "thread c=25 p=1",
+    "configuration": "main, connection reuse",
+    "jobs_per_second": 55.75
+  },
+  {
+    "workload": "ruby_llm_stream_only",
+    "backend": "solid_queue",
+    "mode": "fiber",
+    "cell": "fiber c=5 p=1",
+    "configuration": "2.0",
+    "jobs_per_second": 40.46
+  },
+  {
+    "workload": "ruby_llm_stream_only",
+    "backend": "solid_queue",
+    "mode": "fiber",
+    "cell": "fiber c=5 p=1",
+    "configuration": "main, default HTTP",
+    "jobs_per_second": 66.06
+  },
+  {
+    "workload": "ruby_llm_stream_only",
+    "backend": "solid_queue",
+    "mode": "fiber",
+    "cell": "fiber c=5 p=1",
+    "configuration": "main, connection reuse",
+    "jobs_per_second": 63.2
+  },
+  {
+    "workload": "ruby_llm_stream_only",
+    "backend": "solid_queue",
+    "mode": "fiber",
+    "cell": "fiber c=25 p=1",
+    "configuration": "2.0",
+    "jobs_per_second": 23.31
+  },
+  {
+    "workload": "ruby_llm_stream_only",
+    "backend": "solid_queue",
+    "mode": "fiber",
+    "cell": "fiber c=25 p=1",
+    "configuration": "main, default HTTP",
+    "jobs_per_second": 62.19
+  },
+  {
+    "workload": "ruby_llm_stream_only",
+    "backend": "solid_queue",
+    "mode": "fiber",
+    "cell": "fiber c=25 p=1",
+    "configuration": "main, connection reuse",
+    "jobs_per_second": 63.08
+  }
+]

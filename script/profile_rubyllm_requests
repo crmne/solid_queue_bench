@@ -1,0 +1,88 @@
+#!/usr/bin/env ruby
+# Diagnostic controls only: disabling the ledger is not an application recommendation.
+require 'bundler'
+require 'json'
+require 'fileutils'
+require 'tempfile'
+require 'optparse'
+
+Dir.chdir(File.expand_path('..', __dir__))
+$stdout.sync = true
+options = { output: 'tmp/request-diagnostics', profile: false }
+OptionParser.new do |parser|
+  parser.on('--output DIR') { |value| options[:output] = value }
+  parser.on('--only NAME') { |value| options[:only] = value }
+  parser.on('--profile', 'Also collect worker CPU samples with an installed stackprof gem') { options[:profile] = true }
+end.parse!
+variants = {
+  '2.0-default' => ['Gemfile', {}],
+  'main-default' => ['Gemfile.main', {}],
+  'main-no-ledger' => ['Gemfile.main', { 'BENCH_DISABLE_LEDGER' => '1' }],
+  'main-quiet-sql' => ['Gemfile.main', { 'BENCH_QUIET_SQL' => '1' }],
+  '2.0-quiet-sql' => ['Gemfile', { 'BENCH_QUIET_SQL' => '1' }]
+}
+raise ArgumentError, 'Unknown --only configuration' if options[:only] && !variants.key?(options[:only])
+variants.select! { |name, _| name == options[:only] } if options[:only]
+profile_lib = Gem::Specification.find_by_name('stackprof').full_gem_path + '/lib' if options[:profile]
+
+# Workers are separate Ruby processes. Install an environment-gated hook only
+# for this diagnostic command, removing it even if a measurement fails.
+Tempfile.create(['request_diagnostics_', '.rb'], 'config/initializers') do |hook|
+  hook.write(<<~'HOOK')
+    if ENV['BENCH_REQUEST_DIAGNOSTICS'] == '1'
+      ActiveSupport.on_load(:active_record) do
+        if ENV['BENCH_DISABLE_LEDGER'] == '1' && RubyLLM::Accounting::Usage.respond_to?(:ledger=)
+          RubyLLM::Accounting::Usage.ledger = nil
+        end
+        ActiveRecord.verbose_query_logs = false if ENV['BENCH_QUIET_SQL'] == '1'
+      end
+      if ENV['BENCH_PROFILE_DIR']
+        $LOAD_PATH.unshift(ENV.fetch('STACKPROF_LIB'))
+        require 'stackprof'
+        Rails.application.config.after_initialize do
+          require 'bench/workloads'
+          Bench::Workloads.singleton_class.prepend(Module.new do
+            def call(...)
+              unless @profile_started
+                @profile_started = true
+                StackProf.start(mode: :cpu, interval: 100)
+                at_exit do
+                  StackProf.stop
+                  File.binwrite(File.join(ENV.fetch('BENCH_PROFILE_DIR'), "#{Process.pid}.dump"), Marshal.dump(StackProf.results))
+                end
+              end
+              super
+            end
+          end)
+        end
+      end
+    end
+  HOOK
+  hook.flush
+  variants.each do |name, (gemfile, extra)|
+    directory = File.expand_path(File.join(options[:output], name))
+    FileUtils.mkdir_p(directory)
+    env = { 'BUNDLE_GEMFILE' => File.expand_path(gemfile), 'OPENAI_API_KEY' => '',
+      'BENCH_LLM_ADAPTER' => 'net_http', 'BENCH_SKIP_CHARTS' => '1',
+      'BENCH_REQUEST_DIAGNOSTICS' => '1' }.merge(extra)
+    command = %w[bundle exec ruby bin/matrix --workload ruby_llm_requests --jobs 50 --modes thread --concurrencies 5 --processes 1 --repeat 3 --db-pool matched --output-dir] + [directory]
+    Bundler.with_unbundled_env do
+      File.open("#{directory}/run.log", 'w') { |log| system(env, *command, out: log, err: log, exception: true) }
+      data = JSON.parse(File.read(Dir["#{directory}/matrix-*.json"].max_by { |path| File.mtime(path) }))
+      samples = data.fetch('results').fetch(0).fetch('repeat_runs')
+      raise "Incomplete #{name}" unless samples.size == 3 && samples.all? { |row| row['successful_jobs'] == 50 && row['failed_jobs'] == 0 && row.dig('http_connections', 'requests') == 1000 }
+      count_text = IO.popen([env, 'bin/rails', 'runner', 'puts RubyLLM::ActiveRecord::Usage.count'], &:read)
+      raise 'Usage count failed' unless $?.success?
+      count = Integer(count_text.strip)
+      File.write("#{directory}/usage-count.json", JSON.pretty_generate(rows_after_final_run: count) + "\n")
+      if options[:profile]
+        profile_dir = "#{directory}/profile"
+        FileUtils.mkdir_p(profile_dir)
+        profiled_env = env.merge('STACKPROF_LIB' => profile_lib, 'BENCH_PROFILE_DIR' => profile_dir)
+        command = %w[bundle exec ruby bin/benchmark --workload ruby_llm_requests --jobs 200 --modes thread --concurrency 5 --processes 1 --output-dir] + [profile_dir]
+        File.open("#{profile_dir}/run.log", 'w') { |log| system(profiled_env, *command, out: log, err: log, exception: true) }
+      end
+    end
+    puts "Completed #{name}: #{directory}"
+  end
+end

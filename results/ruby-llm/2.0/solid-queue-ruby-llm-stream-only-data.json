@@ -1,0 +1,1269 @@
+{
+  "generated_at": "2026-10-06T22:28:00Z",
+  "ruby_version": "4.0.2",
+  "environment": {
+    "ruby_description": "ruby 4.0.2 (2026-03-17 revision d3da9fec82) +PRISM [x86_64-linux]",
+    "dependencies": {
+      "action_text-trix": {
+        "version": "2.1.19"
+      },
+      "actioncable": {
+        "version": "8.1.4"
+      },
+      "actionmailbox": {
+        "version": "8.1.4"
+      },
+      "actionmailer": {
+        "version": "8.1.4"
+      },
+      "actionpack": {
+        "version": "8.1.4"
+      },
+      "actiontext": {
+        "version": "8.1.4"
+      },
+      "actionview": {
+        "version": "8.1.4"
+      },
+      "activejob": {
+        "version": "8.1.4"
+      },
+      "activemodel": {
+        "version": "8.1.4"
+      },
+      "activerecord": {
+        "version": "8.1.4"
+      },
+      "activestorage": {
+        "version": "8.1.4"
+      },
+      "activesupport": {
+        "version": "8.1.4"
+      },
+      "async": {
+        "version": "2.46.0"
+      },
+      "async-container": {
+        "version": "0.38.0"
+      },
+      "async-http": {
+        "version": "0.105.0"
+      },
+      "async-http-faraday": {
+        "version": "0.24.0"
+      },
+      "async-job": {
+        "version": "0.11.1"
+      },
+      "async-job-adapter-active_job": {
+        "version": "0.21.0"
+      },
+      "async-job-processor-redis": {
+        "version": "0.3.1"
+      },
+      "async-pool": {
+        "version": "0.12.0"
+      },
+      "async-redis": {
+        "version": "0.14.0"
+      },
+      "async-service": {
+        "version": "0.25.0"
+      },
+      "base64": {
+        "version": "0.3.0"
+      },
+      "bigdecimal": {
+        "version": "4.1.3"
+      },
+      "builder": {
+        "version": "3.3.0"
+      },
+      "bundler": {
+        "version": "4.0.6"
+      },
+      "concurrent-ruby": {
+        "version": "1.3.8"
+      },
+      "connection_pool": {
+        "version": "3.0.2"
+      },
+      "console": {
+        "version": "1.38.0"
+      },
+      "crass": {
+        "version": "1.0.7"
+      },
+      "csv": {
+        "version": "3.3.6"
+      },
+      "date": {
+        "version": "3.5.1"
+      },
+      "debug": {
+        "version": "1.11.1"
+      },
+      "dotenv": {
+        "version": "3.2.0"
+      },
+      "drb": {
+        "version": "2.2.3"
+      },
+      "erb": {
+        "version": "6.0.7"
+      },
+      "erubi": {
+        "version": "1.13.1"
+      },
+      "et-orbi": {
+        "version": "1.4.2"
+      },
+      "event_stream_parser": {
+        "version": "1.0.0"
+      },
+      "faraday": {
+        "version": "2.14.4"
+      },
+      "faraday-multipart": {
+        "version": "1.2.0"
+      },
+      "faraday-net_http": {
+        "version": "3.4.4"
+      },
+      "faraday-net_http_persistent": {
+        "version": "2.3.1"
+      },
+      "faraday-retry": {
+        "version": "2.4.0"
+      },
+      "fiber-annotation": {
+        "version": "0.2.0"
+      },
+      "fiber-local": {
+        "version": "1.1.0"
+      },
+      "fiber-storage": {
+        "version": "1.0.1"
+      },
+      "fugit": {
+        "version": "1.14.0"
+      },
+      "globalid": {
+        "version": "1.4.0"
+      },
+      "i18n": {
+        "version": "1.15.2"
+      },
+      "io-console": {
+        "version": "0.9.4"
+      },
+      "io-endpoint": {
+        "version": "0.19.0"
+      },
+      "io-event": {
+        "version": "1.22.1"
+      },
+      "io-stream": {
+        "version": "0.14.0"
+      },
+      "irb": {
+        "version": "1.18.0"
+      },
+      "json": {
+        "version": "2.21.2"
+      },
+      "logger": {
+        "version": "1.7.0"
+      },
+      "loofah": {
+        "version": "2.25.2"
+      },
+      "mail": {
+        "version": "2.9.1"
+      },
+      "marcel": {
+        "version": "1.2.1"
+      },
+      "mini_mime": {
+        "version": "1.1.5"
+      },
+      "minitest": {
+        "version": "6.0.6"
+      },
+      "multipart-post": {
+        "version": "2.4.1"
+      },
+      "net-http": {
+        "version": "0.9.1"
+      },
+      "net-http-persistent": {
+        "version": "4.0.8"
+      },
+      "net-imap": {
+        "version": "0.6.7"
+      },
+      "net-pop": {
+        "version": "0.1.2"
+      },
+      "net-protocol": {
+        "version": "0.4.0"
+      },
+      "net-smtp": {
+        "version": "0.5.2"
+      },
+      "nio4r": {
+        "version": "2.7.5"
+      },
+      "nokogiri": {
+        "version": "1.19.4"
+      },
+      "openssl": {
+        "version": "4.0.2"
+      },
+      "pg": {
+        "version": "1.7.0"
+      },
+      "pp": {
+        "version": "0.6.4"
+      },
+      "prettyprint": {
+        "version": "0.2.0"
+      },
+      "prism": {
+        "version": "1.9.0"
+      },
+      "propshaft": {
+        "version": "1.3.2"
+      },
+      "protocol-hpack": {
+        "version": "1.5.1"
+      },
+      "protocol-http": {
+        "version": "0.72.0"
+      },
+      "protocol-http1": {
+        "version": "0.41.0"
+      },
+      "protocol-http2": {
+        "version": "0.29.1"
+      },
+      "protocol-redis": {
+        "version": "0.13.1"
+      },
+      "protocol-url": {
+        "version": "0.19.0"
+      },
+      "puma": {
+        "version": "8.0.2"
+      },
+      "raabro": {
+        "version": "1.5.0"
+      },
+      "racc": {
+        "version": "1.8.1"
+      },
+      "rack": {
+        "version": "3.2.7"
+      },
+      "rack-session": {
+        "version": "2.1.2"
+      },
+      "rack-test": {
+        "version": "2.2.0"
+      },
+      "rackup": {
+        "version": "2.3.1"
+      },
+      "rails": {
+        "version": "8.1.4"
+      },
+      "rails-dom-testing": {
+        "version": "2.3.0"
+      },
+      "rails-html-sanitizer": {
+        "version": "1.7.1"
+      },
+      "railties": {
+        "version": "8.1.4"
+      },
+      "rake": {
+        "version": "13.4.2"
+      },
+      "rbs": {
+        "version": "4.2.0"
+      },
+      "rdoc": {
+        "version": "8.1.0"
+      },
+      "reline": {
+        "version": "0.7.0"
+      },
+      "ruby_llm": {
+        "version": "2.0.0"
+      },
+      "schematist": {
+        "version": "1.1.0"
+      },
+      "securerandom": {
+        "version": "0.4.1"
+      },
+      "solid_queue": {
+        "version": "1.7.0"
+      },
+      "string-format": {
+        "version": "0.2.0"
+      },
+      "thor": {
+        "version": "1.5.0"
+      },
+      "timeout": {
+        "version": "0.6.1"
+      },
+      "tsort": {
+        "version": "0.2.0"
+      },
+      "turbo-rails": {
+        "version": "2.0.23"
+      },
+      "tzinfo": {
+        "version": "2.0.6"
+      },
+      "uri": {
+        "version": "1.1.1"
+      },
+      "useragent": {
+        "version": "0.16.11"
+      },
+      "vega": {
+        "version": "0.6.0"
+      },
+      "websocket-driver": {
+        "version": "0.8.2"
+      },
+      "websocket-extensions": {
+        "version": "0.1.5"
+      },
+      "zeitwerk": {
+        "version": "2.8.3"
+      }
+    },
+    "lockfile_sha256": "d2231054b559ec5c8cebce6682cf2d891a6fde3b909f51e717f87021e3ef67e6",
+    "llm_adapter": "net_http",
+    "hostname": "chalk",
+    "cpu": "AMD Ryzen 9 9900X 12-Core Processor",
+    "postgres_version": "17.6 (Debian 17.6-2.pgdg13+1)",
+    "postgres_max_connections": 100
+  },
+  "isolation_level": "fiber",
+  "backend": "solid_queue",
+  "workload": "ruby_llm_stream_only",
+  "payload": {
+    "token_count": 500,
+    "token_delay_ms": 0,
+    "model_id": "gpt-4.1-mini",
+    "prompt": "Respond with a concise sentence.",
+    "calls": 20,
+    "history_messages": 100,
+    "rebuilds": 10
+  },
+  "jobs_per_cell": 50,
+  "concurrencies": [
+    5,
+    25
+  ],
+  "processes": [
+    1
+  ],
+  "modes": [
+    "thread",
+    "fiber"
+  ],
+  "repeat": 3,
+  "db_pool": "matched",
+  "max_total_concurrency": 60,
+  "planned_cells": 4,
+  "successful_cells": 4,
+  "failed_cells": 0,
+  "results": [
+    {
+      "backend": "solid_queue",
+      "mode": "thread",
+      "workload": "ruby_llm_stream_only",
+      "llm_adapter": "net_http",
+      "jobs": 50,
+      "concurrency": 5,
+      "processes": 1,
+      "db_pool": 10,
+      "completed_jobs": 50,
+      "successful_jobs": 50,
+      "finished_jobs": 50,
+      "failed_jobs": 0,
+      "child_jobs_enqueued": 0,
+      "child_jobs_finished": 0,
+      "child_jobs_failed": 0,
+      "benchmark_finished_at": "2026-10-06 22:27:28 UTC",
+      "wall_time_s": 1.286,
+      "enqueue_time_s": 0.05,
+      "drain_time_s": 1.236,
+      "execution_window_s": 1.178,
+      "jobs_per_second": 38.87,
+      "finished_jobs_per_second": 38.87,
+      "drain_jobs_per_second": 40.44,
+      "execution_jobs_per_second": 42.43,
+      "peak_rss_kb": 188316,
+      "avg_rss_kb": 165878,
+      "avg_cpu_pct": 95.9,
+      "peak_cpu_pct": 109.3,
+      "queue_delay_ms": {
+        "p50": 885.01,
+        "p95": 1244.0,
+        "p99": 1271.57,
+        "max": 1271.57
+      },
+      "service_time_ms": {
+        "p50": 11.8,
+        "p95": 404.58,
+        "p99": 405.34,
+        "max": 405.34
+      },
+      "total_latency_ms": {
+        "p50": 897.25,
+        "p95": 1256.06,
+        "p99": 1282.69,
+        "max": 1282.69
+      },
+      "http_connections": {
+        "connections": 50,
+        "requests": 50
+      },
+      "repeat_runs": [
+        {
+          "backend": "solid_queue",
+          "mode": "thread",
+          "workload": "ruby_llm_stream_only",
+          "llm_adapter": "net_http",
+          "jobs": 50,
+          "concurrency": 5,
+          "processes": 1,
+          "db_pool": 10,
+          "completed_jobs": 50,
+          "successful_jobs": 50,
+          "finished_jobs": 50,
+          "failed_jobs": 0,
+          "child_jobs_enqueued": 0,
+          "child_jobs_finished": 0,
+          "child_jobs_failed": 0,
+          "benchmark_finished_at": "2026-10-06 22:27:28 UTC",
+          "wall_time_s": 1.286,
+          "enqueue_time_s": 0.05,
+          "drain_time_s": 1.236,
+          "execution_window_s": 1.178,
+          "jobs_per_second": 38.87,
+          "finished_jobs_per_second": 38.87,
+          "drain_jobs_per_second": 40.44,
+          "execution_jobs_per_second": 42.43,
+          "peak_rss_kb": 188316,
+          "avg_rss_kb": 165878,
+          "avg_cpu_pct": 95.9,
+          "peak_cpu_pct": 109.3,
+          "queue_delay_ms": {
+            "p50": 885.01,
+            "p95": 1244.0,
+            "p99": 1271.57,
+            "max": 1271.57
+          },
+          "service_time_ms": {
+            "p50": 11.8,
+            "p95": 404.58,
+            "p99": 405.34,
+            "max": 405.34
+          },
+          "total_latency_ms": {
+            "p50": 897.25,
+            "p95": 1256.06,
+            "p99": 1282.69,
+            "max": 1282.69
+          },
+          "http_connections": {
+            "connections": 50,
+            "requests": 50
+          }
+        },
+        {
+          "backend": "solid_queue",
+          "mode": "thread",
+          "workload": "ruby_llm_stream_only",
+          "llm_adapter": "net_http",
+          "jobs": 50,
+          "concurrency": 5,
+          "processes": 1,
+          "db_pool": 10,
+          "completed_jobs": 50,
+          "successful_jobs": 50,
+          "finished_jobs": 50,
+          "failed_jobs": 0,
+          "child_jobs_enqueued": 0,
+          "child_jobs_finished": 0,
+          "child_jobs_failed": 0,
+          "benchmark_finished_at": "2026-10-06 22:27:31 UTC",
+          "wall_time_s": 1.283,
+          "enqueue_time_s": 0.017,
+          "drain_time_s": 1.266,
+          "execution_window_s": 1.209,
+          "jobs_per_second": 38.98,
+          "finished_jobs_per_second": 38.98,
+          "drain_jobs_per_second": 39.5,
+          "execution_jobs_per_second": 41.36,
+          "peak_rss_kb": 178616,
+          "avg_rss_kb": 162504,
+          "avg_cpu_pct": 95.4,
+          "peak_cpu_pct": 109.3,
+          "queue_delay_ms": {
+            "p50": 888.07,
+            "p95": 1236.77,
+            "p99": 1269.0,
+            "max": 1269.0
+          },
+          "service_time_ms": {
+            "p50": 11.93,
+            "p95": 424.83,
+            "p99": 428.76,
+            "max": 428.76
+          },
+          "total_latency_ms": {
+            "p50": 898.73,
+            "p95": 1249.54,
+            "p99": 1280.19,
+            "max": 1280.19
+          },
+          "http_connections": {
+            "connections": 50,
+            "requests": 50
+          }
+        },
+        {
+          "backend": "solid_queue",
+          "mode": "thread",
+          "workload": "ruby_llm_stream_only",
+          "llm_adapter": "net_http",
+          "jobs": 50,
+          "concurrency": 5,
+          "processes": 1,
+          "db_pool": 10,
+          "completed_jobs": 50,
+          "successful_jobs": 50,
+          "finished_jobs": 50,
+          "failed_jobs": 0,
+          "child_jobs_enqueued": 0,
+          "child_jobs_finished": 0,
+          "child_jobs_failed": 0,
+          "benchmark_finished_at": "2026-10-06 22:27:33 UTC",
+          "wall_time_s": 1.297,
+          "enqueue_time_s": 0.019,
+          "drain_time_s": 1.278,
+          "execution_window_s": 1.222,
+          "jobs_per_second": 38.56,
+          "finished_jobs_per_second": 38.56,
+          "drain_jobs_per_second": 39.13,
+          "execution_jobs_per_second": 40.91,
+          "peak_rss_kb": 188236,
+          "avg_rss_kb": 170016,
+          "avg_cpu_pct": 97.0,
+          "peak_cpu_pct": 109.1,
+          "queue_delay_ms": {
+            "p50": 890.67,
+            "p95": 1254.64,
+            "p99": 1282.99,
+            "max": 1282.99
+          },
+          "service_time_ms": {
+            "p50": 12.51,
+            "p95": 418.67,
+            "p99": 422.83,
+            "max": 422.83
+          },
+          "total_latency_ms": {
+            "p50": 903.76,
+            "p95": 1267.14,
+            "p99": 1294.22,
+            "max": 1294.22
+          },
+          "http_connections": {
+            "connections": 50,
+            "requests": 50
+          }
+        }
+      ],
+      "repeat_jobs_per_second_values": [
+        38.56,
+        38.87,
+        38.98
+      ],
+      "repeat_successful_jobs_values": [
+        50,
+        50,
+        50
+      ]
+    },
+    {
+      "backend": "solid_queue",
+      "mode": "thread",
+      "workload": "ruby_llm_stream_only",
+      "llm_adapter": "net_http",
+      "jobs": 50,
+      "concurrency": 25,
+      "processes": 1,
+      "db_pool": 30,
+      "completed_jobs": 50,
+      "successful_jobs": 50,
+      "finished_jobs": 50,
+      "failed_jobs": 0,
+      "child_jobs_enqueued": 0,
+      "child_jobs_finished": 0,
+      "child_jobs_failed": 0,
+      "benchmark_finished_at": "2026-10-06 22:27:43 UTC",
+      "wall_time_s": 2.191,
+      "enqueue_time_s": 0.023,
+      "drain_time_s": 2.168,
+      "execution_window_s": 2.06,
+      "jobs_per_second": 22.82,
+      "finished_jobs_per_second": 22.82,
+      "drain_jobs_per_second": 23.07,
+      "execution_jobs_per_second": 24.27,
+      "peak_rss_kb": 261428,
+      "avg_rss_kb": 212371,
+      "avg_cpu_pct": 98.8,
+      "peak_cpu_pct": 109.3,
+      "queue_delay_ms": {
+        "p50": 1780.95,
+        "p95": 2143.08,
+        "p99": 2173.56,
+        "max": 2173.56
+      },
+      "service_time_ms": {
+        "p50": 32.78,
+        "p95": 1367.71,
+        "p99": 1522.86,
+        "max": 1522.86
+      },
+      "total_latency_ms": {
+        "p50": 1792.9,
+        "p95": 2153.81,
+        "p99": 2184.06,
+        "max": 2184.06
+      },
+      "http_connections": {
+        "connections": 50,
+        "requests": 50
+      },
+      "repeat_runs": [
+        {
+          "backend": "solid_queue",
+          "mode": "thread",
+          "workload": "ruby_llm_stream_only",
+          "llm_adapter": "net_http",
+          "jobs": 50,
+          "concurrency": 25,
+          "processes": 1,
+          "db_pool": 30,
+          "completed_jobs": 50,
+          "successful_jobs": 50,
+          "finished_jobs": 50,
+          "failed_jobs": 0,
+          "child_jobs_enqueued": 0,
+          "child_jobs_finished": 0,
+          "child_jobs_failed": 0,
+          "benchmark_finished_at": "2026-10-06 22:27:36 UTC",
+          "wall_time_s": 2.202,
+          "enqueue_time_s": 0.017,
+          "drain_time_s": 2.185,
+          "execution_window_s": 2.078,
+          "jobs_per_second": 22.71,
+          "finished_jobs_per_second": 22.71,
+          "drain_jobs_per_second": 22.89,
+          "execution_jobs_per_second": 24.07,
+          "peak_rss_kb": 269608,
+          "avg_rss_kb": 213366,
+          "avg_cpu_pct": 98.9,
+          "peak_cpu_pct": 109.4,
+          "queue_delay_ms": {
+            "p50": 1873.54,
+            "p95": 2162.34,
+            "p99": 2188.25,
+            "max": 2188.25
+          },
+          "service_time_ms": {
+            "p50": 14.47,
+            "p95": 1423.11,
+            "p99": 1624.87,
+            "max": 1624.87
+          },
+          "total_latency_ms": {
+            "p50": 1885.57,
+            "p95": 2173.35,
+            "p99": 2198.91,
+            "max": 2198.91
+          },
+          "http_connections": {
+            "connections": 50,
+            "requests": 50
+          }
+        },
+        {
+          "backend": "solid_queue",
+          "mode": "thread",
+          "workload": "ruby_llm_stream_only",
+          "llm_adapter": "net_http",
+          "jobs": 50,
+          "concurrency": 25,
+          "processes": 1,
+          "db_pool": 30,
+          "completed_jobs": 50,
+          "successful_jobs": 50,
+          "finished_jobs": 50,
+          "failed_jobs": 0,
+          "child_jobs_enqueued": 0,
+          "child_jobs_finished": 0,
+          "child_jobs_failed": 0,
+          "benchmark_finished_at": "2026-10-06 22:27:39 UTC",
+          "wall_time_s": 2.011,
+          "enqueue_time_s": 0.018,
+          "drain_time_s": 1.993,
+          "execution_window_s": 1.891,
+          "jobs_per_second": 24.87,
+          "finished_jobs_per_second": 24.87,
+          "drain_jobs_per_second": 25.09,
+          "execution_jobs_per_second": 26.44,
+          "peak_rss_kb": 234896,
+          "avg_rss_kb": 194525,
+          "avg_cpu_pct": 98.6,
+          "peak_cpu_pct": 109.0,
+          "queue_delay_ms": {
+            "p50": 1609.32,
+            "p95": 1967.87,
+            "p99": 1996.76,
+            "max": 1996.76
+          },
+          "service_time_ms": {
+            "p50": 13.48,
+            "p95": 1207.69,
+            "p99": 1373.9,
+            "max": 1373.9
+          },
+          "total_latency_ms": {
+            "p50": 1623.18,
+            "p95": 1979.33,
+            "p99": 2007.47,
+            "max": 2007.47
+          },
+          "http_connections": {
+            "connections": 50,
+            "requests": 50
+          }
+        },
+        {
+          "backend": "solid_queue",
+          "mode": "thread",
+          "workload": "ruby_llm_stream_only",
+          "llm_adapter": "net_http",
+          "jobs": 50,
+          "concurrency": 25,
+          "processes": 1,
+          "db_pool": 30,
+          "completed_jobs": 50,
+          "successful_jobs": 50,
+          "finished_jobs": 50,
+          "failed_jobs": 0,
+          "child_jobs_enqueued": 0,
+          "child_jobs_finished": 0,
+          "child_jobs_failed": 0,
+          "benchmark_finished_at": "2026-10-06 22:27:43 UTC",
+          "wall_time_s": 2.191,
+          "enqueue_time_s": 0.023,
+          "drain_time_s": 2.168,
+          "execution_window_s": 2.06,
+          "jobs_per_second": 22.82,
+          "finished_jobs_per_second": 22.82,
+          "drain_jobs_per_second": 23.07,
+          "execution_jobs_per_second": 24.27,
+          "peak_rss_kb": 261428,
+          "avg_rss_kb": 212371,
+          "avg_cpu_pct": 98.8,
+          "peak_cpu_pct": 109.3,
+          "queue_delay_ms": {
+            "p50": 1780.95,
+            "p95": 2143.08,
+            "p99": 2173.56,
+            "max": 2173.56
+          },
+          "service_time_ms": {
+            "p50": 32.78,
+            "p95": 1367.71,
+            "p99": 1522.86,
+            "max": 1522.86
+          },
+          "total_latency_ms": {
+            "p50": 1792.9,
+            "p95": 2153.81,
+            "p99": 2184.06,
+            "max": 2184.06
+          },
+          "http_connections": {
+            "connections": 50,
+            "requests": 50
+          }
+        }
+      ],
+      "repeat_jobs_per_second_values": [
+        22.71,
+        22.82,
+        24.87
+      ],
+      "repeat_successful_jobs_values": [
+        50,
+        50,
+        50
+      ]
+    },
+    {
+      "backend": "solid_queue",
+      "mode": "fiber",
+      "workload": "ruby_llm_stream_only",
+      "llm_adapter": "net_http",
+      "jobs": 50,
+      "concurrency": 5,
+      "processes": 1,
+      "db_pool": 10,
+      "completed_jobs": 50,
+      "successful_jobs": 50,
+      "finished_jobs": 50,
+      "failed_jobs": 0,
+      "child_jobs_enqueued": 0,
+      "child_jobs_finished": 0,
+      "child_jobs_failed": 0,
+      "benchmark_finished_at": "2026-10-06 22:27:47 UTC",
+      "wall_time_s": 1.236,
+      "enqueue_time_s": 0.019,
+      "drain_time_s": 1.217,
+      "execution_window_s": 1.168,
+      "jobs_per_second": 40.46,
+      "finished_jobs_per_second": 40.46,
+      "drain_jobs_per_second": 41.08,
+      "execution_jobs_per_second": 42.8,
+      "peak_rss_kb": 163260,
+      "avg_rss_kb": 151231,
+      "avg_cpu_pct": 98.3,
+      "peak_cpu_pct": 109.2,
+      "queue_delay_ms": {
+        "p50": 860.66,
+        "p95": 1193.91,
+        "p99": 1222.46,
+        "max": 1222.46
+      },
+      "service_time_ms": {
+        "p50": 10.99,
+        "p95": 270.45,
+        "p99": 465.63,
+        "max": 465.63
+      },
+      "total_latency_ms": {
+        "p50": 872.48,
+        "p95": 1207.4,
+        "p99": 1233.04,
+        "max": 1233.04
+      },
+      "http_connections": {
+        "connections": 50,
+        "requests": 50
+      },
+      "repeat_runs": [
+        {
+          "backend": "solid_queue",
+          "mode": "fiber",
+          "workload": "ruby_llm_stream_only",
+          "llm_adapter": "net_http",
+          "jobs": 50,
+          "concurrency": 5,
+          "processes": 1,
+          "db_pool": 10,
+          "completed_jobs": 50,
+          "successful_jobs": 50,
+          "finished_jobs": 50,
+          "failed_jobs": 0,
+          "child_jobs_enqueued": 0,
+          "child_jobs_finished": 0,
+          "child_jobs_failed": 0,
+          "benchmark_finished_at": "2026-10-06 22:27:45 UTC",
+          "wall_time_s": 1.245,
+          "enqueue_time_s": 0.017,
+          "drain_time_s": 1.228,
+          "execution_window_s": 1.177,
+          "jobs_per_second": 40.17,
+          "finished_jobs_per_second": 40.17,
+          "drain_jobs_per_second": 40.73,
+          "execution_jobs_per_second": 42.46,
+          "peak_rss_kb": 163204,
+          "avg_rss_kb": 151245,
+          "avg_cpu_pct": 98.2,
+          "peak_cpu_pct": 109.0,
+          "queue_delay_ms": {
+            "p50": 869.26,
+            "p95": 1204.51,
+            "p99": 1230.69,
+            "max": 1230.69
+          },
+          "service_time_ms": {
+            "p50": 11.29,
+            "p95": 271.19,
+            "p99": 460.03,
+            "max": 460.03
+          },
+          "total_latency_ms": {
+            "p50": 883.48,
+            "p95": 1217.67,
+            "p99": 1241.77,
+            "max": 1241.77
+          },
+          "http_connections": {
+            "connections": 50,
+            "requests": 50
+          }
+        },
+        {
+          "backend": "solid_queue",
+          "mode": "fiber",
+          "workload": "ruby_llm_stream_only",
+          "llm_adapter": "net_http",
+          "jobs": 50,
+          "concurrency": 5,
+          "processes": 1,
+          "db_pool": 10,
+          "completed_jobs": 50,
+          "successful_jobs": 50,
+          "finished_jobs": 50,
+          "failed_jobs": 0,
+          "child_jobs_enqueued": 0,
+          "child_jobs_finished": 0,
+          "child_jobs_failed": 0,
+          "benchmark_finished_at": "2026-10-06 22:27:47 UTC",
+          "wall_time_s": 1.236,
+          "enqueue_time_s": 0.019,
+          "drain_time_s": 1.217,
+          "execution_window_s": 1.168,
+          "jobs_per_second": 40.46,
+          "finished_jobs_per_second": 40.46,
+          "drain_jobs_per_second": 41.08,
+          "execution_jobs_per_second": 42.8,
+          "peak_rss_kb": 163260,
+          "avg_rss_kb": 151231,
+          "avg_cpu_pct": 98.3,
+          "peak_cpu_pct": 109.2,
+          "queue_delay_ms": {
+            "p50": 860.66,
+            "p95": 1193.91,
+            "p99": 1222.46,
+            "max": 1222.46
+          },
+          "service_time_ms": {
+            "p50": 10.99,
+            "p95": 270.45,
+            "p99": 465.63,
+            "max": 465.63
+          },
+          "total_latency_ms": {
+            "p50": 872.48,
+            "p95": 1207.4,
+            "p99": 1233.04,
+            "max": 1233.04
+          },
+          "http_connections": {
+            "connections": 50,
+            "requests": 50
+          }
+        },
+        {
+          "backend": "solid_queue",
+          "mode": "fiber",
+          "workload": "ruby_llm_stream_only",
+          "llm_adapter": "net_http",
+          "jobs": 50,
+          "concurrency": 5,
+          "processes": 1,
+          "db_pool": 10,
+          "completed_jobs": 50,
+          "successful_jobs": 50,
+          "finished_jobs": 50,
+          "failed_jobs": 0,
+          "child_jobs_enqueued": 0,
+          "child_jobs_finished": 0,
+          "child_jobs_failed": 0,
+          "benchmark_finished_at": "2026-10-06 22:27:50 UTC",
+          "wall_time_s": 1.166,
+          "enqueue_time_s": 0.017,
+          "drain_time_s": 1.15,
+          "execution_window_s": 1.096,
+          "jobs_per_second": 42.86,
+          "finished_jobs_per_second": 42.86,
+          "drain_jobs_per_second": 43.48,
+          "execution_jobs_per_second": 45.61,
+          "peak_rss_kb": 162948,
+          "avg_rss_kb": 149460,
+          "avg_cpu_pct": 95.2,
+          "peak_cpu_pct": 109.3,
+          "queue_delay_ms": {
+            "p50": 815.43,
+            "p95": 1129.92,
+            "p99": 1152.85,
+            "max": 1152.85
+          },
+          "service_time_ms": {
+            "p50": 10.76,
+            "p95": 256.63,
+            "p99": 405.58,
+            "max": 405.58
+          },
+          "total_latency_ms": {
+            "p50": 828.38,
+            "p95": 1141.38,
+            "p99": 1164.01,
+            "max": 1164.01
+          },
+          "http_connections": {
+            "connections": 50,
+            "requests": 50
+          }
+        }
+      ],
+      "repeat_jobs_per_second_values": [
+        40.17,
+        40.46,
+        42.86
+      ],
+      "repeat_successful_jobs_values": [
+        50,
+        50,
+        50
+      ]
+    },
+    {
+      "backend": "solid_queue",
+      "mode": "fiber",
+      "workload": "ruby_llm_stream_only",
+      "llm_adapter": "net_http",
+      "jobs": 50,
+      "concurrency": 25,
+      "processes": 1,
+      "db_pool": 30,
+      "completed_jobs": 50,
+      "successful_jobs": 50,
+      "finished_jobs": 50,
+      "failed_jobs": 0,
+      "child_jobs_enqueued": 0,
+      "child_jobs_finished": 0,
+      "child_jobs_failed": 0,
+      "benchmark_finished_at": "2026-10-06 22:27:56 UTC",
+      "wall_time_s": 2.145,
+      "enqueue_time_s": 0.023,
+      "drain_time_s": 2.122,
+      "execution_window_s": 2.044,
+      "jobs_per_second": 23.31,
+      "finished_jobs_per_second": 23.31,
+      "drain_jobs_per_second": 23.56,
+      "execution_jobs_per_second": 24.46,
+      "peak_rss_kb": 216108,
+      "avg_rss_kb": 185573,
+      "avg_cpu_pct": 98.6,
+      "peak_cpu_pct": 109.2,
+      "queue_delay_ms": {
+        "p50": 1754.14,
+        "p95": 2103.59,
+        "p99": 2131.94,
+        "max": 2131.94
+      },
+      "service_time_ms": {
+        "p50": 13.04,
+        "p95": 1416.89,
+        "p99": 1608.12,
+        "max": 1608.12
+      },
+      "total_latency_ms": {
+        "p50": 1764.96,
+        "p95": 2114.57,
+        "p99": 2142.65,
+        "max": 2142.65
+      },
+      "http_connections": {
+        "connections": 50,
+        "requests": 50
+      },
+      "repeat_runs": [
+        {
+          "backend": "solid_queue",
+          "mode": "fiber",
+          "workload": "ruby_llm_stream_only",
+          "llm_adapter": "net_http",
+          "jobs": 50,
+          "concurrency": 25,
+          "processes": 1,
+          "db_pool": 30,
+          "completed_jobs": 50,
+          "successful_jobs": 50,
+          "finished_jobs": 50,
+          "failed_jobs": 0,
+          "child_jobs_enqueued": 0,
+          "child_jobs_finished": 0,
+          "child_jobs_failed": 0,
+          "benchmark_finished_at": "2026-10-06 22:27:53 UTC",
+          "wall_time_s": 1.951,
+          "enqueue_time_s": 0.018,
+          "drain_time_s": 1.933,
+          "execution_window_s": 1.858,
+          "jobs_per_second": 25.62,
+          "finished_jobs_per_second": 25.62,
+          "drain_jobs_per_second": 25.87,
+          "execution_jobs_per_second": 26.92,
+          "peak_rss_kb": 226796,
+          "avg_rss_kb": 194185,
+          "avg_cpu_pct": 98.7,
+          "peak_cpu_pct": 109.2,
+          "queue_delay_ms": {
+            "p50": 1582.25,
+            "p95": 1887.89,
+            "p99": 1938.0,
+            "max": 1938.0
+          },
+          "service_time_ms": {
+            "p50": 11.83,
+            "p95": 1222.28,
+            "p99": 1436.46,
+            "max": 1436.46
+          },
+          "total_latency_ms": {
+            "p50": 1594.43,
+            "p95": 1897.9,
+            "p99": 1948.47,
+            "max": 1948.47
+          },
+          "http_connections": {
+            "connections": 50,
+            "requests": 50
+          }
+        },
+        {
+          "backend": "solid_queue",
+          "mode": "fiber",
+          "workload": "ruby_llm_stream_only",
+          "llm_adapter": "net_http",
+          "jobs": 50,
+          "concurrency": 25,
+          "processes": 1,
+          "db_pool": 30,
+          "completed_jobs": 50,
+          "successful_jobs": 50,
+          "finished_jobs": 50,
+          "failed_jobs": 0,
+          "child_jobs_enqueued": 0,
+          "child_jobs_finished": 0,
+          "child_jobs_failed": 0,
+          "benchmark_finished_at": "2026-10-06 22:27:56 UTC",
+          "wall_time_s": 2.145,
+          "enqueue_time_s": 0.023,
+          "drain_time_s": 2.122,
+          "execution_window_s": 2.044,
+          "jobs_per_second": 23.31,
+          "finished_jobs_per_second": 23.31,
+          "drain_jobs_per_second": 23.56,
+          "execution_jobs_per_second": 24.46,
+          "peak_rss_kb": 216108,
+          "avg_rss_kb": 185573,
+          "avg_cpu_pct": 98.6,
+          "peak_cpu_pct": 109.2,
+          "queue_delay_ms": {
+            "p50": 1754.14,
+            "p95": 2103.59,
+            "p99": 2131.94,
+            "max": 2131.94
+          },
+          "service_time_ms": {
+            "p50": 13.04,
+            "p95": 1416.89,
+            "p99": 1608.12,
+            "max": 1608.12
+          },
+          "total_latency_ms": {
+            "p50": 1764.96,
+            "p95": 2114.57,
+            "p99": 2142.65,
+            "max": 2142.65
+          },
+          "http_connections": {
+            "connections": 50,
+            "requests": 50
+          }
+        },
+        {
+          "backend": "solid_queue",
+          "mode": "fiber",
+          "workload": "ruby_llm_stream_only",
+          "llm_adapter": "net_http",
+          "jobs": 50,
+          "concurrency": 25,
+          "processes": 1,
+          "db_pool": 30,
+          "completed_jobs": 50,
+          "successful_jobs": 50,
+          "finished_jobs": 50,
+          "failed_jobs": 0,
+          "child_jobs_enqueued": 0,
+          "child_jobs_finished": 0,
+          "child_jobs_failed": 0,
+          "benchmark_finished_at": "2026-10-06 22:27:59 UTC",
+          "wall_time_s": 2.387,
+          "enqueue_time_s": 0.017,
+          "drain_time_s": 2.371,
+          "execution_window_s": 2.283,
+          "jobs_per_second": 20.95,
+          "finished_jobs_per_second": 20.95,
+          "drain_jobs_per_second": 21.09,
+          "execution_jobs_per_second": 21.9,
+          "peak_rss_kb": 232400,
+          "avg_rss_kb": 200854,
+          "avg_cpu_pct": 98.2,
+          "peak_cpu_pct": 109.2,
+          "queue_delay_ms": {
+            "p50": 1953.35,
+            "p95": 2339.11,
+            "p99": 2374.62,
+            "max": 2374.62
+          },
+          "service_time_ms": {
+            "p50": 23.74,
+            "p95": 1595.04,
+            "p99": 1770.07,
+            "max": 1770.07
+          },
+          "total_latency_ms": {
+            "p50": 1964.82,
+            "p95": 2349.6,
+            "p99": 2384.76,
+            "max": 2384.76
+          },
+          "http_connections": {
+            "connections": 50,
+            "requests": 50
+          }
+        }
+      ],
+      "repeat_jobs_per_second_values": [
+        20.95,
+        23.31,
+        25.62
+      ],
+      "repeat_successful_jobs_values": [
+        50,
+        50,
+        50
+      ]
+    }
+  ]
+}

@@ -1,0 +1,252 @@
+{
+  "2.0": {
+    "samples": 3187,
+    "missed_samples": 31,
+    "jobs": 200,
+    "requests": 4000,
+    "top_self": [
+      {
+        "name": "(sweeping)",
+        "samples": 159,
+        "total_samples": 159
+      },
+      {
+        "name": "String#sub",
+        "samples": 138,
+        "total_samples": 138
+      },
+      {
+        "name": "(marking)",
+        "samples": 135,
+        "total_samples": 135
+      },
+      {
+        "name": "TCPSocket#initialize",
+        "samples": 77,
+        "total_samples": 79
+      },
+      {
+        "name": "RubyLLM::Models#find_with_provider",
+        "samples": 74,
+        "total_samples": 121
+      },
+      {
+        "name": "Thread::Backtrace::Location#to_s",
+        "samples": 62,
+        "total_samples": 62
+      },
+      {
+        "name": "BasicSocket#__write_nonblock",
+        "samples": 48,
+        "total_samples": 48
+      },
+      {
+        "name": "Array#find",
+        "samples": 43,
+        "total_samples": 115
+      },
+      {
+        "name": "Dir.[]",
+        "samples": 41,
+        "total_samples": 41
+      },
+      {
+        "name": "JSON::Ext::Parser.parse",
+        "samples": 39,
+        "total_samples": 39
+      },
+      {
+        "name": "Regexp#match",
+        "samples": 39,
+        "total_samples": 39
+      },
+      {
+        "name": "Hash#_deep_transform_keys_in_object",
+        "samples": 35,
+        "total_samples": 58
+      },
+      {
+        "name": "Array#each",
+        "samples": 30,
+        "total_samples": 1145
+      },
+      {
+        "name": "IO#close",
+        "samples": 29,
+        "total_samples": 29
+      },
+      {
+        "name": "PG::Connection#exec",
+        "samples": 28,
+        "total_samples": 28
+      },
+      {
+        "name": "Regexp#match?",
+        "samples": 28,
+        "total_samples": 28
+      },
+      {
+        "name": "Faraday::Options#update",
+        "samples": 27,
+        "total_samples": 64
+      },
+      {
+        "name": "Hash#each",
+        "samples": 26,
+        "total_samples": 180
+      },
+      {
+        "name": "#<Object:0x00007cd8eeddca18>.[]",
+        "samples": 23,
+        "total_samples": 23
+      },
+      {
+        "name": "Regexp#initialize",
+        "samples": 22,
+        "total_samples": 22
+      }
+    ],
+    "selected_inclusive": [
+      {
+        "name": "ActiveRecord::LogSubscriber#log_query_source",
+        "samples": 0,
+        "total_samples": 328
+      },
+      {
+        "name": "ActiveSupport::BacktraceCleaner#first_clean_frame",
+        "samples": 5,
+        "total_samples": 324
+      }
+    ]
+  },
+  "main": {
+    "samples": 8736,
+    "missed_samples": 55,
+    "jobs": 200,
+    "requests": 4000,
+    "top_self": [
+      {
+        "name": "String#sub",
+        "samples": 1315,
+        "total_samples": 1315
+      },
+      {
+        "name": "Thread::Backtrace::Location#to_s",
+        "samples": 674,
+        "total_samples": 674
+      },
+      {
+        "name": "(sweeping)",
+        "samples": 567,
+        "total_samples": 567
+      },
+      {
+        "name": "Regexp#match?",
+        "samples": 502,
+        "total_samples": 502
+      },
+      {
+        "name": "ActiveSupport::BacktraceCleaner#clean_frame",
+        "samples": 304,
+        "total_samples": 3171
+      },
+      {
+        "name": "#<Object:0x000074953a17c9f8>.[]",
+        "samples": 208,
+        "total_samples": 208
+      },
+      {
+        "name": "PG::Connection#exec",
+        "samples": 167,
+        "total_samples": 167
+      },
+      {
+        "name": "Thread.each_caller_location",
+        "samples": 142,
+        "total_samples": 3623
+      },
+      {
+        "name": "Array#each",
+        "samples": 114,
+        "total_samples": 5482
+      },
+      {
+        "name": "String#include?",
+        "samples": 113,
+        "total_samples": 113
+      },
+      {
+        "name": "(marking)",
+        "samples": 96,
+        "total_samples": 96
+      },
+      {
+        "name": "TCPSocket#initialize",
+        "samples": 90,
+        "total_samples": 93
+      },
+      {
+        "name": "Rails::BacktraceCleaner#initialize",
+        "samples": 78,
+        "total_samples": 435
+      },
+      {
+        "name": "Rails::BacktraceCleaner#clean_frame",
+        "samples": 61,
+        "total_samples": 3440
+      },
+      {
+        "name": "IO#write",
+        "samples": 56,
+        "total_samples": 56
+      },
+      {
+        "name": "BasicSocket#__write_nonblock",
+        "samples": 48,
+        "total_samples": 48
+      },
+      {
+        "name": "Array#any?",
+        "samples": 46,
+        "total_samples": 430
+      },
+      {
+        "name": "ActiveSupport::BacktraceCleaner#first_clean_frame",
+        "samples": 41,
+        "total_samples": 3623
+      },
+      {
+        "name": "Monitor#synchronize",
+        "samples": 39,
+        "total_samples": 186
+      },
+      {
+        "name": "Kernel#dup",
+        "samples": 35,
+        "total_samples": 68
+      }
+    ],
+    "selected_inclusive": [
+      {
+        "name": "RubyLLM::ActiveRecord::Usage.record",
+        "samples": 1,
+        "total_samples": 5590
+      },
+      {
+        "name": "RubyLLM::Accounting::Usage.record",
+        "samples": 0,
+        "total_samples": 5590
+      },
+      {
+        "name": "ActiveSupport::BacktraceCleaner#first_clean_frame",
+        "samples": 41,
+        "total_samples": 3623
+      },
+      {
+        "name": "ActiveRecord::LogSubscriber#log_query_source",
+        "samples": 4,
+        "total_samples": 3743
+      }
+    ]
+  }
+}

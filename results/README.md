@@ -2,7 +2,8 @@
 
 Benchmark outputs live in the per-family directories below. The generated narrative is in [narrative.md](narrative.md).
 
-Solid Queue commit under test: `305bf4018352e099019f9f24502a18ee4794e64e`
+RubyLLM 2.0 versus main, with connection reuse: [comparison](ruby-llm/README.md).
+
 
 | Family | What It Shows | Summary |
 |---|---|---|
