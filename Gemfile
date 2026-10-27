@@ -27,7 +27,7 @@ end
 if ENV["BUNDLE_GEMFILE"]&.end_with?("Gemfile.main")
   gem "ruby_llm", git: "https://github.com/crmne/ruby_llm.git", branch: "main"
 else
-  gem "ruby_llm", "~> 2.0.0"
+  gem "ruby_llm", "~> 2.1.0"
 end
 gem "faraday-net_http_persistent"
 gem "async-http-faraday"
